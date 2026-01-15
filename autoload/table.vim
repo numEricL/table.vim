@@ -7,7 +7,11 @@ endif
 let g:t = { 'valid': v:false }
 let g:i_separator = '|'
 let g:i_dash = '-'
-let g:enable_multiline_cells = v:false
+let g:default_alignment = 'l'
+" let g:multiline_cells_enable = v:false
+let g:multiline_cells_enable = v:true
+let g:multiline_cells_presever_indentation = v:false
+" let g:multiline_cells_presever_indentation = v:true
 
 function Style() abort
     return table#style#Get(g:config.style)
@@ -326,6 +330,11 @@ function TableColCount() dict abort
     return self.max_col_count
 endfunction
 
+function TableColAlign(col) dict abort
+    let align = get(self.col_align, a:col, g:default_alignment)
+    return empty(align)? g:default_alignment : align
+endfunction
+
 function CellColCount() dict abort
     return len(self.cells)
 endfunction
@@ -363,6 +372,7 @@ function GetTable(linenr) abort
                 \ 'col_widths'    : [],
                 \ 'RowCount'      : function('TableRowCount'),
                 \ 'ColCount'      : function('TableColCount'),
+                \ 'ColAlign'      : function('TableColAlign'),
                 \ 'max_col_count' : 0,
                 \ }
 
@@ -418,7 +428,7 @@ function RefineType( pos_id, row_id, align_id, type) abort
 endfunction
 
 function TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
-    if !g:enable_multiline_cells ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
+    if !g:multiline_cells_enable ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
         " cells is a list of strings, each referring to a line in within the cell
         let cells = empty(a:line_cells)? [['']] : map(copy(a:line_cells), '[v:val]')
         let row = {
@@ -642,7 +652,7 @@ function PadAlignLine(line, align, width) abort
         let right_pad = pad_size - left_pad
         let line = ' ' .. repeat(' ', left_pad) .. line .. repeat(' ', right_pad) .. ' '
     else
-        let line = ' ' .. line .. repeat(' ', pad_size) .. ' '
+        throw 'unknown alignment: ' .. a:align .. ' (should be l, r, or c)'
     endif
     return line
 endfunction
@@ -653,7 +663,7 @@ function AlignCells(table) abort
     for row in a:table.rows
         for j in range(len(row.cells))
             let cell = row.cells[j]
-            let align = get(a:table.col_align, j, '')
+            let align = a:table.ColAlign(j)
             let width = widths[j]
             for i in range(row.Height())
                 let cell[i] = PadAlignLine(cell[i], align, width)
@@ -671,14 +681,14 @@ function MakeSeparator(table, type, num_cols) abort
     let line = left
     let show_alignment = (a:type ==# 'alignment')
     for i in range(a:num_cols-1)
-        let col_align = get(a:table.col_align, i, '')
+        let col_align = a:table.ColAlign(i)
         let pad_left  = (show_alignment && col_align =~# '\v^l|c$') ? ':' : horiz
         let pad_right = (show_alignment && col_align =~# '\v^r|c$') ? ':' : horiz
         let width = get(a:table.col_widths, i, 2)
         let line ..= pad_left .. repeat(horiz, width) .. pad_right .. sep
     endfor
     let i = a:num_cols - 1
-    let col_align = get(a:table.col_align, i, '')
+    let col_align = a:table.ColAlign(i)
     let pad_left  = (show_alignment && col_align =~# '\v^l|c$') ? ':' : horiz
     let pad_right = (show_alignment && col_align =~# '\v^r|c$') ? ':' : horiz
     let width = get(a:table.col_widths, i, 2)
@@ -957,14 +967,20 @@ endfunction
 
 function TrimCells(table) abort
     for row in a:table.rows
-        for cell in row.cells
-            let cell = TrimBlock(cell)
+        for j in range(len(row.cells))
+            if g:multiline_cells_presever_indentation
+                call TrimBlock(row.cells[j], a:table.ColAlign(j))
+            else
+                for i in range(row.Height())
+                    let row.cells[j][i] = trim(row.cells[j][i])
+                endfor
+            endif
         endfor
     endfor
     let a:table.col_widths = ComputeWidths(a:table)
 endfunction
 
-function TrimBlock(lines) abort
+function TrimBlock(lines, alignment) abort
     if empty(a:lines)
         return
     endif
@@ -972,24 +988,58 @@ function TrimBlock(lines) abort
         let a:lines[0] = trim(a:lines[0])
     else
         for i in range(len(a:lines))
-            " trim trailing whitespace
-            let a:lines[i] = trim(a:lines[i], '', 2)
+            if a:alignment ==# 'l'
+                " trim trailing whitespace
+                let a:lines[i] = trim(a:lines[i], '', 2)
+            elseif a:alignment ==# 'r'
+                " trim leading whitespace
+                let a:lines[i] = trim(a:lines[i], '', 1)
+            endif
         endfor
     endif
 
+    if a:alignment =~# '\v^l|c$'
+        let [indent, indices] = MinTrimIndent(a:lines, 'left')
+        for i in indices
+            let a:lines[i] = strpart(a:lines[i], indent)
+        endfor
+    endif
+    if a:alignment =~# '\v^r|c$'
+        let [indent, indices] = MinTrimIndent(a:lines, 'right')
+        for i in indices
+            let a:lines[i] = strpart(a:lines[i], 0, strlen(a:lines[i]) - indent)
+        endfor
+    endif
+endfunction
+
+function MinTrimIndent(lines, side) abort
     let trim_indices = []
-    let min_leading = -1
-    for i in range(len(a:lines))
-        let line = a:lines[i]
-        let leading = len(matchstr(line, '^\s*'))
-        if leading > 0
-            call add(trim_indices, i)
-            let min_leading = (min_leading == -1) ? leading : min([min_leading, leading])
-        endif
-    endfor
-    for i in trim_indices
-        let a:lines[i] = strpart(a:lines[i], min_leading)
-    endfor
+
+    if a:side ==# 'left'
+        let min_indent = -1
+        for i in range(len(a:lines))
+            let [match, start, _] = matchstrpos(a:lines[i], '\S')
+            let indent = strdisplaywidth(strpart(a:lines[i], 0, start))
+            if indent > 0
+                call add(trim_indices, i)
+                let min_indent = (min_indent == -1) ? indent : min([min_indent, indent])
+            endif
+        endfor
+        return [ min_indent, trim_indices ]
+    elseif a:side ==# 'right'
+        let min_indent = -1
+        for i in range(len(a:lines))
+            let [match, start, end] = matchstrpos(a:lines[i], '\S\ze\s*$')
+            let indent = strdisplaywidth(strpart(a:lines[i], end))
+            if indent > 0
+                call add(trim_indices, i)
+                let min_indent = (min_indent == -1) ? indent : min([min_indent, indent])
+            endif
+        endfor
+        return [ min_indent, trim_indices ]
+    else
+        throw 'unknown side: ' .. a:side
+    endif
 endfunction
 
 function SeparatorAlignment(cell) abort
