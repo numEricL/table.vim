@@ -1,12 +1,12 @@
 nnoremap <plug>(table_complete) :call table#Complete(line('.'))<CR>
 nnoremap <plug>(table_align) :call table#Align(line('.'))<CR>
 
-inoremap <silent> <plug>(table_next) <c-o><cmd>call table#NextCell('forward')<cr>
-inoremap <silent> <plug>(table_prev) <c-o><cmd>call table#NextCell('backward')<cr>
-nnoremap <silent> <plug>(table_next) <cmd>call table#NextCell('forward')<cr>
-nnoremap <silent> <plug>(table_prev) <cmd>call table#NextCell('backward')<cr>
-xnoremap <silent> <plug>(table_next) <cmd>call table#NextCell('forward')<cr>
-xnoremap <silent> <plug>(table_prev) <cmd>call table#NextCell('backward')<cr>
+inoremap <silent> <plug>(table_next) <c-o><cmd>call table#NextCell('forward', v:count1)<cr>
+inoremap <silent> <plug>(table_prev) <c-o><cmd>call table#NextCell('backward', v:count1)<cr>
+nnoremap <silent> <plug>(table_next) <cmd>call table#NextCell('forward', v:count1)<cr>
+nnoremap <silent> <plug>(table_prev) <cmd>call table#NextCell('backward', v:count1)<cr>
+xnoremap <silent> <plug>(table_next) <cmd>call table#NextCell('forward', v:count1)<cr>
+xnoremap <silent> <plug>(table_prev) <cmd>call table#NextCell('backward', v:count1)<cr>
 
 xnoremap <silent> <plug>(table_cell_textobj)   <cmd>call table#textobj#Select(function('table#textobj#Cell'),   v:count1, 'default')<cr>
 onoremap <silent> <plug>(table_cell_textobj)   <cmd>call table#textobj#Select(function('table#textobj#Cell'),   v:count1, 'default')<cr>
