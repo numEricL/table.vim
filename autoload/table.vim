@@ -1,4 +1,4 @@
-let g:config = { 'style' : 'simple_full' }
+" let g:config = { 'style' : 'simple_full' }
 " let g:config = { 'style' : 'single_full' }
 
 if !exists('g:config')
@@ -9,27 +9,27 @@ let g:t = { 'valid': v:false }
 let g:i_separator = '|'
 let g:i_dash = '-'
 let g:default_alignment = 'l'
-" let g:multiline_cells_enable = v:false
-let g:multiline_cells_enable = v:true
-" let g:multiline_cells_presever_indentation = v:false
+let g:multiline_cells_enable = v:false
+let g:multiline_cells_presever_indentation = v:false
+" let g:multiline_cells_enable = v:true
 let g:multiline_cells_presever_indentation = v:true
 
-function Style() abort
+function s:Style() abort
     return table#style#Get(g:config.style)
 endfunction
 
 function table#ToStyle(linenr, style) abort
-    let table = GetTable(a:linenr)
+    let table = table#GetTable(a:linenr)
     if !table.valid
         return
     endif
-    let coord = GetCursorCoord(table, getpos('.')[1:2])
+    let coord = s:GetCursorCoord(table, getpos('.')[1:2])
     let config = copy(g:config)
     let g:config = { 'style' : a:style }
-    call AlignCells(table)
-    call DrawComplete(table)
+    call s:AlignCells(table)
+    call s:DrawComplete(table)
     let g:config = config
-    call SetCursorCoord(table, coord)
+    call s:SetCursorCoord(table, coord)
 endfunction
 
 " let custom = {
@@ -46,14 +46,14 @@ function table#IsTable(linenr) abort
     let prev = getline(a:linenr-1)
     let next = getline(a:linenr+1)
 
-    if IsTableLine(line)
-        if IsTableLine(prev) || IsIncompleteTableLine(prev)
+    if s:IsTableLine(line)
+        if s:IsTableLine(prev) || s:IsIncompleteTableLine(prev)
             return v:true
-        elseif IsTableLine(next) || IsIncompleteTableLine(next)
+        elseif s:IsTableLine(next) || s:IsIncompleteTableLine(next)
             return v:true
         endif
-    elseif IsIncompleteTableLine(line)
-        if IsTableLine(prev) || IsTableLine(next)
+    elseif s:IsIncompleteTableLine(line)
+        if s:IsTableLine(prev) || s:IsTableLine(next)
             return v:true
         endif
     endif
@@ -61,40 +61,40 @@ function table#IsTable(linenr) abort
 endfunction
 
 function table#Align(linenr) abort
-    let table = GetTable(a:linenr)
+    let table = table#GetTable(a:linenr)
     if !table.valid
         return
     endif
-    let coord = GetCursorCoord(table, getpos('.')[1:2])
+    let coord = s:GetCursorCoord(table, getpos('.')[1:2])
     if coord.type ==# 'alignment'
         let cell_col = coord.coord[0]/2
         let coord.coord[0] = 2 * (cell_col+1)
     endif
-    call AlignCells(table)
-    call DrawIncomplete(table)
-    call SetCursorCoord(table, coord)
+    call s:AlignCells(table)
+    call s:DrawIncomplete(table)
+    call s:SetCursorCoord(table, coord)
 endfunction
 
 " should fill col_align if missing
 function table#Complete(linenr) abort
-    let table = GetTable(a:linenr)
+    let table = table#GetTable(a:linenr)
     if !table.valid
         return
     endif
-    let coord = GetCursorCoord(table, getpos('.')[1:2])
-    call FillGapCells(table)
-    call AlignCells(table)
-    call DrawComplete(table)
-    call SetCursorCoord(table, coord)
+    let coord = s:GetCursorCoord(table, getpos('.')[1:2])
+    call s:FillGapCells(table)
+    call s:AlignCells(table)
+    call s:DrawComplete(table)
+    call s:SetCursorCoord(table, coord)
 endfunction
 
 function table#NextCell(dir) abort
     let curpos = getpos('.')[1:2]
-    let table = GetTable(curpos[0])
+    let table = table#GetTable(curpos[0])
     if !table.valid
         return
     endif
-    let coord = GetCursorCoord(table, getpos('.')[1:2])
+    let coord = s:GetCursorCoord(table, getpos('.')[1:2])
 
     let step = (a:dir ==# 'forward') ? 1 : -1
     if coord.type ==# 'alignment'
@@ -109,7 +109,7 @@ function table#NextCell(dir) abort
             call add(col_bounds, bound)
         endfor
         let old_cell_id = [ coord.coord[0], coord.coord[2] ]
-        let new_cell_id = Step2D(old_cell_id, col_bounds, row_bound, {'step': step, 'least_significant': 'right'})
+        let new_cell_id = s:Step2D(old_cell_id, col_bounds, row_bound, {'step': step, 'least_significant': 'right'})
         let row_offset = (old_cell_id[0] == new_cell_id[0]) ? coord.coord[1] : 0
         let coord.coord = [ new_cell_id[0], row_offset, new_cell_id[1] ]
     elseif coord.type ==# 'separator'
@@ -120,15 +120,15 @@ function table#NextCell(dir) abort
     else
         throw 'cannot move from type: ' .. coord.type
     endif
-    call SetCursorCoord(table, coord)
+    call s:SetCursorCoord(table, coord)
 endfunction
 
-" alignment separator might return as 'row' or 'separator', check with SplitPos
-function LineType(cells, separators) abort
+" alignment separator might return as 'row' or 'separator', check with s:SplitPos
+function s:LineType(cells, separators) abort
     let type = 'row'
 
     " check if separator
-    let horiz = GeneralHorizPattern()
+    let horiz = s:GeneralHorizPattern()
     let is_sep = v:true
     let is_align = v:false
     let beg_pat = '\V\^\s\*'
@@ -145,21 +145,21 @@ function LineType(cells, separators) abort
     return type
 endfunction
 
-function ParseLine(linenr) abort
+function s:ParseLine(linenr) abort
     let line = getline(a:linenr)
-    let [cells, sep_pos, seps] = SplitPos(line)
+    let [cells, sep_pos, seps] = s:SplitPos(line)
     let type = ''
     if !empty(cells)
-        let type = LineType(cells, seps)
+        let type = s:LineType(cells, seps)
     else
-        let [ sep_pos, type ] = ParseIncomplete(line, seps, sep_pos)
+        let [ sep_pos, type ] = s:ParseIncomplete(line, seps, sep_pos)
     endif
     let col_start = strdisplaywidth(strpart(line, 0, sep_pos[0][1]))
     return [ cells, col_start, sep_pos, type ]
 endfunction
 
-function ParseIncomplete(line, seps, sep_pos) abort
-    let horiz = GeneralHorizPattern()
+function s:ParseIncomplete(line, seps, sep_pos) abort
+    let horiz = s:GeneralHorizPattern()
     let type = ''
     if empty(a:seps)
         let match = matchstrpos(a:line, '\V' .. horiz .. '\+')
@@ -178,13 +178,13 @@ function ParseIncomplete(line, seps, sep_pos) abort
 endfunction
 
 "TODO: just use general separator pattern instead of looping over types
-function IsTableLine(line) abort
+function s:IsTableLine(line) abort
     let cs = split(&commentstring, '%s')
     let cs_pattern = escape(trim(get(cs, 0, '')), '\')
     let cs_pattern = '\s\*\(' ..cs_pattern .. '\)\?\s\*'
     let is_table = v:false
     for type in [ 'row', 'separator', 'alignment','top', 'bottom' ]
-        let [ left, right, sep, horiz ] = BoxDrawingPatterns(type)
+        let [ left, right, sep, horiz ] = s:BoxDrawingPatterns(type)
         if !empty(left) && !empty(right)
             if a:line =~# '\V\^' .. cs_pattern .. left .. '\.\*' .. right
                 let is_table = v:true
@@ -206,12 +206,12 @@ function IsTableLine(line) abort
     return is_table
 endfunction
 
-function IsIncompleteTableLine(line) abort
+function s:IsIncompleteTableLine(line) abort
     let cs = split(&commentstring, '%s')
     let cs_pattern = escape(trim(get(cs, 0, '')), '\')
     let cs_pattern = '\s\*\(' ..cs_pattern .. '\)\?\s\*'
     for type in [ 'row', 'separator', 'top', 'bottom', 'alignment' ]
-        let [ left, right, sep, horiz ] = GetBoxDrawingChars(type)
+        let [ left, right, sep, horiz ] = s:GetBoxDrawingChars(type)
         if !empty(left) && (a:line =~# '\V\^' .. cs_pattern .. left)
             return v:true
         endif
@@ -225,41 +225,41 @@ function IsIncompleteTableLine(line) abort
     return v:false
 endfunction
 
-function GetBoxDrawingChars(type) abort
+function s:GetBoxDrawingChars(type) abort
     if a:type == 'top'
-        let left  = Style().box_drawing.top_left
-        let right = Style().box_drawing.top_right
-        let sep   = Style().box_drawing.top_sep
-        let horiz = Style().box_drawing.top_horiz
+        let left  = s:Style().box_drawing.top_left
+        let right = s:Style().box_drawing.top_right
+        let sep   = s:Style().box_drawing.top_sep
+        let horiz = s:Style().box_drawing.top_horiz
     elseif a:type == 'bottom'
-        let left  = Style().box_drawing.bottom_left
-        let right = Style().box_drawing.bottom_right
-        let sep   = Style().box_drawing.bottom_sep
-        let horiz = Style().box_drawing.bottom_horiz
+        let left  = s:Style().box_drawing.bottom_left
+        let right = s:Style().box_drawing.bottom_right
+        let sep   = s:Style().box_drawing.bottom_sep
+        let horiz = s:Style().box_drawing.bottom_horiz
     elseif a:type == 'alignment'
-        let left  = Style().box_drawing.align_left
-        let right = Style().box_drawing.align_right
-        let sep   = Style().box_drawing.align_sep
-        let horiz = Style().box_drawing.align_horiz
+        let left  = s:Style().box_drawing.align_left
+        let right = s:Style().box_drawing.align_right
+        let sep   = s:Style().box_drawing.align_sep
+        let horiz = s:Style().box_drawing.align_horiz
     elseif a:type == 'separator'
-        let left  = Style().box_drawing.sep_left
-        let right = Style().box_drawing.sep_right
-        let sep   = Style().box_drawing.sep_sep
-        let horiz = Style().box_drawing.sep_horiz
+        let left  = s:Style().box_drawing.sep_left
+        let right = s:Style().box_drawing.sep_right
+        let sep   = s:Style().box_drawing.sep_sep
+        let horiz = s:Style().box_drawing.sep_horiz
     elseif a:type == 'row'
-        let left  = Style().box_drawing.row_left
-        let right = Style().box_drawing.row_right
-        let sep   = Style().box_drawing.row_sep
+        let left  = s:Style().box_drawing.row_left
+        let right = s:Style().box_drawing.row_right
+        let sep   = s:Style().box_drawing.row_sep
         let horiz = ''
     else
         throw 'unknown separator type: ' .. a:type
     endif
-    let left = Style().omit_left_border ? '' : left
-    let right = Style().omit_right_border ? '' : right
+    let left = s:Style().omit_left_border ? '' : left
+    let right = s:Style().omit_right_border ? '' : right
     return [left, right, sep, horiz]
 endfunction
 
-function AnyPattern(list) abort
+function s:AnyPattern(list) abort
     let unique = uniq(sort(a:list))
     call filter(unique, '!empty(v:val)')
     if len(unique) == 1
@@ -277,66 +277,66 @@ function AnyPattern(list) abort
     return pattern
 endfunction
 
-function GeneralSeparatorPattern() abort
+function s:GeneralSeparatorPattern() abort
     let separators = [
-                \ Style().box_drawing.top_left,
-                \ Style().box_drawing.top_right,
-                \ Style().box_drawing.top_sep,
-                \ Style().box_drawing.bottom_left,
-                \ Style().box_drawing.bottom_right,
-                \ Style().box_drawing.bottom_sep,
-                \ Style().box_drawing.align_left,
-                \ Style().box_drawing.align_right,
-                \ Style().box_drawing.align_sep,
-                \ Style().box_drawing.sep_left,
-                \ Style().box_drawing.sep_right,
-                \ Style().box_drawing.sep_sep,
-                \ Style().box_drawing.row_left,
-                \ Style().box_drawing.row_right,
-                \ Style().box_drawing.row_sep,
+                \ s:Style().box_drawing.top_left,
+                \ s:Style().box_drawing.top_right,
+                \ s:Style().box_drawing.top_sep,
+                \ s:Style().box_drawing.bottom_left,
+                \ s:Style().box_drawing.bottom_right,
+                \ s:Style().box_drawing.bottom_sep,
+                \ s:Style().box_drawing.align_left,
+                \ s:Style().box_drawing.align_right,
+                \ s:Style().box_drawing.align_sep,
+                \ s:Style().box_drawing.sep_left,
+                \ s:Style().box_drawing.sep_right,
+                \ s:Style().box_drawing.sep_sep,
+                \ s:Style().box_drawing.row_left,
+                \ s:Style().box_drawing.row_right,
+                \ s:Style().box_drawing.row_sep,
                 \ g:i_separator,
                 \ ]
-    return AnyPattern(separators)
+    return s:AnyPattern(separators)
 endfunction
 
-function GeneralHorizPattern() abort
+function s:GeneralHorizPattern() abort
     let horizs = [
-                \ Style().box_drawing.top_horiz,
-                \ Style().box_drawing.bottom_horiz,
-                \ Style().box_drawing.align_horiz,
-                \ Style().box_drawing.sep_horiz,
+                \ s:Style().box_drawing.top_horiz,
+                \ s:Style().box_drawing.bottom_horiz,
+                \ s:Style().box_drawing.align_horiz,
+                \ s:Style().box_drawing.sep_horiz,
                 \ g:i_dash,
                 \ ]
-    return AnyPattern(horizs)
+    return s:AnyPattern(horizs)
 endfunction
 
-function BoxDrawingPatterns(type) abort
-    let sep = GetBoxDrawingChars(a:type)
+function s:BoxDrawingPatterns(type) abort
+    let sep = s:GetBoxDrawingChars(a:type)
     for i in range(3)
-        let sep[i] = AnyPattern([sep[i], g:i_separator])
+        let sep[i] = s:AnyPattern([sep[i], g:i_separator])
     endfor
     if a:type ==# 'alignment'
-        let sep[3] = AnyPattern([sep[i], g:i_dash, ':'])
+        let sep[3] = s:AnyPattern([sep[i], g:i_dash, ':'])
     else
-        let sep[3] = AnyPattern([sep[i], g:i_dash])
+        let sep[3] = s:AnyPattern([sep[i], g:i_dash])
     endif
     return sep
 endfunction
 
-function TableRowCount() dict abort
+function s:TableRowCount() dict abort
     return len(self.rows)
 endfunction
 
-function TableColCount() dict abort
+function s:TableColCount() dict abort
     return self.max_col_count
 endfunction
 
-function TableColAlign(col) dict abort
+function s:TableColAlign(col) dict abort
     let align = get(self.col_align, a:col, g:default_alignment)
     return empty(align)? g:default_alignment : align
 endfunction
 
-function TableGetCell(row, col) dict abort
+function s:TableGetCell(row, col) dict abort
     let row_obj = self.rows[a:row]
     if a:col >= row_obj.ColCount()
         return []
@@ -344,7 +344,7 @@ function TableGetCell(row, col) dict abort
     return copy(row_obj.cells[a:col])
 endfunction
 
-function TableSetCell(row, col, cell) dict abort
+function s:TableSetCell(row, col, cell) dict abort
     if type(a:cell) != v:t_list
         throw 'cell must be a list of strings'
     endif
@@ -352,11 +352,11 @@ function TableSetCell(row, col, cell) dict abort
     let self.rows[a:row].cells[a:col] = a:cell
 endfunction
 
-function CellColCount() dict abort
+function s:CellColCount() dict abort
     return len(self.cells)
 endfunction
 
-function CellRowHeight() dict abort
+function s:CellRowHeight() dict abort
     let height = 0
     for cell in self.cells
         let height = max([height, len(cell)])
@@ -364,7 +364,7 @@ function CellRowHeight() dict abort
     return height
 endfunction
 
-function CellStrDisplayWidth(cell) abort
+function s:CellStrDisplayWidth(cell) abort
     let width = 0
     for line in a:cell
         let width = max([width, strdisplaywidth(line)])
@@ -372,8 +372,8 @@ function CellStrDisplayWidth(cell) abort
     return width
 endfunction
 
-function GetTable(linenr) abort
-    let bounds = FindTableRange(a:linenr)
+function table#GetTable(linenr) abort
+    let bounds = s:FindTableRange(a:linenr)
     if bounds[0] == -1
         return {'valid': v:false}
     endif
@@ -392,16 +392,16 @@ function GetTable(linenr) abort
                 \ 'col_align'     : [],
                 \ 'col_widths'    : [],
                 \ 'max_col_count' : 0,
-                \ 'RowCount'      : function('TableRowCount'),
-                \ 'ColCount'      : function('TableColCount'),
-                \ 'ColAlign'      : function('TableColAlign'),
-                \ 'Cell'          : function('TableGetCell'),
-                \ 'SetCell'       : function('TableSetCell'),
+                \ 'RowCount'      : function('s:TableRowCount'),
+                \ 'ColCount'      : function('s:TableColCount'),
+                \ 'ColAlign'      : function('s:TableColAlign'),
+                \ 'Cell'          : function('s:TableGetCell'),
+                \ 'SetCell'       : function('s:TableSetCell'),
                 \ }
 
     let last_type = 'separator'
     for pos_id in range(bounds[1] - bounds[0] + 1)
-        let [line_cells, col_start, sep_pos, type] = ParseLine(bounds[0] + pos_id)
+        let [line_cells, col_start, sep_pos, type] = s:ParseLine(bounds[0] + pos_id)
         if type ==# 'separator'
             if pos_id == 0
                 let type = 'top'
@@ -413,7 +413,7 @@ function GetTable(linenr) abort
         endif
 
         if type =~# '\v^row|incomplete$'
-            call TableAppendRow(table, type, last_type, line_cells, pos_id)
+            call s:TableAppendRow(table, type, last_type, line_cells, pos_id)
             let table.max_col_count = max([table.max_col_count, len(line_cells)])
         endif
         let last_type = type
@@ -430,17 +430,17 @@ function GetTable(linenr) abort
         if type ==# 'alignment'
             let placement.align_id = pos_id
             for cell in line_cells
-                call add(table.col_align, SeparatorAlignment(cell))
+                call add(table.col_align, s:SeparatorAlignment(cell))
             endfor
             let table.max_col_count = max([table.max_col_count, len(line_cells)])
         endif
     endfor
-    let table.col_widths = ComputeWidths(table)
+    let table.col_widths = s:ComputeWidths(table)
     let g:t = table
     return table
 endfunction
 
-function RefineType( pos_id, row_id, align_id, type) abort
+function s:RefineType( pos_id, row_id, align_id, type) abort
     if a:type ==# 'separator' && row_id == 0  && placement.align_id == -1
         return 'alignment'
     elseif a:type ==# 'separator' && pos_id == 0
@@ -450,7 +450,7 @@ function RefineType( pos_id, row_id, align_id, type) abort
     endif
 endfunction
 
-function TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
+function s:TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
     if !g:multiline_cells_enable ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
         " cells is a list of strings, each referring to a line in within the cell
         let cells = empty(a:line_cells)? [['']] : map(copy(a:line_cells), '[v:val]')
@@ -458,8 +458,8 @@ function TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
                     \ 'cells'         : cells,
                     \ 'types'         : [ a:line_type ],
                     \ 'placement_id'  : a:pos_id,
-                    \ 'Height'        : function('CellRowHeight'),
-                    \ 'ColCount'      : function('CellColCount'),
+                    \ 'Height'        : function('s:CellRowHeight'),
+                    \ 'ColCount'      : function('s:CellColCount'),
                     \ }
         call add(a:table.rows, row)
     else
@@ -475,7 +475,7 @@ function TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
     endif
 endfunction
 
-function AppendConditionalCommentLine(linenr) abort
+function s:AppendConditionalCommentLine(linenr) abort
     let cs = split(&commentstring, '%s')
     let line = getline(a:linenr)
     let found = v:false
@@ -488,8 +488,8 @@ function AppendConditionalCommentLine(linenr) abort
     call append(a:linenr, new_line)
 endfunction
 
-" DrawLine does not update placement
-function DrawLine(placement, pos_id, line) abort
+" s:DrawLine does not update placement
+function s:DrawLine(placement, pos_id, line) abort
     if a:pos_id > len(a:placement.positions)
         throw 'pos_id out of range'
     endif
@@ -499,7 +499,7 @@ function DrawLine(placement, pos_id, line) abort
     let [col_start, col_end] = [-1, -1]
     if a:pos_id == len(a:placement.positions)
         let linenr = a:placement.row_start + len(a:placement.positions) - 1
-        call AppendConditionalCommentLine(linenr)
+        call s:AppendConditionalCommentLine(linenr)
         let [col_start, col_end] = [a:placement.max_col_start, a:placement.max_col_start]
         call add(a:placement.positions, {})
     else
@@ -519,12 +519,12 @@ function DrawLine(placement, pos_id, line) abort
     return a:pos_id + 1
 endfunction
 
-function DrawRow(table, pos_id, row_id, ...) abort
+function s:DrawRow(table, pos_id, row_id, ...) abort
     let fill_cell_multirows = get(a:000, 0, v:true)
     let row = a:table.rows[a:row_id]
     let pos_id = a:pos_id
     for i in range(row.Height())
-        let fill_cell = fill_cell_multirows || HasRightMostSeparator(a:table, a:row_id, i)
+        let fill_cell = fill_cell_multirows || s:HasRightMostSeparator(a:table, a:row_id, i)
         let rowline = ''
 
         if get(row.types, i, '') ==# 'incomplete'
@@ -534,25 +534,25 @@ function DrawRow(table, pos_id, row_id, ...) abort
             for cell in row.cells
                 call add(single_row_cells, get(cell, i, ''))
             endfor
-            let left  = Style().omit_left_border  ? '' : Style().box_drawing.row_left
-            let right = Style().omit_right_border ? '' : Style().box_drawing.row_right
-            let sep = Style().box_drawing.row_sep
+            let left  = s:Style().omit_left_border  ? '' : s:Style().box_drawing.row_left
+            let right = s:Style().omit_right_border ? '' : s:Style().box_drawing.row_right
+            let sep = s:Style().box_drawing.row_sep
             if fill_cell
                 let rowline = left .. join(single_row_cells, sep) .. right
             else
-                let num_cols = NumSubRowCols(a:table, a:row_id, i)
+                let num_cols = s:NumSubRowCols(a:table, a:row_id, i)
                 let rowline = left .. join(single_row_cells[0:num_cols-1], sep) .. sep
             endif
         endif
         if i == 0
             let row.placement_id = pos_id
         endif
-        let pos_id = DrawLine(a:table.placement, pos_id, rowline)
+        let pos_id = s:DrawLine(a:table.placement, pos_id, rowline)
     endfor
     return pos_id
 endfunction
 
-function HasRightMostSeparator(table, row_id, row_offset) abort
+function s:HasRightMostSeparator(table, row_id, row_offset) abort
     let pos_id = get(a:table.rows[a:row_id], 'placement_id', -1)
     if pos_id == -1
         return v:true
@@ -561,88 +561,88 @@ function HasRightMostSeparator(table, row_id, row_offset) abort
     return len(a:table.placement.positions[pos_id]['separator_pos']) > a:table.rows[a:row_id].ColCount()
 endfunction
 
-function NumSubRowCols(table, row_id, row_offset) abort
+function s:NumSubRowCols(table, row_id, row_offset) abort
     let pos_id = a:table.rows[a:row_id].placement_id + a:row_offset
     return len(a:table.placement.positions[pos_id]['separator_pos']) - 1
 endfunction
 
 " type: alignment | top | bottom | separator
-function DrawSeparator(table, pos_id, type, num_cols) abort
-    let sep = MakeSeparator(a:table, a:type, a:num_cols)
-    let pos_id = DrawLine(a:table.placement, a:pos_id, sep)
+function s:DrawSeparator(table, pos_id, type, num_cols) abort
+    let sep = s:MakeSeparator(a:table, a:type, a:num_cols)
+    let pos_id = s:DrawLine(a:table.placement, a:pos_id, sep)
     return pos_id
 endfunction
 
-function DrawIncomplete(table) abort
+function s:DrawIncomplete(table) abort
     let pos_id = 0
     let new_id = 0
     while pos_id < len(a:table.placement.positions)
         let line_type = a:table.placement.positions[pos_id].type
         if line_type =~# '\v^top|bottom|separator|alignment$'
             let linenr = a:table.placement.row_start + pos_id
-            let num_cols = len(SplitPos(getline(linenr))[0])
+            let num_cols = len(s:SplitPos(getline(linenr))[0])
             let num_cols = (num_cols == 0)? a:table.ColCount() : num_cols
-            let new_id = DrawSeparator(a:table, new_id, line_type, num_cols)
+            let new_id = s:DrawSeparator(a:table, new_id, line_type, num_cols)
         elseif line_type =~# '\v^row|incomplete$'
             let row_id = a:table.placement.positions[pos_id].row_id
-            let new_id = DrawRow(a:table, new_id, row_id, v:false)
+            let new_id = s:DrawRow(a:table, new_id, row_id, v:false)
             let pos_id += a:table.rows[row_id].Height() - 1
         else
             throw 'unknown line type: ' .. line_type
         endif
         let pos_id += 1
     endwhile
-    call ClearRemaining(a:table.placement, len(a:table.placement.positions))
-    call extend(a:table, GetTable(a:table.placement.row_start))
+    call s:ClearRemaining(a:table.placement, len(a:table.placement.positions))
+    call extend(a:table, table#GetTable(a:table.placement.row_start))
 endfunction
 
-function DrawComplete(table) abort
+function s:DrawComplete(table) abort
     let row_count = a:table.RowCount()
     if row_count == 0
         return
     endif
     let pos_id = 0
 
-    if !Style().omit_top_border
+    if !s:Style().omit_top_border
         let num_cols = a:table.rows[0].ColCount()
-        let pos_id = DrawSeparator(a:table, pos_id, 'top', num_cols)
+        let pos_id = s:DrawSeparator(a:table, pos_id, 'top', num_cols)
     endif
-    let pos_id = DrawRow(a:table, pos_id, 0)
+    let pos_id = s:DrawRow(a:table, pos_id, 0)
 
     if a:table.RowCount() > 1
         let row_id = 0
         let num_cols = max([len(a:table.col_align), a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
         " let num_cols = (num_cols == 0)? a:table.ColCount() : num_cols
-        let pos_id = DrawSeparator(a:table, pos_id, 'alignment', num_cols)
+        let pos_id = s:DrawSeparator(a:table, pos_id, 'alignment', num_cols)
         " let a:table.placement.align_id = pos_id - 1
     endif
 
     if a:table.RowCount() > 2
         for row_id in range(1, a:table.RowCount() - 2)
-            let pos_id = DrawRow(a:table, pos_id, row_id)
-            if !Style().omit_separator_rows
+            let pos_id = s:DrawRow(a:table, pos_id, row_id)
+            if !s:Style().omit_separator_rows
                 let num_cols = max([a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
-                let pos_id = DrawSeparator(a:table, pos_id, 'separator', num_cols)
+                let pos_id = s:DrawSeparator(a:table, pos_id, 'separator', num_cols)
             endif
         endfor
     endif
 
     if a:table.RowCount() > 1
-        let pos_id = DrawRow(a:table, pos_id, a:table.RowCount() - 1)
+        let pos_id = s:DrawRow(a:table, pos_id, a:table.RowCount() - 1)
     endif
 
-    if !Style().omit_bottom_border
+    if !s:Style().omit_bottom_border
         let num_cols = a:table.rows[-1].ColCount()
-        let pos_id = DrawSeparator(a:table, pos_id, 'bottom', num_cols)
+        let pos_id = s:DrawSeparator(a:table, pos_id, 'bottom', num_cols)
     endif
-    call ClearRemaining(a:table.placement, pos_id)
-    call extend(a:table, GetTable(a:table.placement.row_start))
+    call s:ClearRemaining(a:table.placement, pos_id)
+    call extend(a:table, table#GetTable(a:table.placement.row_start))
 endfunction
 
-function ClearRemaining(placement, pos_id) abort
+function s:ClearRemaining(placement, pos_id) abort
     let cs = split(&commentstring, '%s')
     call map(cs, 'trim(v:val)')
-    let pattern = AnyPattern(cs + ['\s'])
+    let pattern = s:AnyPattern(cs + ['\s'])
 
     for id in reverse(range(a:pos_id, len(a:placement.positions)-1))
         let linenr = a:placement.row_start + id
@@ -657,7 +657,7 @@ function ClearRemaining(placement, pos_id) abort
     endfor
 endfunction
 
-function FillGapCells(table) abort
+function s:FillGapCells(table) abort
     for row in a:table.rows
         let row.types = repeat(['row'], row.Height())
         while len(row.cells) < a:table.ColCount()
@@ -667,7 +667,7 @@ function FillGapCells(table) abort
     endfor
 endfunction
 
-function PadAlignLine(line, align, width) abort
+function s:PadAlignLine(line, align, width) abort
     let pad_size = a:width - strdisplaywidth(a:line)
     let line = a:line
     if a:align ==# 'l'
@@ -684,8 +684,8 @@ function PadAlignLine(line, align, width) abort
     return line
 endfunction
 
-function AlignCells(table) abort
-    call TrimCells(a:table)
+function s:AlignCells(table) abort
+    call s:TrimCells(a:table)
     let widths = a:table.col_widths
     for row in a:table.rows
         for j in range(len(row.cells))
@@ -694,9 +694,9 @@ function AlignCells(table) abort
             let width = widths[j]
             for i in range(row.Height())
                 if i < len(cell)
-                    let cell[i] = PadAlignLine(cell[i], align, width)
+                    let cell[i] = s:PadAlignLine(cell[i], align, width)
                 else
-                    call add(cell, PadAlignLine('', align, width))
+                    call add(cell, s:PadAlignLine('', align, width))
                 endif
             endfor
         endfor
@@ -704,8 +704,8 @@ function AlignCells(table) abort
 endfunction
 
 " type: alignment | top | bottom | separator
-function MakeSeparator(table, type, num_cols) abort
-    let [ left, right, sep, horiz ] = GetBoxDrawingChars(a:type)
+function s:MakeSeparator(table, type, num_cols) abort
+    let [ left, right, sep, horiz ] = s:GetBoxDrawingChars(a:type)
     if a:num_cols == 0
         return ''
     endif
@@ -729,8 +729,8 @@ endfunction
 
 " a version of split that includes positions in the result
 " sep_pos_list is the list of positions one after where the separators were found
-function SplitPos(line) abort
-    let pattern = GeneralSeparatorPattern()
+function s:SplitPos(line) abort
+    let pattern = s:GeneralSeparatorPattern()
     let match_list = []
     let sep_list = []
     let sep_pos_list = []
@@ -750,7 +750,7 @@ function SplitPos(line) abort
     return [ match_list, sep_pos_list, sep_list ]
 endfunction
 
-function GetCursorType(table, linenr) abort
+function s:GetCursorType(table, linenr) abort
     if !a:table.valid
         return ''
     endif
@@ -770,12 +770,12 @@ function GetCursorType(table, linenr) abort
     endif
 endfunction
 
-function GetCursorCoord(table, pos, ...) abort
+function s:GetCursorCoord(table, pos, ...) abort
     let type_override = get(a:000, 0, '')
     if !a:table.valid
         return {'type': 'invalid', 'coord': []}
     endif
-    let coord = { 'type': GetCursorType(a:table, a:pos[0]), 'coord': [] }
+    let coord = { 'type': s:GetCursorType(a:table, a:pos[0]), 'coord': [] }
 
     let placement_id = a:pos[0] - a:table.placement.row_start
     if placement_id < 0 || placement_id >= len(a:table.placement.positions)
@@ -802,7 +802,7 @@ function GetCursorCoord(table, pos, ...) abort
         let row = max([0, row_id])
         let offset = max([0, row_offset])
         let boundaries = map(copy(sep_pos), 'v:val[0] + 1')
-        let col = SearchSorted(a:pos[1], boundaries)
+        let col = s:SearchSorted(a:pos[1], boundaries)
         let coord.coord = [ row, offset, col ]
     elseif coord.type ==# 'alignment'
         let boundaries = []
@@ -813,11 +813,11 @@ function GetCursorCoord(table, pos, ...) abort
             call add(boundaries, sep_pos[j][1] + 1)
             call add(boundaries, sep_pos[j][1] + 2)
         endfor
-        let col = SearchSorted(a:pos[1], boundaries)
+        let col = s:SearchSorted(a:pos[1], boundaries)
         let coord.coord = [ col ]
     elseif coord.type ==# 'separator'
         let boundaries = map(copy(sep_pos), 'v:val[0] + 1')
-        let col = SearchSorted(a:pos[1], boundaries)
+        let col = s:SearchSorted(a:pos[1], boundaries)
         let coord.coord = [ row_id, col ]
     else
         throw 'unsupported cursor type: ' .. coord.type
@@ -828,7 +828,7 @@ endfunction
 " unoptimized linear search
 " if on a boundary, returns index of the boundary
 " otherwise, returns index of the left boundary
-function SearchSorted(x, list) abort
+function s:SearchSorted(x, list) abort
     if empty(a:list)
         return -1
     endif
@@ -841,22 +841,22 @@ function SearchSorted(x, list) abort
     return i
 endfunction
 
-function SetCursorCoord(table, coord) abort
+function s:SetCursorCoord(table, coord) abort
     if !a:table.valid
         return
     endif
     if a:coord.type ==# 'cell'
-        call SetCursorCell(a:table, a:coord.coord)
+        call s:SetCursorCell(a:table, a:coord.coord)
     elseif a:coord.type ==# 'alignment'
-        call SetCursorAlignmentSeparator(a:table, a:coord.coord[0])
+        call s:SetCursorAlignmentSeparator(a:table, a:coord.coord[0])
     elseif a:coord.type ==# 'separator'
-        call SetCursorSeparator(a:table, a:coord.coord)
+        call s:SetCursorSeparator(a:table, a:coord.coord)
     else
         throw 'unsupported cursor type: ' .. a:coord.type
     endif
 endfunction
 
-function SetCursorCell(table, cell_id) abort
+function s:SetCursorCell(table, cell_id) abort
     let [row_id, row_offset, col_id] = a:cell_id
     let pos_id = a:table.rows[row_id].placement_id + row_offset
 
@@ -882,14 +882,14 @@ function SetCursorCell(table, cell_id) abort
             endif
         else
             "separator not found, search downwards in the same cell
-            let col = FindCellSepCol(a:table, a:cell_id)
+            let col = s:FindCellSepCol(a:table, a:cell_id)
         endif
     endif
     call cursor(linenr, col)
 endfunction
 
 "TODO: find closest separator to row_offset
-function FindCellSepCol(table, cell_id) abort
+function s:FindCellSepCol(table, cell_id) abort
     let [row_id, _, col_id] = a:cell_id
 
     " " check if separator exists on the current pos_id
@@ -912,7 +912,7 @@ function FindCellSepCol(table, cell_id) abort
     throw 'separator not found'
 endfunction
 
-function SetCursorAlignmentSeparator(table, col_id) abort
+function s:SetCursorAlignmentSeparator(table, col_id) abort
     let id = a:table.placement.align_id
 
     let linenr = a:table.placement.row_start + id
@@ -931,7 +931,7 @@ function SetCursorAlignmentSeparator(table, col_id) abort
     call cursor(linenr, col)
 endfunction
 
-function SetCursorSeparator(table, sep_id) abort
+function s:SetCursorSeparator(table, sep_id) abort
     let [row_id, col_id] = a:sep_id
     let row = a:table.rows[row_id]
     let pos_id = row.placement_id + row.Height()
@@ -948,7 +948,7 @@ function SetCursorSeparator(table, sep_id) abort
     call cursor(linenr, col)
 endfunction
 
-function Step2D(vec, xbounds, ybound, ...) abort
+function s:Step2D(vec, xbounds, ybound, ...) abort
     if len(a:vec) != 2
         throw 'vec must be of length 2'
     endif
@@ -981,20 +981,20 @@ function Step2D(vec, xbounds, ybound, ...) abort
     return out
 endfunction
 
-function ComputeWidths(table) abort
+function s:ComputeWidths(table) abort
     let widths = []
     for col in range(a:table.ColCount())
         let max_width = 0
         for row in a:table.rows
             let cell = get(row.cells, col, '')
-            let max_width = max([max_width, CellStrDisplayWidth(cell)])
+            let max_width = max([max_width, s:CellStrDisplayWidth(cell)])
         endfor
         call add(widths, max_width)
     endfor
     return widths
 endfunction
 
-function FindTableRange(linenr) abort
+function s:FindTableRange(linenr) abort
     if !table#IsTable(a:linenr)
         return [-1, -1]
     endif
@@ -1009,11 +1009,11 @@ function FindTableRange(linenr) abort
     return [top, bottom]
 endfunction
 
-function TrimCells(table) abort
+function s:TrimCells(table) abort
     for row in a:table.rows
         for j in range(len(row.cells))
             if g:multiline_cells_presever_indentation
-                call TrimBlock(row.cells[j], a:table.ColAlign(j))
+                call s:TrimBlock(row.cells[j], a:table.ColAlign(j))
             else
                 for i in range(len(row.cells[j]))
                     let row.cells[j][i] = trim(row.cells[j][i])
@@ -1021,10 +1021,10 @@ function TrimCells(table) abort
             endif
         endfor
     endfor
-    let a:table.col_widths = ComputeWidths(a:table)
+    let a:table.col_widths = s:ComputeWidths(a:table)
 endfunction
 
-function TrimBlock(lines, alignment) abort
+function s:TrimBlock(lines, alignment) abort
     if empty(a:lines)
         return
     endif
@@ -1043,20 +1043,20 @@ function TrimBlock(lines, alignment) abort
     endif
 
     if a:alignment =~# '\v^l|c$'
-        let [indent, indices] = MinTrimIndent(a:lines, 'left')
+        let [indent, indices] = s:MinTrimIndent(a:lines, 'left')
         for i in indices
             let a:lines[i] = strpart(a:lines[i], indent)
         endfor
     endif
     if a:alignment =~# '\v^r|c$'
-        let [indent, indices] = MinTrimIndent(a:lines, 'right')
+        let [indent, indices] = s:MinTrimIndent(a:lines, 'right')
         for i in indices
             let a:lines[i] = strpart(a:lines[i], 0, strlen(a:lines[i]) - indent)
         endfor
     endif
 endfunction
 
-function MinTrimIndent(lines, side) abort
+function s:MinTrimIndent(lines, side) abort
     let trim_indices = []
 
     if a:side ==# 'left'
@@ -1086,7 +1086,7 @@ function MinTrimIndent(lines, side) abort
     endif
 endfunction
 
-function SeparatorAlignment(cell) abort
+function s:SeparatorAlignment(cell) abort
     let cell = trim(a:cell)
     let left = cell[0] ==# ':'
     let right = cell[-1:] ==# ':'
@@ -1113,31 +1113,4 @@ endfunction
 "         let start = match[2]
 "     endwhile
 "     return count
-" endfunction
-
-" function Erase(table) abort
-"     " pads to max_col_start in order to allow redrawing later
-"     let placement = a:table.placement
-"     let linenr = placement.row_start
-"     for i in a:table.placement.row_count
-"         let row = a:table.rows[i]
-"         let line = getline(linenr)
-"         let newline = strpart(line, 0, placement.col_start[i]-1)
-"         let newline ..= repeat(' ', placement.max_col_start - placement.col_start[i])
-"         let newline ..= strpart(line, placement.col_end[i]-1)
-"         call setline(linenr, newline)
-"
-"         let placement.col_start[i] = placement.max_col_start
-"         let placement.col_end[i] = placement.max_col_start
-"         let linenr += 1
-"     endfor
-" endfunction
-"
-" function Insert(table, pos) abort
-"     call AlignCells(a:table)
-"     let a:table.placement.row_start = a:pos[1]
-"     let a:table.placement.max_col_start = a:pos[2]
-"     let a:table.placement.col_start = repeat([a:pos[2]], a:table.placement.row_count)
-"     let a:table.placement.col_end = repeat([a:pos[2]], a:table.placement.row_count)
-"     call Draw(a:table, v:false)
 " endfunction
