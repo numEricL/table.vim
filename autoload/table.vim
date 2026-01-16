@@ -1,3 +1,4 @@
+let g:config = { 'style' : 'simple_full' }
 " let g:config = { 'style' : 'single_full' }
 
 if !exists('g:config')
@@ -10,8 +11,8 @@ let g:i_dash = '-'
 let g:default_alignment = 'l'
 " let g:multiline_cells_enable = v:false
 let g:multiline_cells_enable = v:true
-let g:multiline_cells_presever_indentation = v:false
-" let g:multiline_cells_presever_indentation = v:true
+" let g:multiline_cells_presever_indentation = v:false
+let g:multiline_cells_presever_indentation = v:true
 
 function Style() abort
     return table#style#Get(g:config.style)
@@ -335,12 +336,32 @@ function TableColAlign(col) dict abort
     return empty(align)? g:default_alignment : align
 endfunction
 
+function TableGetCell(row, col) dict abort
+    let row_obj = self.rows[a:row]
+    if a:col >= row_obj.ColCount()
+        return []
+    endif
+    return copy(row_obj.cells[a:col])
+endfunction
+
+function TableSetCell(row, col, cell) dict abort
+    if type(a:cell) != v:t_list
+        throw 'cell must be a list of strings'
+    endif
+    let row_obj = self.rows[a:row]
+    let self.rows[a:row].cells[a:col] = a:cell
+endfunction
+
 function CellColCount() dict abort
     return len(self.cells)
 endfunction
 
 function CellRowHeight() dict abort
-    return len(self.cells[0])
+    let height = 0
+    for cell in self.cells
+        let height = max([height, len(cell)])
+    endfor
+    return height
 endfunction
 
 function CellStrDisplayWidth(cell) abort
@@ -370,10 +391,12 @@ function GetTable(linenr) abort
                 \ 'rows'          : [],
                 \ 'col_align'     : [],
                 \ 'col_widths'    : [],
+                \ 'max_col_count' : 0,
                 \ 'RowCount'      : function('TableRowCount'),
                 \ 'ColCount'      : function('TableColCount'),
                 \ 'ColAlign'      : function('TableColAlign'),
-                \ 'max_col_count' : 0,
+                \ 'Cell'          : function('TableGetCell'),
+                \ 'SetCell'       : function('TableSetCell'),
                 \ }
 
     let last_type = 'separator'
@@ -442,7 +465,8 @@ function TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
     else
         let row = a:table.rows[-1]
         while len(row.cells) < len(a:line_cells)
-            call add(row.cells, repeat([''], row.Height()))
+            call add(row.cells, [''])
+            " call add(row.cells, repeat([''], row.Height()))
         endwhile
         for j in range(len(row.cells))
             call add(row.cells[j], get(a:line_cells, j, ''))
@@ -503,7 +527,7 @@ function DrawRow(table, pos_id, row_id, ...) abort
         let fill_cell = fill_cell_multirows || HasRightMostSeparator(a:table, a:row_id, i)
         let rowline = ''
 
-        if row.types[i] ==# 'incomplete'
+        if get(row.types, i, '') ==# 'incomplete'
             let rowline = g:i_separator
         else
             let single_row_cells = []
@@ -529,7 +553,11 @@ function DrawRow(table, pos_id, row_id, ...) abort
 endfunction
 
 function HasRightMostSeparator(table, row_id, row_offset) abort
-    let pos_id = a:table.rows[a:row_id].placement_id + a:row_offset
+    let pos_id = get(a:table.rows[a:row_id], 'placement_id', -1)
+    if pos_id == -1
+        return v:true
+    endif
+    let pos_id += a:row_offset
     return len(a:table.placement.positions[pos_id]['separator_pos']) > a:table.rows[a:row_id].ColCount()
 endfunction
 
@@ -584,7 +612,7 @@ function DrawComplete(table) abort
     if a:table.RowCount() > 1
         let row_id = 0
         let num_cols = max([len(a:table.col_align), a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
-        let num_cols = (num_cols == 0)? a:table.ColCount() : num_cols
+        " let num_cols = (num_cols == 0)? a:table.ColCount() : num_cols
         let pos_id = DrawSeparator(a:table, pos_id, 'alignment', num_cols)
         " let a:table.placement.align_id = pos_id - 1
     endif
@@ -631,11 +659,10 @@ endfunction
 
 function FillGapCells(table) abort
     for row in a:table.rows
-        for i in range(row.Height())
-            let row.types[i] = 'row'
-        endfor
+        let row.types = repeat(['row'], row.Height())
         while len(row.cells) < a:table.ColCount()
-            call add(row.cells, repeat([''], row.Height()))
+            " call add(row.cells, repeat([''], row.Height()))
+            call add(row.cells, [''])
         endwhile
     endfor
 endfunction
@@ -666,7 +693,11 @@ function AlignCells(table) abort
             let align = a:table.ColAlign(j)
             let width = widths[j]
             for i in range(row.Height())
-                let cell[i] = PadAlignLine(cell[i], align, width)
+                if i < len(cell)
+                    let cell[i] = PadAlignLine(cell[i], align, width)
+                else
+                    call add(cell, PadAlignLine('', align, width))
+                endif
             endfor
         endfor
     endfor
@@ -681,14 +712,14 @@ function MakeSeparator(table, type, num_cols) abort
     let line = left
     let show_alignment = (a:type ==# 'alignment')
     for i in range(a:num_cols-1)
-        let col_align = a:table.ColAlign(i)
+        let col_align = get(a:table.col_align, i, '')
         let pad_left  = (show_alignment && col_align =~# '\v^l|c$') ? ':' : horiz
         let pad_right = (show_alignment && col_align =~# '\v^r|c$') ? ':' : horiz
         let width = get(a:table.col_widths, i, 2)
         let line ..= pad_left .. repeat(horiz, width) .. pad_right .. sep
     endfor
     let i = a:num_cols - 1
-    let col_align = a:table.ColAlign(i)
+    let col_align = get(a:table.col_align, i, '')
     let pad_left  = (show_alignment && col_align =~# '\v^l|c$') ? ':' : horiz
     let pad_right = (show_alignment && col_align =~# '\v^r|c$') ? ':' : horiz
     let width = get(a:table.col_widths, i, 2)
@@ -739,7 +770,8 @@ function GetCursorType(table, linenr) abort
     endif
 endfunction
 
-function GetCursorCoord(table, pos) abort
+function GetCursorCoord(table, pos, ...) abort
+    let type_override = get(a:000, 0, '')
     if !a:table.valid
         return {'type': 'invalid', 'coord': []}
     endif
@@ -753,6 +785,18 @@ function GetCursorCoord(table, pos) abort
     let row_id     = a:table.placement.positions[placement_id]['row_id']
     let row_offset = a:table.placement.positions[placement_id]['row_offset']
     let sep_pos    = a:table.placement.positions[placement_id]['separator_pos']
+
+    if !empty(type_override)
+        if type_override !=# 'cell'
+            throw 'only cell type override is supported'
+        endif
+        if coord.type =~# '\v^separator|alignment$'
+            let coord.type = 'cell'
+            let row_id += 1
+            let row_id = min([row_id, a:table.RowCount() - 1])
+            let row_offset = 0
+        endif
+    endif
 
     if coord.type ==# 'cell'
         let row = max([0, row_id])
@@ -971,7 +1015,7 @@ function TrimCells(table) abort
             if g:multiline_cells_presever_indentation
                 call TrimBlock(row.cells[j], a:table.ColAlign(j))
             else
-                for i in range(row.Height())
+                for i in range(len(row.cells[j]))
                     let row.cells[j][i] = trim(row.cells[j][i])
                 endfor
             endif
