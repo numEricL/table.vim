@@ -1,14 +1,35 @@
-function table#style#Get(style) abort
-    return get(s:styles, a:style, s:styles.markdown)
-endfunction
+" supported styles: markdown, orgmode, simple_full, single_full, double_full,
+" double_single, ribbed
 
 let s:styles = {}
+
+function table#style#Get(style) abort
+    if !has_key(s:styles, a:style)
+        throw 'Style "' . a:style . '" is not registered.'
+    endif
+    return s:styles[a:style]
+endfunction
+
+function table#style#Exists(style) abort
+    return a:style ==# 'default' || has_key(s:styles, a:style)
+endfunction
+
+function table#style#GetStyleNames() abort
+    return keys(s:styles)
+endfunction
+
+function table#style#Register(style_name, style_def) abort
+    let s:styles[a:style_name] = a:style_def
+endfunction
+
 let s:styles.markdown = {
-            \ 'omit_left_border'     : v:false,
-            \ 'omit_right_border'    : v:false,
-            \ 'omit_top_border'      : v:true,
-            \ 'omit_bottom_border'   : v:true,
-            \ 'omit_separator_rows'  : v:true,
+            \ 'options' : {
+            \   'omit_left_border'     : v:false,
+            \   'omit_right_border'    : v:false,
+            \   'omit_top_border'      : v:true,
+            \   'omit_bottom_border'   : v:true,
+            \   'omit_separator_rows'  : v:true,
+            \ },
             \ 'box_drawing' : {
             \   'top_left'     : '',
             \   'top_right'    : '',
@@ -33,11 +54,13 @@ let s:styles.markdown = {
             \ }
 
 let s:styles.orgmode = {
-            \ 'omit_left_border'     : v:false,
-            \ 'omit_right_border'    : v:false,
-            \ 'omit_top_border'      : v:true,
-            \ 'omit_bottom_border'   : v:true,
-            \ 'omit_separator_rows'  : v:true,
+            \ 'options' : {
+            \   'omit_left_border'     : v:false,
+            \   'omit_right_border'    : v:false,
+            \   'omit_top_border'      : v:true,
+            \   'omit_bottom_border'   : v:true,
+            \   'omit_separator_rows'  : v:true,
+            \ },
             \ 'box_drawing' : {
             \   'top_left'     : '',
             \   'top_right'    : '',
@@ -62,11 +85,13 @@ let s:styles.orgmode = {
             \ }
 
 let s:styles.simple_full = {
-            \ 'omit_left_border'     : v:false,
-            \ 'omit_right_border'    : v:false,
-            \ 'omit_top_border'      : v:false,
-            \ 'omit_bottom_border'   : v:false,
-            \ 'omit_separator_rows'  : v:false,
+            \ 'options' : {
+            \   'omit_left_border'     : v:false,
+            \   'omit_right_border'    : v:false,
+            \   'omit_top_border'      : v:false,
+            \   'omit_bottom_border'   : v:false,
+            \   'omit_separator_rows'  : v:false,
+            \ },
             \ 'box_drawing' : {
             \   'top_left'     : '|',
             \   'top_right'    : '|',
@@ -91,11 +116,13 @@ let s:styles.simple_full = {
             \ }
 
 let s:styles.single_full = {
-            \ 'omit_left_border'     : v:false,
-            \ 'omit_right_border'    : v:false,
-            \ 'omit_top_border'      : v:false,
-            \ 'omit_bottom_border'   : v:false,
-            \ 'omit_separator_rows'  : v:false,
+            \ 'options' : {
+            \   'omit_left_border'     : v:false,
+            \   'omit_right_border'    : v:false,
+            \   'omit_top_border'      : v:false,
+            \   'omit_bottom_border'   : v:false,
+            \   'omit_separator_rows'  : v:false,
+            \ },
             \ 'box_drawing' : {
             \   'top_left'     : '┌',
             \   'top_right'    : '┐',
@@ -120,11 +147,13 @@ let s:styles.single_full = {
             \ }
 
 let s:styles.double_full = {
-            \ 'omit_left_border'     : v:false,
-            \ 'omit_right_border'    : v:false,
-            \ 'omit_top_border'      : v:false,
-            \ 'omit_bottom_border'   : v:false,
-            \ 'omit_separator_rows'  : v:false,
+            \ 'options' : {
+            \   'omit_left_border'     : v:false,
+            \   'omit_right_border'    : v:false,
+            \   'omit_top_border'      : v:false,
+            \   'omit_bottom_border'   : v:false,
+            \   'omit_separator_rows'  : v:false,
+            \ },
             \ 'box_drawing' : {
             \   'top_left'     : '╔',
             \   'top_right'    : '╗',
@@ -149,11 +178,13 @@ let s:styles.double_full = {
             \ }
 
 let s:styles.double_single = {
-            \ 'omit_left_border'     : v:false,
-            \ 'omit_right_border'    : v:false,
-            \ 'omit_top_border'      : v:false,
-            \ 'omit_bottom_border'   : v:false,
-            \ 'omit_separator_rows'  : v:false,
+            \ 'options' : {
+            \   'omit_left_border'     : v:false,
+            \   'omit_right_border'    : v:false,
+            \   'omit_top_border'      : v:false,
+            \   'omit_bottom_border'   : v:false,
+            \   'omit_separator_rows'  : v:false,
+            \ },
             \ 'box_drawing' : {
             \   'top_left'     : '╔',
             \   'top_right'    : '╗',
@@ -178,11 +209,13 @@ let s:styles.double_single = {
             \ }
 
 let s:styles.ribbed = {
-            \ 'omit_left_border'     : v:false,
-            \ 'omit_right_border'    : v:false,
-            \ 'omit_top_border'      : v:false,
-            \ 'omit_bottom_border'   : v:false,
-            \ 'omit_separator_rows'  : v:false,
+            \ 'options' : {
+            \   'omit_left_border'     : v:false,
+            \   'omit_right_border'    : v:false,
+            \   'omit_top_border'      : v:false,
+            \   'omit_bottom_border'   : v:false,
+            \   'omit_separator_rows'  : v:false,
+            \ },
             \ 'box_drawing' : {
             \   'top_left'     : '╔',
             \   'top_right'    : '╗',

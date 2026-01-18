@@ -100,6 +100,7 @@ function s:TextObjBlock(table, coord1, coord2) abort
 endfunction
 
 function s:AdjustForType(table, text_obj, text_obj_type, type) abort
+    let style_opts = table#config#Style().options
     "check placement for top border
     let row_id = a:text_obj.coord1[0]
     let pos_id = a:table.rows[row_id].placement_id
@@ -116,11 +117,11 @@ function s:AdjustForType(table, text_obj, text_obj_type, type) abort
 
     "check placement for left border
     let col_id = a:text_obj.coord1[2]
-    let has_left_border = (col_id > 0) ? v:true : !s:Style().omit_left_border
+    let has_left_border = (col_id > 0) ? v:true : !style_opts.omit_left_border
 
     "check placement for right border
     let col_id = a:text_obj.coord2[2]
-    let has_right_border = (col_id < a:table.rows[0].ColCount() - 1) ? v:true : !s:Style().omit_right_border
+    let has_right_border = (col_id < a:table.rows[0].ColCount() - 1) ? v:true : !style_opts.omit_right_border
 
     let top_offset = has_top_border       ? 1 : 0
     let bottom_offset = has_bottom_border ? 1 : 0
@@ -169,8 +170,4 @@ function s:SetVisualSelection(v_mode, text_obj) abort
         execute "normal! \<esc>" .. v_mode
         call cursor(a:text_obj['end'])
     endif
-endfunction
-
-function s:Style() abort
-    return table#config#Style()
 endfunction

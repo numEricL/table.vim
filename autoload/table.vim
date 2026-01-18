@@ -6,17 +6,20 @@ function! table#GetTable(linenr) abort
     return table#table#Get(a:linenr)
 endfunction
 
-function! table#ToStyle(linenr, style) abort
+function! table#ToDefault(linenr) abort
     let table = table#GetTable(a:linenr)
     if !table.valid
         return
     endif
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
-    let config = copy(g:config)
-    let g:config = { 'style' : a:style }
+    let cfg = table#config#Config()
+    let old_style = cfg.style
+
+    let cfg.style = 'default'
     call table#format#Align(table)
     call table#draw#Complete(table)
-    let g:config = config
+
+    let cfg.style = old_style
     call table#cursor#SetCoord(table, coord)
 endfunction
 
@@ -47,7 +50,7 @@ function! table#Complete(linenr) abort
     call table#cursor#SetCoord(table, coord)
 endfunction
 
-function! table#NextCell(dir, count1) abort
+function! table#CycleCursorCell(dir, count1) abort
     let curpos = getpos('.')[1:2]
     let table = table#GetTable(curpos[0])
     if !table.valid
@@ -55,12 +58,12 @@ function! table#NextCell(dir, count1) abort
     endif
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
     for _ in range(a:count1)
-        let coord = s:NextCell(table, a:dir, coord)
+        let coord = s:CycleCursorCell(table, a:dir, coord)
     endfor
     call table#cursor#SetCoord(table, coord)
 endfunction
 
-function! s:NextCell(table, dir, coord) abort
+function! s:CycleCursorCell(table, dir, coord) abort
     let step = (a:dir ==# 'forward') ? 1 : -1
     if a:coord.type ==# 'alignment'
         let n = 2*len(a:table.col_align)
@@ -85,5 +88,30 @@ function! s:NextCell(table, dir, coord) abort
     else
         throw 'cannot move from type: ' .. a:coord.type
     endif
+    return a:coord
+endfunction
+
+function! table#MoveCursorCell(dir, count1) abort
+    let curpos = getpos('.')[1:2]
+    let table = table#GetTable(curpos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, getpos('.')[1:2], 'cell')
+    for _ in range(a:count1)
+        let coord = s:MoveCursorCell(table, a:dir, coord)
+    endfor
+    call table#cursor#SetCoord(table, coord)
+endfunction
+
+function! s:MoveCursorCell(table, dir, coord) abort
+    let [row_id, row_offset, col_id] = a:coord.coord
+    let x_offset = a:dir ==# 'left' ? -1 : (a:dir ==# 'right' ? 1 : 0)
+    let y_offset = a:dir ==# 'up' ? -1 : (a:dir ==# 'down' ? 1 : 0)
+    let new_row_id = row_id + y_offset
+    let new_row_id = min([max([0, new_row_id]), a:table.RowCount() - 1])
+    let new_col_id = col_id + x_offset
+    let new_col_id = min([max([0, new_col_id]), len(a:table.rows[new_row_id].cells) - 1])
+    let a:coord.coord = [ new_row_id, 0, new_col_id ]
     return a:coord
 endfunction

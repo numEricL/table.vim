@@ -80,3 +80,9 @@ function! s:CellStrDisplayWidth(cell) abort
     endfor
     return width
 endfunction
+
+function table#util#Pad(string, length) abort
+    let l:pad_len = a:length - strdisplaywidth(a:string)
+    let l:pad = (l:pad_len > 0)? repeat(' ', l:pad_len) : ''
+    return a:string .. l:pad
+endfunction

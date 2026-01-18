@@ -72,8 +72,10 @@ function! s:TableColCount() dict abort
 endfunction
 
 function! s:TableColAlign(col) dict abort
-    let align = get(self.col_align, a:col, g:default_alignment)
-    return empty(align)? g:default_alignment : align
+    let cfg_opts = table#config#Config().options
+    let default_align = cfg_opts.default_alignment
+    let align = get(self.col_align, a:col, default_align)
+    return empty(align)? default_align : align
 endfunction
 
 function! s:TableGetCell(row, col) dict abort
@@ -105,7 +107,8 @@ function! s:CellRowHeight() dict abort
 endfunction
 
 function! s:TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
-    if !g:multiline_cells_enable ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
+    let cfg_opts = table#config#Config().options
+    if !cfg_opts.multiline_cells_enable ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
         let cells = empty(a:line_cells)? [['']] : map(copy(a:line_cells), '[v:val]')
         let row = {
                     \ 'cells'         : cells,

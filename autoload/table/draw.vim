@@ -27,8 +27,9 @@ function! table#draw#Complete(table) abort
         return
     endif
     let pos_id = 0
+    let style_opts = table#config#Style().options
 
-    if !table#config#Style().omit_top_border
+    if !style_opts.omit_top_border
         let num_cols = a:table.rows[0].ColCount()
         let pos_id = s:DrawSeparator(a:table, pos_id, 'top', num_cols)
     endif
@@ -43,7 +44,7 @@ function! table#draw#Complete(table) abort
     if a:table.RowCount() > 2
         for row_id in range(1, a:table.RowCount() - 2)
             let pos_id = s:DrawRow(a:table, pos_id, row_id)
-            if !table#config#Style().omit_separator_rows
+            if !style_opts.omit_separator_rows
                 let num_cols = max([a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
                 let pos_id = s:DrawSeparator(a:table, pos_id, 'separator', num_cols)
             endif
@@ -54,7 +55,7 @@ function! table#draw#Complete(table) abort
         let pos_id = s:DrawRow(a:table, pos_id, a:table.RowCount() - 1)
     endif
 
-    if !table#config#Style().omit_bottom_border
+    if !style_opts.omit_bottom_border
         let num_cols = a:table.rows[-1].ColCount()
         let pos_id = s:DrawSeparator(a:table, pos_id, 'bottom', num_cols)
     endif
@@ -96,20 +97,24 @@ function! s:DrawRow(table, pos_id, row_id, ...) abort
     let fill_cell_multirows = get(a:000, 0, v:true)
     let row = a:table.rows[a:row_id]
     let pos_id = a:pos_id
+    let cfg_opts = table#config#Config().options
+    let style_opts = table#config#Style().options
+    let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars('row')
+    
     for i in range(row.Height())
         let fill_cell = fill_cell_multirows || s:HasRightMostSeparator(a:table, a:row_id, i)
         let rowline = ''
 
         if get(row.types, i, '') ==# 'incomplete'
-            let rowline = g:i_separator
+            let rowline = cfg_opts.i_vertical
         else
             let single_row_cells = []
             for cell in row.cells
                 call add(single_row_cells, get(cell, i, ''))
             endfor
-            let left  = table#config#Style().omit_left_border  ? '' : table#config#Style().box_drawing.row_left
-            let right = table#config#Style().omit_right_border ? '' : table#config#Style().box_drawing.row_right
-            let sep = table#config#Style().box_drawing.row_sep
+            let left  = style_opts.omit_left_border  ? '' : row_left
+            let right = style_opts.omit_right_border ? '' : row_right
+            let sep = row_sep
             if fill_cell
                 let rowline = left .. join(single_row_cells, sep) .. right
             else

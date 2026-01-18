@@ -1,16 +1,97 @@
-if !exists('g:config')
-    let g:config = { 'style' : 'markdown' }
-endif
-
 let g:t = { 'valid': v:false }
-let g:i_separator = '|'
-let g:i_dash = '-'
-let g:default_alignment = 'l'
-let g:multiline_cells_enable = v:false
-let g:multiline_cells_presever_indentation = v:false
+
+let s:table_default_config = {
+            \ 'style': 'default',
+            \ 'options': {
+            \   'i_vertical': '|',
+            \   'i_horizontal': '-',
+            \   'default_alignment': 'l',
+            \   'multiline_cells_enable': v:true,
+            \   'multiline_cells_presever_indentation': v:true,
+            \ },
+            \ }
+
+let s:config = deepcopy(s:table_default_config)
+
+function! table#config#Config() abort
+    return s:config
+endfunction
 
 function! table#config#Style() abort
-    return table#style#Get(g:config.style)
+    if s:config.style ==# 'default'
+        return s:GeneratreDefaultStyle()
+    else 
+        return table#style#Get(s:config.style)
+    endif
+endfunction
+
+function! s:ValidateConfig(config) abort
+    for key in keys(a:config)
+        if !has_key(s:table_default_config, key)
+            throw 'Invalid configuration key: ' .. key
+        endif
+        if key ==# 'options'
+            for opt_key in keys(a:config.options)
+                if !has_key(s:table_default_config.options, opt_key)
+                    throw 'Invalid configuration option key: ' .. opt_key
+                endif
+            endfor
+        elseif key ==# 'style'
+            if !table#style#Exists(a:config.style)
+                throw 'Style "' . a:style . '" is not registered.'
+            endif
+        endif
+    endfor
+endfunction
+
+function! table#config#SetConfig(config) abort
+    call s:ValidateConfig(a:config)
+    if has_key(a:config, 'options')
+        call extend(s:config.options, a:config.options)
+    endif
+    if has_key(a:config, 'style')
+        let s:config.style = a:config.style
+    endif
+endfunction
+
+function! table#config#RestoreDefault() abort
+    call table#config#SetConfig(s:table_default_config)
+endfunction
+
+function! s:GeneratreDefaultStyle() abort
+    let vert  = table#config#Config().options.i_vertical
+    let horiz = table#config#Config().options.i_horizontal
+    let style = {
+                \ 'options' : {
+                \   'omit_left_border'     : v:false,
+                \   'omit_right_border'    : v:false,
+                \   'omit_top_border'      : v:false,
+                \   'omit_bottom_border'   : v:false,
+                \   'omit_separator_rows'  : v:false,
+                \ },
+                \ 'box_drawing' : {
+                \   'top_left'     : vert,
+                \   'top_right'    : vert,
+                \   'top_sep'      : vert,
+                \   'top_horiz'    : horiz,
+                \   'bottom_left'  : vert,
+                \   'bottom_right' : vert,
+                \   'bottom_sep'   : vert,
+                \   'bottom_horiz' : horiz,
+                \   'align_left'   : vert,
+                \   'align_right'  : vert,
+                \   'align_sep'    : vert,
+                \   'align_horiz'  : horiz,
+                \   'sep_left'     : vert,
+                \   'sep_right'    : vert,
+                \   'sep_sep'      : vert,
+                \   'sep_horiz'    : horiz,
+                \   'row_left'     : vert,
+                \   'row_right'    : vert,
+                \   'row_sep'      : vert,
+                \   }
+                \ }
+    return style
 endfunction
 
 function! table#config#GetBoxDrawingChars(type) abort
@@ -43,7 +124,7 @@ function! table#config#GetBoxDrawingChars(type) abort
     else
         throw 'unknown separator type: ' .. a:type
     endif
-    let left = table#config#Style().omit_left_border ? '' : left
-    let right = table#config#Style().omit_right_border ? '' : right
+    let left = table#config#Style().options.omit_left_border ? '' : left
+    let right = table#config#Style().options.omit_right_border ? '' : right
     return [left, right, sep, horiz]
 endfunction

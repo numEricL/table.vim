@@ -77,6 +77,8 @@ function! s:IsIncompleteTableLine(line) abort
     let cs = split(&commentstring, '%s')
     let cs_pattern = escape(trim(get(cs, 0, '')), '\')
     let cs_pattern = '\s\*\(' ..cs_pattern .. '\)\?\s\*'
+    let cfg_opts = table#config#Config().options
+    let i_vertical = cfg_opts.i_vertical
     for type in [ 'row', 'separator', 'top', 'bottom', 'alignment' ]
         let [ left, right, sep, horiz ] = table#config#GetBoxDrawingChars(type)
         if !empty(left) && (a:line =~# '\V\^' .. cs_pattern .. left)
@@ -85,7 +87,7 @@ function! s:IsIncompleteTableLine(line) abort
         if !empty(sep) && (a:line =~# '\V\^' .. cs_pattern .. sep)
             return v:true
         endif
-        if (a:line =~# '\V\^' .. cs_pattern .. g:i_separator)
+        if (a:line =~# '\V\^' .. cs_pattern .. i_vertical)
             return v:true
         endif
     endfor
@@ -133,46 +135,53 @@ endfunction
 
 function! s:BoxDrawingPatterns(type) abort
     let sep = table#config#GetBoxDrawingChars(a:type)
+    let cfg_opts = table#config#Config().options
     for i in range(3)
-        let sep[i] = table#util#AnyPattern([sep[i], g:i_separator])
+        let sep[i] = table#util#AnyPattern([sep[i], cfg_opts.i_vertical])
     endfor
     if a:type ==# 'alignment'
-        let sep[3] = table#util#AnyPattern([sep[i], g:i_dash, ':'])
+        let sep[3] = table#util#AnyPattern([sep[i], cfg_opts.i_horizontal, ':'])
     else
-        let sep[3] = table#util#AnyPattern([sep[i], g:i_dash])
+        let sep[3] = table#util#AnyPattern([sep[i], cfg_opts.i_horizontal])
     endif
     return sep
 endfunction
 
 function! table#parse#GeneralSeparatorPattern() abort
+    let box = table#config#Style().box_drawing
+    let cfg_opts = table#config#Config().options
+    let i_vertical = cfg_opts.i_vertical
     let separators = [
-                \ table#config#Style().box_drawing.top_left,
-                \ table#config#Style().box_drawing.top_right,
-                \ table#config#Style().box_drawing.top_sep,
-                \ table#config#Style().box_drawing.bottom_left,
-                \ table#config#Style().box_drawing.bottom_right,
-                \ table#config#Style().box_drawing.bottom_sep,
-                \ table#config#Style().box_drawing.align_left,
-                \ table#config#Style().box_drawing.align_right,
-                \ table#config#Style().box_drawing.align_sep,
-                \ table#config#Style().box_drawing.sep_left,
-                \ table#config#Style().box_drawing.sep_right,
-                \ table#config#Style().box_drawing.sep_sep,
-                \ table#config#Style().box_drawing.row_left,
-                \ table#config#Style().box_drawing.row_right,
-                \ table#config#Style().box_drawing.row_sep,
-                \ g:i_separator,
+                \ box.top_left,
+                \ box.top_right,
+                \ box.top_sep,
+                \ box.bottom_left,
+                \ box.bottom_right,
+                \ box.bottom_sep,
+                \ box.align_left,
+                \ box.align_right,
+                \ box.align_sep,
+                \ box.sep_left,
+                \ box.sep_right,
+                \ box.sep_sep,
+                \ box.row_left,
+                \ box.row_right,
+                \ box.row_sep,
+                \ i_vertical,
                 \ ]
     return table#util#AnyPattern(separators)
 endfunction
 
 function! table#parse#GeneralHorizPattern() abort
+    let box = table#config#Style().box_drawing
+    let cfg_opts = table#config#Config().options
+    let i_horizontal = cfg_opts.i_horizontal
     let horizs = [
-                \ table#config#Style().box_drawing.top_horiz,
-                \ table#config#Style().box_drawing.bottom_horiz,
-                \ table#config#Style().box_drawing.align_horiz,
-                \ table#config#Style().box_drawing.sep_horiz,
-                \ g:i_dash,
+                \ box.top_horiz,
+                \ box.bottom_horiz,
+                \ box.align_horiz,
+                \ box.sep_horiz,
+                \ i_horizontal,
                 \ ]
     return table#util#AnyPattern(horizs)
 endfunction
