@@ -1,19 +1,23 @@
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        echohl ErrorMsg
-        echom "Table: subcommand required (SetOption, SetStyleOption, SetStyle)"
-        echohl None
+        echom 'Available subcommands: Option, Style, StyleOption'
+        echom ' '
+        " display current options
+        call s:SetTableOption([])
+        echom "Table style = " .. table#config#Config().style
+        " display current style options
+        call s:SetTableStyleOption([])
         return
     endif
 
     let subcommand = a:1
     let args = a:000[1:]
 
-    if subcommand ==# 'SetOption'
+    if subcommand ==# 'Option'
         call s:SetTableOption(args)
-    elseif subcommand ==# 'SetStyleOption'
+    elseif subcommand ==# 'StyleOption'
         call s:SetTableStyleOption(args)
-    elseif subcommand ==# 'SetStyle'
+    elseif subcommand ==# 'Style'
         call s:SetStyle(args)
     else
         echohl ErrorMsg
@@ -29,24 +33,24 @@ function! table#commands#Complete(ArgLead, CmdLine, CursorPos) abort
     " If no args yet or completing the first arg (subcommand)
     if num_args <= 1
         " Complete subcommand names
-        let subcommands = ['SetOption', 'SetStyleOption', 'SetStyle']
+        let subcommands = ['Option', 'StyleOption', 'Style']
         return filter(copy(subcommands), 'v:val =~? "^" .. a:ArgLead')
     endif
 
     let subcommand = parts[1]
 
-    if subcommand ==# 'SetOption'
-        " Delegate to SetOption completion
+    if subcommand ==# 'Option'
+        " Delegate to Option completion
         let fake_cmdline = 'TableOption ' .. join(parts[2:], ' ')
         let fake_pos = a:CursorPos - (len(subcommand) + 1 - len('TableOption'))
         return s:CompleteTableOption(a:ArgLead, fake_cmdline, fake_pos)
-    elseif subcommand ==# 'SetStyle'
-        " Delegate to SetStyle completion
+    elseif subcommand ==# 'Style'
+        " Delegate to Style completion
         let fake_cmdline = 'TableStyle ' .. join(parts[2:], ' ')
         let fake_pos = a:CursorPos - (len(subcommand) + 1 - len('TableStyle'))
         return s:CompleteTableStyle(a:ArgLead, fake_cmdline, fake_pos)
-    elseif subcommand ==# 'SetStyleOption'
-        " Delegate to SetStyleOption completion
+    elseif subcommand ==# 'StyleOption'
+        " Delegate to StyleOption completion
         let fake_cmdline = 'TableStyleOption ' .. join(parts[2:], ' ')
         let fake_pos = a:CursorPos - (len(subcommand) + 1 - len('TableStyleOption'))
         return s:CompleteTableStyleOption(a:ArgLead, fake_cmdline, fake_pos)
