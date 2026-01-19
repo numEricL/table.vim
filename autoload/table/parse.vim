@@ -27,7 +27,7 @@ function! table#parse#ParseLine(linenr) abort
     else
         let [ sep_pos, type ] = s:ParseIncomplete(line_stripped, seps, sep_pos)
     endif
-    let offset = strlen(prefix)
+    let offset = prefix[2]
     call map(sep_pos, '[v:val[0] + offset, v:val[1] + offset]')
     let col_start = strdisplaywidth(strpart(line, 0, sep_pos[0][0]))
     return [ cells, col_start, sep_pos, type ]
@@ -198,28 +198,20 @@ function! s:CommentAwareTrim(line) abort
     if empty(cs)
         return [a:line, '', '']
     endif
-    let cs_left = trim(get(cs, 0, ''))
-    let cs_right = trim(get(cs, 1, ''))
     let line = a:line
-    let prefix = ''
-    let suffix = ''
     
-    if !empty(cs_left)
-        let cs_pattern = '\V\^\s\*\(' .. escape(cs_left, '\') .. '\)\?\s\*'
-        let match = matchstrpos(line, cs_pattern)
-        if match[1] != -1
-            let prefix = match[0]
-            let line = strpart(line, match[2])
-        endif
+    let cs_left = trim(get(cs, 0, ''))
+    let cs_pattern = '\V\^\s\*\(' .. escape(cs_left, '\') .. '\)\?\s\*'
+    let prefix = matchstrpos(line, cs_pattern)
+    if prefix[1] != -1
+        let line = strpart(line, prefix[2])
     endif
-    
-    if !empty(cs_right)
-        let cs_pattern = '\V\s\*' .. escape(cs_right, '\') .. '\s\*\$'
-        let match = matchstrpos(line, cs_pattern)
-        if match[1] != -1
-            let suffix = match[0]
-            let line = strpart(line, 0, match[1])
-        endif
+
+    let cs_right = trim(get(cs, 1, ''))
+    let cs_pattern = '\V\s\*' .. escape(cs_right, '\') .. '\s\*\$'
+    let suffix = matchstrpos(line, cs_pattern)
+    if suffix[1] != -1
+        let line = strpart(line, 0, suffix[1])
     endif
     
     return [line, prefix, suffix]
