@@ -19,7 +19,7 @@ endfunction
 
 function! table#parse#ParseLine(linenr) abort
     let line = getline(a:linenr)
-    let [line_stripped, cs_prefix, cs_suffix] = s:CommentAwareTrim(line)
+    let [line_stripped, prefix, _] = s:CommentAwareTrim(line)
     let [cells, sep_pos, seps] = s:SplitPos(line_stripped)
     let type = ''
     if !empty(cells)
@@ -27,8 +27,8 @@ function! table#parse#ParseLine(linenr) abort
     else
         let [ sep_pos, type ] = s:ParseIncomplete(line_stripped, seps, sep_pos)
     endif
-    let cs_offset = strlen(cs_prefix)
-    call map(sep_pos, '[v:val[0] + cs_offset, v:val[1] + cs_offset]')
+    let offset = strlen(prefix)
+    call map(sep_pos, '[v:val[0] + offset, v:val[1] + offset]')
     let col_start = strdisplaywidth(strpart(line, 0, sep_pos[0][0]))
     return [ cells, col_start, sep_pos, type ]
 endfunction
