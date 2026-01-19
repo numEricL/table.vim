@@ -13,11 +13,11 @@ function! table#commands#TableCommand(...) abort
     let subcommand = a:1
     let args = a:000[1:]
 
-    if subcommand ==# 'Option'
+    if subcommand ==? 'Option'
         call s:SetTableOption(args)
-    elseif subcommand ==# 'StyleOption'
+    elseif subcommand ==? 'StyleOption'
         call s:SetTableStyleOption(args)
-    elseif subcommand ==# 'Style'
+    elseif subcommand ==? 'Style'
         call s:SetTableStyle(args)
     else
         echohl ErrorMsg
@@ -37,23 +37,15 @@ function! table#commands#Complete(ArgLead, CmdLine, CursorPos) abort
         return filter(copy(subcommands), 'v:val =~? "^" .. a:ArgLead')
     endif
 
+    " fake cmdline is the cmdline starting from the subcommand (i.e. no Table)
     let subcommand = parts[1]
-
-    if subcommand ==# 'Option'
-        " Delegate to Option completion
-        let fake_cmdline = 'TableOption ' .. join(parts[2:], ' ')
-        let fake_pos = a:CursorPos - (len(subcommand) + 1 - len('TableOption'))
-        return s:CompleteTableOption(a:ArgLead, fake_cmdline, fake_pos)
-    elseif subcommand ==# 'Style'
-        " Delegate to Style completion
-        let fake_cmdline = 'TableStyle ' .. join(parts[2:], ' ')
-        let fake_pos = a:CursorPos - (len(subcommand) + 1 - len('TableStyle'))
-        return s:CompleteTableStyle(a:ArgLead, fake_cmdline, fake_pos)
-    elseif subcommand ==# 'StyleOption'
-        " Delegate to StyleOption completion
-        let fake_cmdline = 'TableStyleOption ' .. join(parts[2:], ' ')
-        let fake_pos = a:CursorPos - (len(subcommand) + 1 - len('TableStyleOption'))
-        return s:CompleteTableStyleOption(a:ArgLead, fake_cmdline, fake_pos)
+    let fake_cmdline = join([subcommand] + parts[2:], ' ')
+    if subcommand ==? 'Option'
+        return s:CompleteTableOption(a:ArgLead, fake_cmdline, a:CursorPos)
+    elseif subcommand ==? 'Style'
+        return s:CompleteTableStyle(a:ArgLead, fake_cmdline, a:CursorPos)
+    elseif subcommand ==? 'StyleOption'
+        return s:CompleteTableStyleOption(a:ArgLead, fake_cmdline, a:CursorPos)
     endif
 
     return []
