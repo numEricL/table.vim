@@ -71,11 +71,16 @@ function! s:DrawLine(placement, pos_id, line) abort
         return a:pos_id
     endif
     let [col_start, col_end] = [-1, -1]
+    let display_col_start = (table#config#Style().options.omit_left_border) ? a:placement.min_col_start : a:placement.max_col_start
+
     if a:pos_id == len(a:placement.positions)
         let linenr = a:placement.row_start + len(a:placement.positions) - 1
         call s:AppendConditionalCommentLine(linenr)
-        let [col_start, col_end] = [a:placement.max_col_start, a:placement.max_col_start]
+        let [col_start, col_end] = [display_col_start, display_col_start]
         call add(a:placement.positions, {})
+    elseif table#config#Style().options.omit_left_border
+        let col_start = display_col_start
+        let col_end   = a:placement.positions[a:pos_id]['separator_pos'][-1][1]
     else
         let col_start = a:placement.positions[a:pos_id]['separator_pos'][0][0]
         let col_end   = a:placement.positions[a:pos_id]['separator_pos'][-1][1]
@@ -84,7 +89,7 @@ function! s:DrawLine(placement, pos_id, line) abort
     let linenr = a:placement.row_start + a:pos_id
     let current_line = getline(linenr)
     let newline = strpart(current_line, 0, col_start)
-    let newline ..= repeat(' ', a:placement.max_col_start - strdisplaywidth(newline))
+    let newline ..= repeat(' ', display_col_start - strdisplaywidth(newline))
     let newline ..= a:line
     let newline ..= strpart(current_line, col_end)
     if newline !=# current_line
