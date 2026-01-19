@@ -19,14 +19,17 @@ endfunction
 
 function! table#parse#ParseLine(linenr) abort
     let line = getline(a:linenr)
-    let [cells, sep_pos, seps] = s:SplitPos(line)
+    let [line_stripped, cs_prefix, cs_suffix] = s:StripCommentString(line)
+    let [cells, sep_pos, seps] = s:SplitPos(line_stripped)
     let type = ''
     if !empty(cells)
         let type = s:LineType(cells, seps)
     else
-        let [ sep_pos, type ] = s:ParseIncomplete(line, seps, sep_pos)
+        let [ sep_pos, type ] = s:ParseIncomplete(line_stripped, seps, sep_pos)
     endif
-    let col_start = strdisplaywidth(strpart(line, 0, sep_pos[0][1]))
+    let cs_offset = strlen(cs_prefix)
+    call map(sep_pos, '[v:val[0] + cs_offset, v:val[1] + cs_offset]')
+    let col_start = strdisplaywidth(strpart(line, 0, sep_pos[0][0]))
     return [ cells, col_start, sep_pos, type ]
 endfunction
 
@@ -190,7 +193,38 @@ function! table#parse#GeneralHorizPattern() abort
     return table#util#AnyPattern(horizs)
 endfunction
 
-"TODO: when border is omitted don't include commentstring in cells
+function! s:StripCommentString(line) abort
+    let cs = split(&commentstring, '%s')
+    if empty(cs)
+        return [a:line, '', '']
+    endif
+    let cs_left = trim(get(cs, 0, ''))
+    let cs_right = trim(get(cs, 1, ''))
+    let line = a:line
+    let prefix = ''
+    let suffix = ''
+    
+    if !empty(cs_left)
+        let cs_pattern = '\V\^\s\*' .. escape(cs_left, '\') .. '\s\*'
+        let match = matchstrpos(line, cs_pattern)
+        if match[1] != -1
+            let prefix = match[0]
+            let line = strpart(line, match[2])
+        endif
+    endif
+    
+    if !empty(cs_right)
+        let cs_pattern = '\V\s\*' .. escape(cs_right, '\') .. '\s\*\$'
+        let match = matchstrpos(line, cs_pattern)
+        if match[1] != -1
+            let suffix = match[0]
+            let line = strpart(line, 0, match[1])
+        endif
+    endif
+    
+    return [line, prefix, suffix]
+endfunction
+
 function! s:SplitPos(line) abort
     let pattern = table#parse#GeneralSeparatorPattern()
     let match_list = []

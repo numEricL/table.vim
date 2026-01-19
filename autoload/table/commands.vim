@@ -1,10 +1,10 @@
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        echom 'Available subcommands: Option, Style, StyleOption'
-        echom ' '
+        echomsg 'Available subcommands: Option, Style, StyleOption'
+        echomsg ' '
         " display current options
         call s:SetTableOption([])
-        echom "Table style = " .. table#config#Config().style
+        echomsg "Table style = " .. table#config#Config().style
         " display current style options
         call s:SetTableStyleOption([])
         return
@@ -18,10 +18,10 @@ function! table#commands#TableCommand(...) abort
     elseif subcommand ==# 'StyleOption'
         call s:SetTableStyleOption(args)
     elseif subcommand ==# 'Style'
-        call s:SetStyle(args)
+        call s:SetTableStyle(args)
     else
         echohl ErrorMsg
-        echom "Table: unknown subcommand '" .. subcommand .. "'"
+        echomsg "Table: unknown subcommand '" .. subcommand .. "'"
         echohl None
     endif
 endfunction
@@ -71,16 +71,15 @@ function! s:ConvertValue(value) abort
     endif
 endfunction
 
-
 function! s:SetTableOption(args) abort
     let cfg_opts = table#config#Config().options
     if len(a:args) == 0
-        echom "Table Options:"
+        echomsg "Table Options:"
         let maxlen = max(map(keys(cfg_opts), 'len(v:val)'))
         let sorted_items = sort(items(cfg_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
         for [key, value] in sorted_items
             let padded_key = table#util#Pad(key, maxlen)
-            echom '  ' .. padded_key .. ' = ' .. string(value)
+            echomsg '  ' .. padded_key .. ' = ' .. string(value)
         endfor
         return
     endif
@@ -93,7 +92,7 @@ function! s:SetTableOption(args) abort
     call table#config#SetConfig({ 'options': { key : value } })
 endfunction
 
-function! s:SetStyle(args) abort
+function! s:SetTableStyle(args) abort
     if len(a:args) == 0
         echo 'Current style: ' .. table#config#Config().style
         return
@@ -104,12 +103,12 @@ endfunction
 function! s:SetTableStyleOption(args) abort
     let style_opts = table#config#Style().options
     if len(a:args) == 0
-        echom "Table Style Options:"
+        echomsg "Table Style Options:"
         let maxlen = max(map(keys(style_opts), 'len(v:val)'))
         let sorted_items = sort(items(style_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
         for [key, value] in sorted_items
             let padded_key = table#util#Pad(key, maxlen)
-            echom '  ' .. padded_key .. ' = ' .. string(value)
+            echomsg '  ' .. padded_key .. ' = ' .. string(value)
         endfor
         return
     endif

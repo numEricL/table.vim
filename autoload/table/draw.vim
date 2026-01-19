@@ -84,7 +84,7 @@ function! s:DrawLine(placement, pos_id, line) abort
     let linenr = a:placement.row_start + a:pos_id
     let current_line = getline(linenr)
     let newline = strpart(current_line, 0, col_start)
-    let newline ..= repeat(' ', a:placement.max_col_start-1 - strdisplaywidth(newline))
+    let newline ..= repeat(' ', a:placement.max_col_start - strdisplaywidth(newline))
     let newline ..= a:line
     let newline ..= strpart(current_line, col_end)
     if newline !=# current_line
@@ -194,7 +194,7 @@ function! s:ClearRemaining(placement, pos_id) abort
     for id in reverse(range(a:pos_id, len(a:placement.positions)-1))
         let linenr = a:placement.row_start + id
         let line = getline(linenr)
-        let newline = strpart(line, 0, a:placement.max_col_start - 1)
+        let newline = strpart(line, 0, a:placement.max_col_start)
         let newline ..= strpart(line, a:placement.positions[id]['separator_pos'][-1][1])
         if newline =~# '\V\^' .. pattern .. '\*\$'
             call deletebufline('%', linenr)

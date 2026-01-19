@@ -16,9 +16,6 @@ function! table#config#Config() abort
 endfunction
 
 function! table#config#Style() abort
-    if s:config.style ==# 'default' && !table#style#Exists('default')
-        call table#style#Register('default', s:GeneratreDefaultStyle())
-    endif
     return table#style#Get(s:config.style)
 endfunction
 
@@ -33,9 +30,9 @@ function! s:ValidateConfig(config) abort
                     throw 'Invalid configuration option key: ' .. opt_key
                 endif
             endfor
-        elseif key ==# 'style'
+        elseif key ==# 'style' && a:config.style !=# 'default'
             if !table#style#Exists(a:config.style)
-                throw 'Style "' . a:style . '" is not registered.'
+                throw 'Style "' . a:config.style . '" is not registered.'
             endif
         endif
     endfor
@@ -47,6 +44,9 @@ function! table#config#SetConfig(config) abort
         call extend(s:config.options, a:config.options)
     endif
     if has_key(a:config, 'style')
+        if a:config.style ==# 'default' && !table#style#Exists('default')
+            call table#style#Register('default', s:GeneratreDefaultStyle())
+        endif
         let s:config.style = a:config.style
     endif
 endfunction
