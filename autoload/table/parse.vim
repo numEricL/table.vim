@@ -190,13 +190,19 @@ function! table#parse#GeneralHorizPattern() abort
     return table#util#AnyPattern(horizs)
 endfunction
 
+"TODO: when border is omitted don't include commentstring in cells
 function! s:SplitPos(line) abort
     let pattern = table#parse#GeneralSeparatorPattern()
     let match_list = []
     let sep_list = []
     let sep_pos_list = []
+    let style_opts = table#config#Style().options
     let match1 = matchstrpos(a:line, pattern)
     if match1[1] != -1
+        if match1[1] > 0 && style_opts.omit_left_border
+            call add(match_list, strpart(a:line, 0, match1[1]))
+            call add(sep_pos_list, [0, 0])
+        endif
         call add(sep_list, match1[0])
         call add(sep_pos_list, [match1[1], match1[2]])
         let match2 = matchstrpos(a:line, pattern, match1[2])
@@ -207,6 +213,10 @@ function! s:SplitPos(line) abort
             let match1 = match2
             let match2 = matchstrpos(a:line, pattern, match1[2])
         endwhile
+        if match1[2] < len(a:line) && style_opts.omit_right_border
+            call add(match_list, strpart(a:line, match1[2]))
+            call add(sep_pos_list, [len(a:line), len(a:line)])
+        endif
     endif
     return [ match_list, sep_pos_list, sep_list ]
 endfunction

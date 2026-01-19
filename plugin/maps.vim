@@ -90,3 +90,9 @@ xmap <expr> <c-h> table#IsTable(line('.')) ? "\<plug>(table_move_left)"  : "\<c-
 xmap <expr> <c-l> table#IsTable(line('.')) ? "\<plug>(table_move_right)" : "\<c-l>"
 xmap <expr> <c-k> table#IsTable(line('.')) ? "\<plug>(table_move_up)"    : "\<c-k>"
 xmap <expr> <c-j> table#IsTable(line('.')) ? "\<plug>(table_move_down)"  : "\<c-j>"
+
+Table Style markdown
+Table StyleOption omit_left_border 1
+Table StyleOption omit_right_border 1
+Table Option multiline_cells 0
+
