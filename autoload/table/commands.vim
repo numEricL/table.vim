@@ -1,6 +1,6 @@
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        echomsg 'Available subcommands: Option, Style, StyleOption'
+        echomsg 'Available subcommands: Option, Style, StyleOption, RegisterStyle'
         echomsg ' '
         " display current options
         call s:SetTableOption([])
@@ -19,6 +19,8 @@ function! table#commands#TableCommand(...) abort
         call s:SetTableStyleOption(args)
     elseif subcommand ==? 'Style'
         call s:SetTableStyle(args)
+    elseif subcommand ==? 'RegisterStyle'
+        call s:RegisterTableStyle(args)
     else
         echohl ErrorMsg
         echomsg "Table: unknown subcommand '" .. subcommand .. "'"
@@ -33,7 +35,7 @@ function! table#commands#Complete(ArgLead, CmdLine, CursorPos) abort
     " If no args yet or completing the first arg (subcommand)
     if num_args <= 1
         " Complete subcommand names
-        let subcommands = ['Option', 'StyleOption', 'Style']
+        let subcommands = ['Option', 'StyleOption', 'Style', 'RegisterStyle']
         return filter(copy(subcommands), 'v:val =~? "^" .. a:ArgLead')
     endif
 
@@ -87,9 +89,25 @@ endfunction
 function! s:SetTableStyle(args) abort
     if len(a:args) == 0
         echo 'Current style: ' .. table#config#Config().style
+        let styles = ['default'] + table#style#GetNames()
+        echo 'Available styles: ' .. join(styles, ', ')
         return
     endif
     call table#config#SetConfig({ 'style': a:args[0] })
+endfunction
+
+function! s:RegisterTableStyle(args) abort
+    if len(a:args) == 0
+        echohl ErrorMsg
+        echomsg 'RegisterStyle: style name required'
+        echohl None
+        return
+    endif
+    let style_name = a:args[0]
+    let current_style = deepcopy(table#config#Style())
+    call table#style#Register(style_name, current_style)
+    call table#config#SetConfig({ 'style': style_name })
+    echomsg 'Registered style "' .. style_name .. '"'
 endfunction
 
 function! s:SetTableStyleOption(args) abort
