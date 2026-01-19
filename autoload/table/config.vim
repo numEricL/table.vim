@@ -1,13 +1,11 @@
-let g:t = { 'valid': v:false }
-
 let s:table_default_config = {
             \ 'style': 'default',
             \ 'options': {
             \   'i_vertical': '|',
             \   'i_horizontal': '-',
             \   'default_alignment': 'l',
-            \   'multiline_cells_enable': v:true,
-            \   'multiline_cells_presever_indentation': v:true,
+            \   'multiline_cells': v:true,
+            \   'multiline_preserve_indentation': v:true,
             \ },
             \ }
 
@@ -18,11 +16,10 @@ function! table#config#Config() abort
 endfunction
 
 function! table#config#Style() abort
-    if s:config.style ==# 'default'
-        return s:GeneratreDefaultStyle()
-    else 
-        return table#style#Get(s:config.style)
+    if s:config.style ==# 'default' && !table#style#Exists('default')
+        call table#style#Register('default', s:GeneratreDefaultStyle())
     endif
+    return table#style#Get(s:config.style)
 endfunction
 
 function! s:ValidateConfig(config) abort

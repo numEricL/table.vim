@@ -59,6 +59,18 @@ function! table#commands#Complete(ArgLead, CmdLine, CursorPos) abort
     return []
 endfunction
 
+function! s:ConvertValue(value) abort
+    if a:value ==? 'v:true' || a:value ==? 'true' || a:value ==# '1'
+        return v:true
+    elseif a:value ==? 'v:false' || a:value ==? 'false' || a:value ==# '0'
+        return v:false
+    elseif a:value =~# '^\d\+$'
+        return str2nr(a:value)
+    else
+        return a:value
+    endif
+endfunction
+
 
 function! s:SetTableOption(args) abort
     let cfg_opts = table#config#Config().options
@@ -77,7 +89,7 @@ function! s:SetTableOption(args) abort
         echo key .. ' = ' .. string(cfg_opts[key])
         return
     endif
-    let value = a:args[1]
+    let value = s:ConvertValue(a:args[1])
     call table#config#SetConfig({ 'options': { key : value } })
 endfunction
 
@@ -106,7 +118,7 @@ function! s:SetTableStyleOption(args) abort
         echo key .. ' = ' .. string(style_opts[key])
         return
     endif
-    let value = a:args[1]
+    let value = s:ConvertValue(a:args[1])
     let style_opts[key] = value
 endfunction
 

@@ -47,7 +47,7 @@ function! s:TrimCells(table) abort
     let cfg_opts = table#config#Config().options
     for row in a:table.rows
         for j in range(len(row.cells))
-            if cfg_opts.multiline_cells_presever_indentation
+            if cfg_opts.multiline_preserve_indentation
                 call s:TrimBlock(row.cells[j], a:table.ColAlign(j))
             else
                 for i in range(len(row.cells[j]))

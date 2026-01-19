@@ -59,6 +59,7 @@ function! table#table#Get(linenr) abort
         endif
     endfor
     let table.col_widths = table#util#ComputeWidths(table)
+    " TEMP: for debugging
     let g:t = table
     return table
 endfunction
@@ -108,7 +109,7 @@ endfunction
 
 function! s:TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
     let cfg_opts = table#config#Config().options
-    if !cfg_opts.multiline_cells_enable ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
+    if !cfg_opts.multiline_cells ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
         let cells = empty(a:line_cells)? [['']] : map(copy(a:line_cells), '[v:val]')
         let row = {
                     \ 'cells'         : cells,

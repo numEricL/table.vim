@@ -15,11 +15,11 @@ function! table#ToDefault(linenr) abort
     let cfg = table#config#Config()
     let old_style = cfg.style
 
-    let cfg.style = 'default'
+    call table#config#SetConfig({ 'style': 'default' })
     call table#format#Align(table)
     call table#draw#Complete(table)
 
-    let cfg.style = old_style
+    call table#config#SetConfig({ 'style': old_style })
     call table#cursor#SetCoord(table, coord)
 endfunction
 

@@ -10,7 +10,7 @@ function table#style#Get(style) abort
 endfunction
 
 function table#style#Exists(style) abort
-    return a:style ==# 'default' || has_key(s:styles, a:style)
+    return has_key(s:styles, a:style)
 endfunction
 
 function table#style#GetStyleNames() abort

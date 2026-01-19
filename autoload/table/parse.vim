@@ -134,6 +134,7 @@ function! s:ParseIncomplete(line, seps, sep_pos) abort
 endfunction
 
 function! s:BoxDrawingPatterns(type) abort
+    " sep = [ left, right, sep, horiz ]
     let sep = table#config#GetBoxDrawingChars(a:type)
     let cfg_opts = table#config#Config().options
     for i in range(3)
@@ -144,6 +145,9 @@ function! s:BoxDrawingPatterns(type) abort
     else
         let sep[3] = table#util#AnyPattern([sep[i], cfg_opts.i_horizontal])
     endif
+    let style_opts = table#config#Style().options
+    let sep[0] = style_opts.omit_left_border  ? '' : sep[0]
+    let sep[1] = style_opts.omit_right_border ? '' : sep[1]
     return sep
 endfunction
 
