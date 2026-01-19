@@ -13,7 +13,7 @@ function table#style#Exists(style) abort
     return has_key(s:styles, a:style)
 endfunction
 
-function table#style#GetStyleNames() abort
+function table#style#GetNames() abort
     return keys(s:styles)
 endfunction
 

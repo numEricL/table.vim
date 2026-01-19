@@ -140,7 +140,7 @@ function! s:CompleteTableOption(ArgLead, CmdLine, CursorPos) abort
 endfunction
 
 function! s:CompleteTableStyle(ArgLead, CmdLine, CursorPos) abort
-    let styles = ['default'] + table#style#GetStyleNames()
+    let styles = ['default'] + table#style#GetNames()
     return filter(copy(styles), 'v:val =~? "^" .. a:ArgLead')
 endfunction
 

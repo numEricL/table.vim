@@ -10,13 +10,17 @@ let s:table_default_config = {
             \ }
 
 let s:config = deepcopy(s:table_default_config)
+let s:style_cache = {}
 
 function! table#config#Config() abort
     return s:config
 endfunction
 
 function! table#config#Style() abort
-    return table#style#Get(s:config.style)
+    if empty(s:style_cache)
+        let s:style_cache = deepcopy(table#style#Get(s:config.style))
+    endif
+    return s:style_cache
 endfunction
 
 function! s:ValidateConfig(config) abort
@@ -48,6 +52,7 @@ function! table#config#SetConfig(config) abort
             call table#style#Register('default', s:GeneratreDefaultStyle())
         endif
         let s:config.style = a:config.style
+        let s:style_cache = {}
     endif
 endfunction
 
