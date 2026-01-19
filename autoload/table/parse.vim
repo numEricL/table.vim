@@ -19,7 +19,7 @@ endfunction
 
 function! table#parse#ParseLine(linenr) abort
     let line = getline(a:linenr)
-    let [line_stripped, cs_prefix, cs_suffix] = s:StripCommentString(line)
+    let [line_stripped, cs_prefix, cs_suffix] = s:CommentAwareTrim(line)
     let [cells, sep_pos, seps] = s:SplitPos(line_stripped)
     let type = ''
     if !empty(cells)
@@ -193,7 +193,7 @@ function! table#parse#GeneralHorizPattern() abort
     return table#util#AnyPattern(horizs)
 endfunction
 
-function! s:StripCommentString(line) abort
+function! s:CommentAwareTrim(line) abort
     let cs = split(&commentstring, '%s')
     if empty(cs)
         return [a:line, '', '']
@@ -205,7 +205,7 @@ function! s:StripCommentString(line) abort
     let suffix = ''
     
     if !empty(cs_left)
-        let cs_pattern = '\V\^\s\*' .. escape(cs_left, '\') .. '\s\*'
+        let cs_pattern = '\V\^\s\*\(' .. escape(cs_left, '\') .. '\)\?\s\*'
         let match = matchstrpos(line, cs_pattern)
         if match[1] != -1
             let prefix = match[0]
