@@ -225,9 +225,14 @@ function! s:SplitPos(line) abort
     let style_opts = table#config#Style().options
     let match1 = matchstrpos(a:line, pattern)
     if match1[1] != -1
-        if match1[1] > 0 && style_opts.omit_left_border
-            call add(match_list, strpart(a:line, 0, match1[1]))
-            call add(sep_pos_list, [0, 0])
+        if style_opts.omit_left_border
+            if match1[1] > 0
+                call add(match_list, strpart(a:line, 0, match1[1]))
+                call add(sep_pos_list, [0, 0])
+            elseif match1[1] == 0
+                call add(match_list, '')
+                call add(sep_pos_list, [0, 0])
+            endif
         endif
         call add(sep_list, match1[0])
         call add(sep_pos_list, [match1[1], match1[2]])
@@ -239,9 +244,14 @@ function! s:SplitPos(line) abort
             let match1 = match2
             let match2 = matchstrpos(a:line, pattern, match1[2])
         endwhile
-        if match1[2] < len(a:line) && style_opts.omit_right_border
-            call add(match_list, strpart(a:line, match1[2]))
-            call add(sep_pos_list, [len(a:line), len(a:line)])
+        if style_opts.omit_right_border
+            if match1[2] < len(a:line)
+                call add(match_list, strpart(a:line, match1[2]))
+                call add(sep_pos_list, [len(a:line), len(a:line)])
+            elseif match1[2] == len(a:line)
+                call add(match_list, '')
+                call add(sep_pos_list, [len(a:line), len(a:line)])
+            endif
         endif
     endif
     return [ match_list, sep_pos_list, sep_list ]
