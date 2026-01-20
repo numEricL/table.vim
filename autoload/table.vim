@@ -13,13 +13,14 @@ function! table#ToDefault(linenr) abort
     endif
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
     let cfg = table#config#Config()
-    let old_style = cfg.style
+    let style = table#config#Style()
 
     call table#config#SetConfig({ 'style': 'default' })
     call table#format#Align(table)
     call table#draw#Complete(table)
 
-    call table#config#SetConfig({ 'style': old_style })
+    call table#config#SetConfig(cfg)
+    call table#config#SetStyle(style)
     call table#cursor#SetCoord(table, coord)
 endfunction
 

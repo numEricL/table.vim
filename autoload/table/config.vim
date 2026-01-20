@@ -56,6 +56,10 @@ function! table#config#SetConfig(config) abort
     endif
 endfunction
 
+function! table#config#SetStyle(style_dict) abort
+    let s:style_cache = deepcopy(a:style_dict)
+endfunction
+
 function! table#config#RestoreDefault() abort
     call table#config#SetConfig(s:table_default_config)
 endfunction
