@@ -190,11 +190,11 @@ endfunction
 
 function! s:AppendConditionalCommentLine(linenr) abort
     let cs = split(&commentstring, '%s')
-    let line = getline(a:linenr)
     let found = v:false
-    let match = []
     if len(cs) > 0
-        let match = matchstrpos(line, '\V\^ \*' .. escape(cs[0], '\'))
+        let line = getline(a:linenr)
+        let cs_pattern = table#util#CommentStringPattern()[0]
+        let match = matchstrpos(line, '\V\^' .. cs_pattern)
         let found = match[1] != -1
     endif
     let new_line = found? cs[0] : ''
@@ -202,16 +202,13 @@ function! s:AppendConditionalCommentLine(linenr) abort
 endfunction
 
 function! s:ClearRemaining(placement, pos_id) abort
-    let cs = split(&commentstring, '%s')
-    call map(cs, 'trim(v:val)')
-    let pattern = table#util#AnyPattern(cs + ['\s'])
-
+    let [cs_left, cs_right] = table#util#CommentStringPattern()
     for id in reverse(range(a:pos_id, len(a:placement.positions)-1))
         let linenr = a:placement.row_start + id
         let line = getline(linenr)
         let newline = strpart(line, 0, a:placement.max_col_start)
         let newline ..= strpart(line, a:placement.positions[id]['separator_pos'][-1][1])
-        if newline =~# '\V\^' .. pattern .. '\*\$'
+        if newline =~# '\V\^' .. cs_left .. cs_right .. '\$'
             call deletebufline('%', linenr)
         else
             call setline(linenr, newline)

@@ -50,9 +50,7 @@ function! table#parse#FindTableRange(linenr) abort
 endfunction
 
 function! s:IsTableLine(line) abort
-    let cs = split(&commentstring, '%s')
-    let cs_pattern = escape(trim(get(cs, 0, '')), '\')
-    let cs_pattern = '\s\*\(' ..cs_pattern .. '\)\?\s\*'
+    let cs_pattern = table#util#CommentStringPattern()[0]
     let is_table = v:false
     for type in [ 'row', 'separator', 'alignment','top', 'bottom' ]
         let [ left, right, sep, horiz ] = s:BoxDrawingPatterns(type)
@@ -78,9 +76,7 @@ function! s:IsTableLine(line) abort
 endfunction
 
 function! s:IsIncompleteTableLine(line) abort
-    let cs = split(&commentstring, '%s')
-    let cs_pattern = escape(trim(get(cs, 0, '')), '\')
-    let cs_pattern = '\s\*\(' ..cs_pattern .. '\)\?\s\*'
+    let cs_pattern = table#util#CommentStringPattern()[0]
     let cfg_opts = table#config#Config().options
     let i_vertical = cfg_opts.i_vertical
     for type in [ 'row', 'separator', 'top', 'bottom', 'alignment' ]
@@ -201,15 +197,13 @@ function! s:CommentAwareTrim(line) abort
     endif
     let line = a:line
     
-    let cs_left = trim(get(cs, 0, ''))
-    let cs_pattern = '\V\^\s\*\(' .. escape(cs_left, '\') .. '\)\?\s\*'
+    let cs_pattern = '\V\^' .. table#util#CommentStringPattern()[0]
     let prefix = matchstrpos(line, cs_pattern)
     if prefix[1] != -1
         let line = strpart(line, prefix[2])
     endif
 
-    let cs_right = trim(get(cs, 1, ''))
-    let cs_pattern = '\V\s\*' .. escape(cs_right, '\') .. '\s\*\$'
+    let cs_pattern = '\V' .. table#util#CommentStringPattern()[1] .. '\$'
     let suffix = matchstrpos(line, cs_pattern)
     if suffix[1] != -1
         let line = strpart(line, 0, suffix[1])
