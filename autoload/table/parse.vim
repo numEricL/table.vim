@@ -21,6 +21,7 @@ function! table#parse#ParseLine(linenr) abort
     let line = getline(a:linenr)
     let [line_stripped, prefix, _] = s:CommentAwareTrim(line)
     let [cells, sep_pos, seps] = s:SplitPos(line_stripped)
+    let [cells, sep_pos] = s:HandleOmittedBorders(line_stripped, cells, sep_pos)
     let type = ''
     if !empty(cells)
         let type = s:LineType(cells, seps)
@@ -222,18 +223,8 @@ function! s:SplitPos(line) abort
     let match_list = []
     let sep_list = []
     let sep_pos_list = []
-    let style_opts = table#config#Style().options
     let match1 = matchstrpos(a:line, pattern)
     if match1[1] != -1
-        if style_opts.omit_left_border
-            if match1[1] > 0
-                call add(match_list, strpart(a:line, 0, match1[1]))
-                call add(sep_pos_list, [0, 0])
-            elseif match1[1] == 0
-                call add(match_list, '')
-                call add(sep_pos_list, [0, 0])
-            endif
-        endif
         call add(sep_list, match1[0])
         call add(sep_pos_list, [match1[1], match1[2]])
         let match2 = matchstrpos(a:line, pattern, match1[2])
@@ -244,17 +235,23 @@ function! s:SplitPos(line) abort
             let match1 = match2
             let match2 = matchstrpos(a:line, pattern, match1[2])
         endwhile
-        if style_opts.omit_right_border
-            if match1[2] < len(a:line)
-                call add(match_list, strpart(a:line, match1[2]))
-                call add(sep_pos_list, [len(a:line), len(a:line)])
-            elseif match1[2] == len(a:line)
-                call add(match_list, '')
-                call add(sep_pos_list, [len(a:line), len(a:line)])
-            endif
-        endif
     endif
     return [ match_list, sep_pos_list, sep_list ]
+endfunction
+
+function! s:HandleOmittedBorders(line, match_list, sep_pos_list) abort
+    let style_opts = table#config#Style().options
+    if !empty(a:sep_pos_list)
+        if style_opts.omit_left_border
+            call insert(a:match_list, strpart(a:line, 0, a:sep_pos_list[0][0]))
+            call insert(a:sep_pos_list, [0, 0])
+        endif
+        if style_opts.omit_right_border
+            call add(a:match_list, strpart(a:line, a:sep_pos_list[-1][1]))
+            call add(a:sep_pos_list, [len(a:line), len(a:line)])
+        endif
+    endif
+    return [a:match_list, a:sep_pos_list]
 endfunction
 
 function! table#parse#SeparatorAlignment(cell) abort

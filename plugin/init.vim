@@ -1,7 +1,7 @@
 Table Style markdown
 Table StyleOption omit_left_border 1
 Table StyleOption omit_right_border 1
-Table Option multiline_cells 0
+Table Option multiline_cells 1
 
 """
 nnoremap <leader><leader> <plug>(table_align)
