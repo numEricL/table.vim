@@ -1,9 +1,7 @@
 function! table#util#AnyPattern(list) abort
     let unique = uniq(sort(a:list))
     call filter(unique, '!empty(v:val)')
-    if len(unique) == 1
-        return escape(unique[0], '\')
-    endif
+    call map(unique, 'escape(v:val, "/\\")')
     let pattern = '\%(' .. unique[0]
     if len(unique) > 1
         for i in range(1, len(unique)-1)
@@ -12,6 +10,25 @@ function! table#util#AnyPattern(list) abort
     endif
     let pattern ..= '\)'
     return pattern
+endfunction
+
+function! table#util#CommentString() abort
+    let cs = split(&commentstring, '%s')
+    call map(cs, 'trim(v:val)')
+    return [get(cs, 0, ''), get(cs, 1, '')]
+endfunction
+
+function! table#util#CommentStringPattern() abort
+    let cs = table#util#CommentString()
+    for i in range(len(cs))
+        if !empty(cs[i])
+            let cs[i] = table#util#AnyPattern([cs[i]])
+            let cs[i] = '\s\*' .. cs[i] .. '\?\s\*'
+        else
+            let cs[i] = '\s\*'
+        endif
+    endfor
+    return cs
 endfunction
 
 function! table#util#SearchSorted(x, list) abort
@@ -81,7 +98,7 @@ function! s:CellStrDisplayWidth(cell) abort
     return width
 endfunction
 
-function table#util#Pad(string, length) abort
+function! table#util#Pad(string, length) abort
     let l:pad_len = a:length - strdisplaywidth(a:string)
     let l:pad = (l:pad_len > 0)? repeat(' ', l:pad_len) : ''
     return a:string .. l:pad

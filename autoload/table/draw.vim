@@ -27,6 +27,7 @@ function! table#draw#Complete(table) abort
         return
     endif
     let pos_id = 0
+    let cfg_opts = table#config#Config().options
     let style_opts = table#config#Style().options
 
     if !style_opts.omit_top_border
@@ -44,7 +45,7 @@ function! table#draw#Complete(table) abort
     if a:table.RowCount() > 2
         for row_id in range(1, a:table.RowCount() - 2)
             let pos_id = s:DrawRow(a:table, pos_id, row_id)
-            if !style_opts.omit_separator_rows
+            if cfg_opts.multiline_cells || !style_opts.omit_separator_rows
                 let num_cols = max([a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
                 let pos_id = s:DrawSeparator(a:table, pos_id, 'separator', num_cols)
             endif
@@ -71,11 +72,25 @@ function! s:DrawLine(placement, pos_id, line) abort
         return a:pos_id
     endif
     let [col_start, col_end] = [-1, -1]
+
+    let display_col_start = a:placement.max_col_start
+    let cfg_opts = table#config#Config().options
+    let style_opts = table#config#Style().options
+    if style_opts.omit_left_border
+        let display_col_start = a:placement.min_col_start
+        if a:placement.align_id == -1 && style_opts.omit_separator_rows && !cfg_opts.multiline_cells
+            let display_col_start -= 1
+        endif
+    endif
+
     if a:pos_id == len(a:placement.positions)
         let linenr = a:placement.row_start + len(a:placement.positions) - 1
         call s:AppendConditionalCommentLine(linenr)
-        let [col_start, col_end] = [a:placement.max_col_start, a:placement.max_col_start]
+        let [col_start, col_end] = [display_col_start, display_col_start]
         call add(a:placement.positions, {})
+    elseif style_opts.omit_left_border
+        let col_start = display_col_start
+        let col_end   = a:placement.positions[a:pos_id]['separator_pos'][-1][1]
     else
         let col_start = a:placement.positions[a:pos_id]['separator_pos'][0][0]
         let col_end   = a:placement.positions[a:pos_id]['separator_pos'][-1][1]
@@ -84,7 +99,7 @@ function! s:DrawLine(placement, pos_id, line) abort
     let linenr = a:placement.row_start + a:pos_id
     let current_line = getline(linenr)
     let newline = strpart(current_line, 0, col_start)
-    let newline ..= repeat(' ', a:placement.max_col_start-1 - strdisplaywidth(newline))
+    let newline ..= repeat(' ', display_col_start - strdisplaywidth(newline))
     let newline ..= a:line
     let newline ..= strpart(current_line, col_end)
     if newline !=# current_line
@@ -175,11 +190,11 @@ endfunction
 
 function! s:AppendConditionalCommentLine(linenr) abort
     let cs = split(&commentstring, '%s')
-    let line = getline(a:linenr)
     let found = v:false
-    let match = []
     if len(cs) > 0
-        let match = matchstrpos(line, '\V\^ \*' .. escape(cs[0], '\'))
+        let line = getline(a:linenr)
+        let cs_pattern = table#util#CommentStringPattern()[0]
+        let match = matchstrpos(line, '\V\^' .. cs_pattern)
         let found = match[1] != -1
     endif
     let new_line = found? cs[0] : ''
@@ -187,16 +202,13 @@ function! s:AppendConditionalCommentLine(linenr) abort
 endfunction
 
 function! s:ClearRemaining(placement, pos_id) abort
-    let cs = split(&commentstring, '%s')
-    call map(cs, 'trim(v:val)')
-    let pattern = table#util#AnyPattern(cs + ['\s'])
-
+    let [cs_left, cs_right] = table#util#CommentStringPattern()
     for id in reverse(range(a:pos_id, len(a:placement.positions)-1))
         let linenr = a:placement.row_start + id
         let line = getline(linenr)
-        let newline = strpart(line, 0, a:placement.max_col_start - 1)
+        let newline = strpart(line, 0, a:placement.max_col_start)
         let newline ..= strpart(line, a:placement.positions[id]['separator_pos'][-1][1])
-        if newline =~# '\V\^' .. pattern .. '\*\$'
+        if newline =~# '\V\^' .. cs_left .. cs_right .. '\$'
             call deletebufline('%', linenr)
         else
             call setline(linenr, newline)

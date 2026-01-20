@@ -1,4 +1,4 @@
-function table#textobj#Select(GetTextObj, ...) abort
+function! table#textobj#Select(GetTextObj, ...) abort
     let args = a:000
     " Determine the current mode and set visual selection accordingly
     if mode() =~# '\v^[vV]$'
@@ -17,7 +17,7 @@ function table#textobj#Select(GetTextObj, ...) abort
     endif
 endfunction
 
-function table#textobj#Cell(count1, type) abort
+function! table#textobj#Cell(count1, type) abort
     let pos = getpos('.')[1:2]
     let table = table#GetTable(pos[0])
     if !table.valid
@@ -35,7 +35,7 @@ function table#textobj#Cell(count1, type) abort
     return text_obj
 endfunction
 
-function table#textobj#Row(count1, type) abort
+function! table#textobj#Row(count1, type) abort
     let pos = getpos('.')[1:2]
     let table = table#GetTable(pos[0])
     if !table.valid
@@ -53,7 +53,7 @@ function table#textobj#Row(count1, type) abort
     return text_obj
 endfunction
 
-function table#textobj#Column(count1, type) abort
+function! table#textobj#Column(count1, type) abort
     let pos = getpos('.')[1:2]
     let table = table#GetTable(pos[0])
     if !table.valid
@@ -72,7 +72,7 @@ function table#textobj#Column(count1, type) abort
 endfunction
 
 " finds inner cell
-function s:TextObjBlock(table, coord1, coord2) abort
+function! s:TextObjBlock(table, coord1, coord2) abort
     " get top-left pos of coord1
     let [row_id, _, col_id] = a:coord1
     let pos_id = a:table.rows[row_id].placement_id
@@ -99,7 +99,7 @@ function s:TextObjBlock(table, coord1, coord2) abort
     return text_obj
 endfunction
 
-function s:AdjustForType(table, text_obj, text_obj_type, type) abort
+function! s:AdjustForType(table, text_obj, text_obj_type, type) abort
     let style_opts = table#config#Style().options
     "check placement for top border
     let row_id = a:text_obj.coord1[0]
@@ -146,7 +146,7 @@ function s:AdjustForType(table, text_obj, text_obj_type, type) abort
     return a:text_obj
 endfunction
 
-function s:ConvexUnion(block1, block2) abort
+function! s:ConvexUnion(block1, block2) abort
     let block1 = s:OrderBlock(a:block1)
     let block2 = s:OrderBlock(a:block2)
     let p1 = [ min([block1[0][0], block2[0][0]]), min([block1[0][1], block2[0][1]]) ]
@@ -154,7 +154,7 @@ function s:ConvexUnion(block1, block2) abort
     return [p1, p2]
 endfunction
 
-function s:OrderBlock(block) abort
+function! s:OrderBlock(block) abort
     let [p1, p2] = a:block
     if p1[0] < p2[0] || (p1[0] == p2[0] && p1[1] <= p2[1])
         return [p1, p2]
@@ -163,7 +163,7 @@ function s:OrderBlock(block) abort
     endif
 endfunction
 
-function s:SetVisualSelection(v_mode, text_obj) abort
+function! s:SetVisualSelection(v_mode, text_obj) abort
     if a:text_obj['valid']
         let v_mode = get(a:text_obj, 'v_mode_override', a:v_mode)
         call cursor(a:text_obj['start'])

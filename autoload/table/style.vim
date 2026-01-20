@@ -2,22 +2,22 @@
 
 let s:styles = {}
 
-function table#style#Get(style) abort
+function! table#style#Get(style) abort
     if !has_key(s:styles, a:style)
         throw 'Style "' . a:style . '" is not registered.'
     endif
     return s:styles[a:style]
 endfunction
 
-function table#style#Exists(style) abort
+function! table#style#Exists(style) abort
     return has_key(s:styles, a:style)
 endfunction
 
-function table#style#GetStyleNames() abort
+function! table#style#GetNames() abort
     return keys(s:styles)
 endfunction
 
-function table#style#Register(style_name, style_def) abort
+function! table#style#Register(style_name, style_def) abort
     let s:styles[a:style_name] = a:style_def
 endfunction
 

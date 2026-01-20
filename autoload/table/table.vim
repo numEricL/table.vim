@@ -7,7 +7,8 @@ function! table#table#Get(linenr) abort
                 \ 'row_start'     : bounds[0],
                 \ 'positions'     : [],
                 \ 'align_id'      : -1,
-                \ 'max_col_start' : 0,
+                \ 'min_col_start' : -1,
+                \ 'max_col_start' : -1,
                 \ }
     let table = {
                 \ 'valid'         : v:true,
@@ -48,6 +49,7 @@ function! table#table#Get(linenr) abort
                     \ 'type'          : type,
                     \ 'separator_pos' : sep_pos,
                     \ } )
+        let placement.min_col_start = (placement.min_col_start == -1)? col_start : min([placement.min_col_start, col_start])
         let placement.max_col_start = max([placement.max_col_start, col_start])
 
         if type ==# 'alignment'
