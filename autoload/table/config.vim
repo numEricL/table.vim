@@ -13,7 +13,7 @@ let s:config = deepcopy(s:table_default_config)
 let s:style_cache = {}
 
 function! table#config#Config() abort
-    return s:config
+    return deepcopy(s:config)
 endfunction
 
 function! table#config#Style() abort
@@ -49,7 +49,7 @@ function! table#config#SetConfig(config) abort
     endif
     if has_key(a:config, 'style')
         if a:config.style ==# 'default' && !table#style#Exists('default')
-            call table#style#Register('default', s:GeneratreDefaultStyle())
+            call table#style#Register('default', s:GenerateDefaultStyle())
         endif
         let s:config.style = a:config.style
         let s:style_cache = {}
@@ -64,7 +64,7 @@ function! table#config#RestoreDefault() abort
     call table#config#SetConfig(s:table_default_config)
 endfunction
 
-function! s:GeneratreDefaultStyle() abort
+function! s:GenerateDefaultStyle() abort
     let vert  = table#config#Config().options.i_vertical
     let horiz = table#config#Config().options.i_horizontal
     let style = {
