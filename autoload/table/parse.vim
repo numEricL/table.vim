@@ -100,7 +100,7 @@ endfunction
 function! s:LineType(cells, separators) abort
     let type = 'row'
 
-    let horiz = table#parse#GeneralHorizPattern()
+    let horiz = s:GeneralHorizPattern()
     let is_sep = v:true
     let is_align = v:false
     let beg_pat = '\V\^\s\*'
@@ -118,7 +118,7 @@ function! s:LineType(cells, separators) abort
 endfunction
 
 function! s:ParseIncomplete(line, seps, sep_pos) abort
-    let horiz = table#parse#GeneralHorizPattern()
+    let horiz = s:GeneralHorizPattern()
     let type = ''
     if empty(a:seps)
         let match = matchstrpos(a:line, '\V' .. horiz .. '\+')
@@ -154,7 +154,7 @@ function! s:BoxDrawingPatterns(type) abort
     return sep
 endfunction
 
-function! table#parse#GeneralSeparatorPattern() abort
+function! s:GeneralSeparatorPattern() abort
     let box = table#config#Style().box_drawing
     let cfg_opts = table#config#Config().options
     let i_vertical = cfg_opts.i_vertical
@@ -179,7 +179,7 @@ function! table#parse#GeneralSeparatorPattern() abort
     return table#util#AnyPattern(separators)
 endfunction
 
-function! table#parse#GeneralHorizPattern() abort
+function! s:GeneralHorizPattern() abort
     let box = table#config#Style().box_drawing
     let cfg_opts = table#config#Config().options
     let i_horizontal = cfg_opts.i_horizontal
@@ -218,7 +218,7 @@ function! s:CommentAwareTrim(line) abort
 endfunction
 
 function! s:SplitPos(line) abort
-    let pattern = '\V' .. table#parse#GeneralSeparatorPattern()
+    let pattern = '\V' .. s:GeneralSeparatorPattern()
     let match_list = []
     let sep_list = []
     let sep_pos_list = []
