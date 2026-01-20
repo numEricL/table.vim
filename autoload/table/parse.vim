@@ -218,7 +218,7 @@ function! s:CommentAwareTrim(line) abort
 endfunction
 
 function! s:SplitPos(line) abort
-    let pattern = table#parse#GeneralSeparatorPattern()
+    let pattern = '\V' .. table#parse#GeneralSeparatorPattern()
     let match_list = []
     let sep_list = []
     let sep_pos_list = []

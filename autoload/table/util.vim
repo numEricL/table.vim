@@ -2,8 +2,9 @@ function! table#util#AnyPattern(list) abort
     let unique = uniq(sort(a:list))
     call filter(unique, '!empty(v:val)')
     if len(unique) == 1
-        return escape(unique[0], '\')
+        return escape(unique[0], '/\')
     endif
+    call map(unique, 'escape(v:val, "/\\")')
     let pattern = '\%(' .. unique[0]
     if len(unique) > 1
         for i in range(1, len(unique)-1)
