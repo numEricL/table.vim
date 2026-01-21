@@ -50,47 +50,32 @@ function! table#parse#FindTableRange(linenr) abort
 endfunction
 
 function! s:IsTableLine(line) abort
-    let cs_pattern = table#util#CommentStringPattern()[0]
-    let is_table = v:false
-    for type in [ 'row', 'separator', 'alignment','top', 'bottom' ]
-        let [ left, right, sep, horiz ] = s:BoxDrawingPatterns(type)
-        if !empty(left) && !empty(right)
-            if a:line =~# '\V\^' .. cs_pattern .. left .. '\.\*' .. right
-                let is_table = v:true
-                break
-            endif
-        else
-            if a:line =~# '\V\^' .. cs_pattern .. left .. '\.\*' .. sep .. '\.\*' .. right
-                let is_table = v:true
-                break
-            endif
+    let sep = s:GeneralSeparatorPattern()
+    let style_opts = table#config#Style().options
+    if style_opts.omit_left_border && style_opts.omit_right_border
+        if a:line =~# '\V' .. sep
+            return v:true
         endif
-        if type == 'alignment' || type == 'separator'
-            if a:line =~# '\V\^' .. cs_pattern .. horiz .. '\+\s\*\$'
-                let is_table = v:true
-                break
-            endif
+    else
+        if a:line =~# '\V' .. sep .. '\.\*' .. sep
+            return v:true
         endif
-    endfor
-    return is_table
+    endif
+
+    let cs = table#util#CommentStringPattern()[0]
+    let horiz = s:GeneralHorizPattern()
+    if a:line =~# '\V\^' .. cs .. horiz .. '\+\s\*\$'
+        return v:true
+    endif
+    return v:false
 endfunction
 
 function! s:IsIncompleteTableLine(line) abort
-    let cs_pattern = table#util#CommentStringPattern()[0]
-    let cfg_opts = table#config#Config().options
-    let i_vertical = cfg_opts.i_vertical
-    for type in [ 'row', 'separator', 'top', 'bottom', 'alignment' ]
-        let [ left, right, sep, horiz ] = table#config#GetBoxDrawingChars(type)
-        if !empty(left) && (a:line =~# '\V\^' .. cs_pattern .. left)
-            return v:true
-        endif
-        if !empty(sep) && (a:line =~# '\V\^' .. cs_pattern .. sep)
-            return v:true
-        endif
-        if (a:line =~# '\V\^' .. cs_pattern .. i_vertical)
-            return v:true
-        endif
-    endfor
+    let cs = table#util#CommentStringPattern()[0]
+    let sep = s:GeneralSeparatorPattern()
+    if a:line =~# '\V\^' .. cs .. sep
+        return v:true
+    endif
     return v:false
 endfunction
 
