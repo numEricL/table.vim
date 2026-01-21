@@ -54,10 +54,12 @@ function! table#config#SetConfig(config) abort
         let s:config.style = a:config.style
         let s:style_cache = {}
     endif
+    call table#table#InvalidateCache()
 endfunction
 
 function! table#config#SetStyle(style_dict) abort
     let s:style_cache = deepcopy(a:style_dict)
+    call table#table#InvalidateCache()
 endfunction
 
 function! table#config#RestoreDefault() abort

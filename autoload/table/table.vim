@@ -1,4 +1,61 @@
 function! table#table#Get(linenr) abort
+    " cache initialization
+    if !exists('b:table_cache')
+        let b:table_cache = {}
+        let b:table_cache_bounds = []
+        call s:SetupCacheInvalidation()
+    endif
+
+    " Check cache
+    for i in range(len(b:table_cache_bounds))
+        let bounds = b:table_cache_bounds[i]
+        if a:linenr >= bounds[0] && a:linenr <= bounds[1]
+            let cache_key = string(bounds)
+            if has_key(b:table_cache, cache_key)
+                return b:table_cache[cache_key]
+            endif
+        endif
+    endfor
+
+    let table = s:Generate(a:linenr)
+    if table.valid
+        let bounds = [table.placement.row_start, 
+                    \ table.placement.row_start + len(table.placement.positions) - 1]
+        let cache_key = string(bounds)
+        let b:table_cache[cache_key] = table
+
+        " Track bounds for invalidation
+        let found = v:false
+        for existing_bounds in b:table_cache_bounds
+            if existing_bounds == bounds
+                let found = v:true
+                break
+            endif
+        endfor
+        if !found
+            call add(b:table_cache_bounds, bounds)
+        endif
+    endif
+
+    return table
+endfunction
+
+function! s:SetupCacheInvalidation() abort
+    augroup TableCacheInvalidation
+        autocmd! * <buffer>
+        autocmd TextChanged,TextChangedI <buffer> call table#table#InvalidateCache()
+    augroup END
+endfunction
+
+function! table#table#InvalidateCache() abort
+    " Public API for cache invalidation
+    if exists('b:table_cache')
+        let b:table_cache = {}
+        let b:table_cache_bounds = []
+    endif
+endfunction
+
+function! s:Generate(linenr) abort
     let bounds = table#parse#FindTableRange(a:linenr)
     if bounds[0] == -1
         return {'valid': v:false}
