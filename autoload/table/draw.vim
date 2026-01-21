@@ -18,6 +18,7 @@ function! table#draw#Incomplete(table) abort
         let pos_id += 1
     endwhile
     call s:ClearRemaining(a:table.placement, len(a:table.placement.positions))
+    call table#table#InvalidateCache()
     call extend(a:table, table#table#Get(a:table.placement.row_start))
 endfunction
 
@@ -61,6 +62,7 @@ function! table#draw#Complete(table) abort
         let pos_id = s:DrawSeparator(a:table, pos_id, 'bottom', num_cols)
     endif
     call s:ClearRemaining(a:table.placement, pos_id)
+    call table#table#InvalidateCache()
     call extend(a:table, table#table#Get(a:table.placement.row_start))
 endfunction
 

@@ -6,7 +6,7 @@ function! table#table#Get(linenr) abort
         call s:SetupCacheInvalidation()
     endif
 
-    " Check cache
+    " check cache
     for i in range(len(b:table_cache_bounds))
         let bounds = b:table_cache_bounds[i]
         if a:linenr >= bounds[0] && a:linenr <= bounds[1]
@@ -24,7 +24,7 @@ function! table#table#Get(linenr) abort
         let cache_key = string(bounds)
         let b:table_cache[cache_key] = table
 
-        " Track bounds for invalidation
+        " track bounds for invalidation
         let found = v:false
         for existing_bounds in b:table_cache_bounds
             if existing_bounds == bounds
