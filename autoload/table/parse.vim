@@ -24,7 +24,7 @@ function! table#parse#ParseLine(linenr) abort
     let [cells, sep_pos] = s:HandleOmittedBorders(line_stripped, cells, sep_pos)
     let type = ''
     if !empty(cells)
-        let type = s:LineType(cells, seps)
+        let type = s:LineType(cells)
     else
         let [ sep_pos, type ] = s:ParseIncomplete(line_stripped, seps, sep_pos)
     endif
@@ -38,14 +38,21 @@ function! table#parse#FindTableRange(linenr) abort
     if !table#parse#IsTable(a:linenr)
         return [-1, -1]
     endif
-    let top = a:linenr
-    while table#parse#IsTable(top-1)
-        let top -= 1
-    endwhile
-    let bottom = a:linenr
-    while table#parse#IsTable(bottom+1)
-        let bottom += 1
-    endwhile
+    let view = {}
+    let move_cursor = ( line('.') != a:linenr )
+    if move_cursor
+        let view = winsaveview()
+        call cursor(a:linenr, 1)
+    endif
+    let cs = table#util#CommentStringPattern()
+    let empty_line = '\V\^' .. cs[0] .. cs[1] .. '\$'
+    let top = search(empty_line, 'bnW')
+    let top = (top == 0) ? 1 : top + 1
+    let bottom = search(empty_line, 'nW')
+    let bottom = (bottom == 0) ? line('$') : bottom - 1
+    if move_cursor
+        call winrestview(view)
+    endif
     return [top, bottom]
 endfunction
 
@@ -79,24 +86,16 @@ function! s:IsIncompleteTableLine(line) abort
     return v:false
 endfunction
 
-function! s:LineType(cells, separators) abort
-    let type = 'row'
-
+function! s:LineType(cells) abort
     let horiz = s:GeneralHorizPattern()
     let is_sep = v:true
-    let is_align = v:false
     let beg_pat = '\V\^\s\*'
     let end_pat = '\s\*\$'
     for cell in a:cells
         let is_sep_cell = (cell =~# beg_pat .. ':\?' .. horiz .. '\+:\?' .. end_pat) || (cell =~# '\v^\s*::?\s*$')
         let is_sep = is_sep && is_sep_cell
-        let is_align = is_align || cell =~# ':'
     endfor
-
-    if is_sep
-        let type = (is_align)? 'alignment' : 'separator'
-    endif
-    return type
+    return (is_sep)? 'separator' : 'row'
 endfunction
 
 function! s:ParseIncomplete(line, seps, sep_pos) abort

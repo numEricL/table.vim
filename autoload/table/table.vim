@@ -1,4 +1,10 @@
+let s:cache_table = v:false
+
 function! table#table#Get(linenr) abort
+    if !s:cache_table
+        return s:Generate(a:linenr)
+    endif
+
     " cache initialization
     if !exists('b:table_cache')
         let b:table_cache = {}
@@ -40,19 +46,23 @@ function! table#table#Get(linenr) abort
     return table
 endfunction
 
-function! s:SetupCacheInvalidation() abort
-    augroup TableCacheInvalidation
-        autocmd! * <buffer>
-        autocmd TextChanged,TextChangedI <buffer> call table#table#InvalidateCache()
-    augroup END
-endfunction
-
 function! table#table#InvalidateCache() abort
+    if !s:cache_table
+        return
+    endif
+
     " Public API for cache invalidation
     if exists('b:table_cache')
         let b:table_cache = {}
         let b:table_cache_bounds = []
     endif
+endfunction
+
+function! s:SetupCacheInvalidation() abort
+    augroup TableCacheInvalidation
+        autocmd! * <buffer>
+        autocmd TextChanged,TextChangedI <buffer> call table#table#InvalidateCache()
+    augroup END
 endfunction
 
 function! s:Generate(linenr) abort
