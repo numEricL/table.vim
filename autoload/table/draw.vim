@@ -197,7 +197,7 @@ function! s:AppendConditionalCommentLine(linenr) abort
         let line = getline(a:linenr)
         let cs_pattern = table#util#CommentStringPattern()[0]
         let match = matchstrpos(line, '\V\^' .. cs_pattern)
-        let found = match[1] != -1
+        let found = !empty(match[0])
     endif
     let new_line = found? cs[0] : ''
     call append(a:linenr, new_line)
