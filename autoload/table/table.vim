@@ -1,8 +1,11 @@
+" TODO: chunks should also include separator lines if they exist
+
 let s:cache_table = v:false
 
-function! table#table#Get(linenr) abort
-    if !s:cache_table
-        return s:Generate(a:linenr)
+function! table#table#Get(linenr, chunk_size, ...) abort
+    let cache_table = a:0 ? a:1 : s:cache_table
+    if !cache_table
+        return s:Generate(a:linenr, a:chunk_size)
     endif
 
     " cache initialization
@@ -23,9 +26,9 @@ function! table#table#Get(linenr) abort
         endif
     endfor
 
-    let table = s:Generate(a:linenr)
+    let table = s:Generate(a:linenr, chunk_size)
     if table.valid
-        let bounds = [table.placement.row_start, 
+        let bounds = [table.placement.row_start,
                     \ table.placement.row_start + len(table.placement.positions) - 1]
         let cache_key = string(bounds)
         let b:table_cache[cache_key] = table
@@ -47,11 +50,6 @@ function! table#table#Get(linenr) abort
 endfunction
 
 function! table#table#InvalidateCache() abort
-    if !s:cache_table
-        return
-    endif
-
-    " Public API for cache invalidation
     if exists('b:table_cache')
         let b:table_cache = {}
         let b:table_cache_bounds = []
@@ -65,13 +63,62 @@ function! s:SetupCacheInvalidation() abort
     augroup END
 endfunction
 
-function! s:Generate(linenr) abort
-    let bounds = table#parse#FindTableRange(a:linenr)
-    if bounds[0] == -1
+function! s:CalculateChunkBounds(linenr, full_bounds, chunk_size) abort
+    if a:chunk_size == -1
+        return a:full_bounds
+    endif
+
+    let cfg_opts = table#config#Config().options
+    let half_chunk = a:chunk_size / 2
+
+    let start_line = max([a:full_bounds[0], a:linenr - half_chunk])
+    let end_line = min([a:full_bounds[1], a:linenr + half_chunk])
+
+    if !cfg_opts.multiline_cells
+        return [start_line, end_line]
+    endif
+
+    let start_line = s:ExpandToCompleteRow(start_line, a:full_bounds[0], -1)
+    let end_line = s:ExpandToCompleteRow(end_line, a:full_bounds[1], 1)
+
+    return [start_line, end_line]
+endfunction
+
+function! s:ExpandToCompleteRow(linenr, boundary, direction) abort
+    let current = a:linenr
+
+    while current != a:boundary
+        let [_, _, _, type] = table#parse#ParseLine(current)
+        if type =~# '\v^separator|alignment|top|bottom$'
+            break
+        endif
+
+        let next = current + a:direction
+        if next < 1 || next > line('$')
+            break
+        endif
+        if (a:direction == -1 && next < a:boundary) || (a:direction == 1 && next > a:boundary)
+            break
+        endif
+
+        let current = next
+    endwhile
+
+    return current
+endfunction
+
+function! s:Generate(linenr, chunk_size) abort
+    let full_bounds = table#parse#FindTableRange(a:linenr)
+    if full_bounds[0] == -1
         return {'valid': v:false}
     endif
+    let bounds = s:CalculateChunkBounds(a:linenr, full_bounds, a:chunk_size)
     let placement = {
                 \ 'row_start'     : bounds[0],
+                \ 'top_chunk'     : bounds[0] == full_bounds[0],
+                \ 'bottom_chunk'  : bounds[1] == full_bounds[1],
+                \ 'chunk_size'    : a:chunk_size,
+                \ 'full_bounds'   : full_bounds,
                 \ 'positions'     : [],
                 \ 'align_id'      : -1,
                 \ 'min_col_start' : -1,
@@ -95,16 +142,15 @@ function! s:Generate(linenr) abort
     for pos_id in range(bounds[1] - bounds[0] + 1)
         let [line_cells, col_start, sep_pos, type] = table#parse#ParseLine(bounds[0] + pos_id)
         if type ==# 'separator'
-            if pos_id == 0
+            if pos_id == 0 && placement.top_chunk
                 let type = 'top'
-            elseif pos_id == (bounds[1] - bounds[0])
+            elseif pos_id == (bounds[1] - bounds[0]) && placement.bottom_chunk
                 let type = 'bottom'
-            elseif table.RowCount() == 1 && placement.align_id == -1
-                let type = 'alignment'
             endif
         endif
 
-        if type =~# '\v^row|incomplete$'
+        " incomplete at pos_id 0 shouldn't disrupt alignment separator
+        if type ==# 'row' || ( type ==# 'incomplete' && pos_id != 0 )
             call s:TableAppendRow(table, type, last_type, line_cells, pos_id)
             let table.max_col_count = max([table.max_col_count, len(line_cells)])
         endif
@@ -119,7 +165,7 @@ function! s:Generate(linenr) abort
         let placement.min_col_start = (placement.min_col_start == -1)? col_start : min([placement.min_col_start, col_start])
         let placement.max_col_start = max([placement.max_col_start, col_start])
 
-        if type ==# 'alignment'
+        if type ==# 'alignment' && placement.align_id == -1
             let placement.align_id = pos_id
             for cell in line_cells
                 call add(table.col_align, table#parse#SeparatorAlignment(cell))

@@ -1,3 +1,7 @@
+" TODO: column object doesn't need the entire table, just the range
+" TODO: for adjusting text objects, we should just parse the topleft and
+" bottomright lines again
+
 function! table#textobj#Select(GetTextObj, ...) abort
     let args = a:000
     " Determine the current mode and set visual selection accordingly
@@ -19,7 +23,7 @@ endfunction
 
 function! table#textobj#Cell(count1, type) abort
     let pos = getpos('.')[1:2]
-    let table = table#GetTable(pos[0])
+    let table = table#table#Get(pos[0], 1)
     if !table.valid
         return { 'valid': v:false }
     endif
@@ -37,7 +41,7 @@ endfunction
 
 function! table#textobj#Row(count1, type) abort
     let pos = getpos('.')[1:2]
-    let table = table#GetTable(pos[0])
+    let table = table#table#Get(pos[0], 1)
     if !table.valid
         return { 'valid': v:false }
     endif
@@ -55,7 +59,7 @@ endfunction
 
 function! table#textobj#Column(count1, type) abort
     let pos = getpos('.')[1:2]
-    let table = table#GetTable(pos[0])
+    let table = table#table#Get(pos[0], -1)
     if !table.valid
         return { 'valid': v:false }
     endif
@@ -100,8 +104,8 @@ function! s:TextObjBlock(table, coord1, coord2) abort
 endfunction
 
 function! s:AdjustForType(table, text_obj, text_obj_type, type) abort
-    let style_opts = table#config#Style().options
     "check placement for top border
+    let pos_id = a:text_obj.start[0] - a:table.placement.full_bounds[0]
     let row_id = a:text_obj.coord1[0]
     let pos_id = a:table.rows[row_id].placement_id
     let pos_id = max([0, pos_id - 1])
@@ -113,8 +117,10 @@ function! s:AdjustForType(table, text_obj, text_obj_type, type) abort
     let pos_id = a:table.rows[row_id].placement_id + a:table.rows[row_id].Height() - 1
     let pos_id = min([pos_id + 1, len(a:table.placement.positions) - 1])
     let line_type = a:table.placement.positions[pos_id]['type']
+    echom 'bottom pos_id: ' . pos_id . ', line_type: ' . line_type
     let has_bottom_border = (line_type =~# '\v^(separator|top|alignment|bottom)$')
 
+    let style_opts = table#config#Style().options
     "check placement for left border
     let col_id = a:text_obj.coord1[2]
     let has_left_border = (col_id > 0) ? v:true : !style_opts.omit_left_border

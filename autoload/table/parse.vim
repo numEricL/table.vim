@@ -18,6 +18,7 @@ function! table#parse#IsTable(linenr) abort
 endfunction
 
 function! table#parse#ParseLine(linenr) abort
+    let cfg_opts = table#config#Config().options
     let line = getline(a:linenr)
     let [line_stripped, prefix, _] = s:CommentAwareTrim(line)
     let [cells, sep_pos, seps] = s:SplitPos(line_stripped)
@@ -26,12 +27,21 @@ function! table#parse#ParseLine(linenr) abort
     if !empty(cells)
         let type = s:LineType(cells)
     else
-        let [ sep_pos, type ] = s:ParseIncomplete(line_stripped, seps, sep_pos)
+        let [ sep_pos, type ] = s:ParseIncompleteBorders(line_stripped, seps, sep_pos)
+    endif
+    if type ==# 'separator' && s:CheckAlignmentSeparator(line_stripped)
+        let type = 'alignment'
     endif
     let offset = prefix[2]
     call map(sep_pos, '[v:val[0] + offset, v:val[1] + offset]')
     let col_start = strdisplaywidth(strpart(line, 0, sep_pos[0][0]))
     return [ cells, col_start, sep_pos, type ]
+endfunction
+
+function! s:CheckAlignmentSeparator(line) abort
+    let cfg_opts = table#config#Config().options
+    let pat = table#util#AnyPattern([cfg_opts.i_alignment])
+    return a:line =~# '\V' .. pat
 endfunction
 
 function! table#parse#FindTableRange(linenr) abort
@@ -89,16 +99,13 @@ endfunction
 function! s:LineType(cells) abort
     let horiz = s:GeneralHorizPattern()
     let is_sep = v:true
-    let beg_pat = '\V\^\s\*'
-    let end_pat = '\s\*\$'
     for cell in a:cells
-        let is_sep_cell = (cell =~# beg_pat .. ':\?' .. horiz .. '\+:\?' .. end_pat) || (cell =~# '\v^\s*::?\s*$')
-        let is_sep = is_sep && is_sep_cell
+        let is_sep = is_sep && (cell =~#  '\V\^\s\*' .. horiz ..  '\+\s\*\$')
     endfor
     return (is_sep)? 'separator' : 'row'
 endfunction
 
-function! s:ParseIncomplete(line, seps, sep_pos) abort
+function! s:ParseIncompleteBorders(line, seps, sep_pos) abort
     let horiz = s:GeneralHorizPattern()
     let type = ''
     if empty(a:seps)
@@ -163,13 +170,13 @@ endfunction
 function! s:GeneralHorizPattern() abort
     let box = table#config#Style().box_drawing
     let cfg_opts = table#config#Config().options
-    let i_horizontal = cfg_opts.i_horizontal
     let horizs = [
                 \ box.top_horiz,
                 \ box.bottom_horiz,
                 \ box.align_horiz,
                 \ box.sep_horiz,
-                \ i_horizontal,
+                \ cfg_opts.i_horizontal,
+                \ cfg_opts.i_alignment,
                 \ ]
     return table#util#AnyPattern(horizs)
 endfunction
