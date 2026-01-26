@@ -18,7 +18,6 @@ function! table#parse#IsTable(linenr) abort
 endfunction
 
 function! table#parse#ParseLine(linenr) abort
-    let cfg_opts = table#config#Config().options
     let line = getline(a:linenr)
     let [line_stripped, prefix, _] = s:CommentAwareTrim(line)
     let [cells, sep_pos, seps] = s:SplitPos(line_stripped)

@@ -1,7 +1,3 @@
-" table#table#Get is a lazy workaround to update table placement data for
-" setting the cursor position after redrawing the table. Instead the placement
-" data should be updated directly during drawing.
-
 function! table#draw#CurrentlyPlaced(table) abort
     let cfg_opts = table#config#Config().options
     let pos_id = 0

@@ -24,7 +24,7 @@ function! table#table#Get(linenr, chunk_size, ...) abort
         endif
     endfor
 
-    let table = s:Generate(a:linenr, chunk_size)
+    let table = s:Generate(a:linenr, a:chunk_size)
     if table.valid
         let bounds = [table.placement.row_start,
                     \ table.placement.row_start + len(table.placement.positions) - 1]
