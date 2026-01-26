@@ -1,17 +1,11 @@
-" TODO: setcursor for table#Align
-let s:chunk_size_default = 20
+let s:chunk_size_default = 10
 
 function! table#IsTable(linenr) abort
     return table#parse#IsTable(a:linenr)
 endfunction
 
-function! s:GetTable(linenr, ...) abort
-    let chunk_size = get(a:000, 0, -1)   " chuck_size = -1 means full table
-    return table#table#Get(a:linenr, chunk_size)
-endfunction
-
 function! table#ToDefault(linenr) abort
-    let table = s:GetTable(a:linenr)
+    let table = s:GetFullTable(a:linenr)
     if !table.valid
         return
     endif
@@ -47,7 +41,7 @@ function! table#Align(linenr) abort
 endfunction
 
 function! table#Complete(linenr) abort
-    let table = s:GetTable(a:linenr)
+    let table = s:GetFullTable(a:linenr)
     if !table.valid
         return
     endif
@@ -67,6 +61,10 @@ function! table#CycleCursorCell(dir, count1) abort
         let coord = s:CycleCursorCell(table, a:dir, coord)
     endfor
     call table#cursor#SetCoord(table, coord)
+endfunction
+
+function! s:GetFullTable(linenr) abort
+    return table#table#Get(a:linenr, -1)
 endfunction
 
 function! s:CycleCursorCell(table, dir, coord) abort
@@ -99,7 +97,8 @@ endfunction
 
 function! table#MoveCursorCell(dir, count1) abort
     let curpos = getpos('.')[1:2]
-    let table = s:GetTable(curpos[0])
+    let chunk_size = (a:dir =~# '\v^(left|right)$') ? 1 : (a:count1 + 1)*2
+    let table = table#table#Get(curpos[0], chunk_size)
     if !table.valid
         return
     endif

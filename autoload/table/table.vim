@@ -1,5 +1,3 @@
-" TODO: chunks should also include separator lines if they exist
-
 let s:cache_table = v:false
 
 function! table#table#Get(linenr, chunk_size, ...) abort
@@ -68,18 +66,27 @@ function! s:CalculateChunkBounds(linenr, full_bounds, chunk_size) abort
         return a:full_bounds
     endif
 
-    let cfg_opts = table#config#Config().options
-    let half_chunk = a:chunk_size / 2
-
-    let start_line = max([a:full_bounds[0], a:linenr - half_chunk])
-    let end_line = min([a:full_bounds[1], a:linenr + half_chunk])
-
-    if !cfg_opts.multiline_cells
-        return [start_line, end_line]
+    let chunk_above = (a:chunk_size / 2)
+    let chunk_below = (a:chunk_size - 1) / 2
+    let start_line = a:linenr - chunk_above
+    let end_line = a:linenr + chunk_below
+    if start_line < a:full_bounds[0]
+        let diff = a:full_bounds[0] - start_line
+        let end_line += diff
     endif
-
-    let start_line = s:ExpandToCompleteRow(start_line, a:full_bounds[0], -1)
-    let end_line = s:ExpandToCompleteRow(end_line, a:full_bounds[1], 1)
+    if end_line > a:full_bounds[1]
+        let diff = end_line - a:full_bounds[1]
+        let start_line -= diff
+    endif
+    let start_line = max([a:full_bounds[0], start_line])
+    let end_line = min([a:full_bounds[1], end_line])
+    
+     " expand to complete rows if multiline cells enabled
+     let cfg_opts = table#config#Config().options
+     if cfg_opts.multiline_cells
+         let start_line = s:ExpandToCompleteRow(start_line, a:full_bounds[0], -1)
+         let end_line = s:ExpandToCompleteRow(end_line, a:full_bounds[1], 1)
+     endif
 
     return [start_line, end_line]
 endfunction
@@ -115,8 +122,6 @@ function! s:Generate(linenr, chunk_size) abort
     let bounds = s:CalculateChunkBounds(a:linenr, full_bounds, a:chunk_size)
     let placement = {
                 \ 'row_start'     : bounds[0],
-                \ 'top_chunk'     : bounds[0] == full_bounds[0],
-                \ 'bottom_chunk'  : bounds[1] == full_bounds[1],
                 \ 'chunk_size'    : a:chunk_size,
                 \ 'full_bounds'   : full_bounds,
                 \ 'positions'     : [],
@@ -142,9 +147,9 @@ function! s:Generate(linenr, chunk_size) abort
     for pos_id in range(bounds[1] - bounds[0] + 1)
         let [line_cells, col_start, sep_pos, type] = table#parse#ParseLine(bounds[0] + pos_id)
         if type ==# 'separator'
-            if pos_id == 0 && placement.top_chunk
+            if pos_id == 0 && (bounds[0] == full_bounds[0]) " top chunk
                 let type = 'top'
-            elseif pos_id == (bounds[1] - bounds[0]) && placement.bottom_chunk
+            elseif pos_id == (bounds[1] - bounds[0]) && (bounds[1] == full_bounds[1]) " bottom chunk
                 let type = 'bottom'
             endif
         endif

@@ -1,7 +1,3 @@
-" TODO: column object doesn't need the entire table, just the range
-" TODO: for adjusting text objects, we should just parse the topleft and
-" bottomright lines again
-
 function! table#textobj#Select(GetTextObj, ...) abort
     let args = a:000
     " Determine the current mode and set visual selection accordingly
@@ -34,8 +30,8 @@ function! table#textobj#Cell(count1, type) abort
     let col2 = min([col2, table.rows[row].ColCount() - 1])
     let coord1 = [ row, 0, col1 ]
     let coord2 = [ row, 0, col2 ]
-    let text_obj = s:TextObjBlock(table, coord1, coord2)
-    let text_obj = s:AdjustForType(table, text_obj, 'cell', a:type)
+    let text_obj = s:TextObjBlock(table, coord1, table, coord2)
+    let text_obj = s:AdjustForType(table, coord1, table, coord2, text_obj, 'cell', a:type)
     return text_obj
 endfunction
 
@@ -52,44 +48,49 @@ function! table#textobj#Row(count1, type) abort
     let col2 = table.rows[row2].ColCount() - 1
     let coord1 = [ row1, 0, 0 ]
     let coord2 = [ row2, 0, col2 ]
-    let text_obj = s:TextObjBlock(table, coord1, coord2)
-    let text_obj = s:AdjustForType(table, text_obj, 'row', a:type)
+    let text_obj = s:TextObjBlock(table, coord1, table, coord2)
+    let text_obj = s:AdjustForType(table, coord1, table, coord2, text_obj, 'row', a:type)
     return text_obj
 endfunction
 
 function! table#textobj#Column(count1, type) abort
     let pos = getpos('.')[1:2]
-    let table = table#table#Get(pos[0], -1)
+    let table = table#table#Get(pos[0], 2)
     if !table.valid
         return { 'valid': v:false }
     endif
     let coord = table#cursor#GetCoord(table, pos, 'cell')
+    let row = coord.coord[0]
     let col1 = coord.coord[2]
-    let row2 = table.RowCount() - 1
     let col2 = col1 + a:count1 - 1
-    let col2 = min([col2, table.rows[0].ColCount() - 1])
+    let col2 = min([col2, table.rows[row].ColCount() - 1])
+
+    let table1 = table#table#Get(table.placement.full_bounds[0], 2)
     let coord1 = [ 0, 0, col1 ]
-    let coord2 = [ row2, 0, col2 ]
-    let text_obj = s:TextObjBlock(table, coord1, coord2)
-    let text_obj = s:AdjustForType(table, text_obj, 'column', a:type)
+    
+    let table2 = table#table#Get(table.placement.full_bounds[1], 2)
+    let coord2 = [ table2.RowCount() - 1, 0, col2 ]
+
+    let text_obj = s:TextObjBlock(table1, coord1, table2, coord2)
+    let text_obj = s:AdjustForType(table1, coord1, table2, coord2, text_obj, 'column', a:type)
     return text_obj
 endfunction
 
 " finds inner cell
-function! s:TextObjBlock(table, coord1, coord2) abort
+function! s:TextObjBlock(table1, coord1, table2, coord2) abort
     " get top-left pos of coord1
     let [row_id, _, col_id] = a:coord1
-    let pos_id = a:table.rows[row_id].placement_id
-    let sep_pos = a:table.placement.positions[pos_id]['separator_pos']
-    let linenr = a:table.placement.row_start + pos_id
+    let pos_id = a:table1.rows[row_id].placement_id
+    let sep_pos = a:table1.placement.positions[pos_id]['separator_pos']
+    let linenr = a:table1.placement.row_start + pos_id
     let col = sep_pos[col_id][1] + 1
     let topleft = [linenr, col]
 
     " get bottom-right pos of coord2
     let [row_id, _, col_id] = a:coord2
-    let pos_id = a:table.rows[row_id].placement_id + a:table.rows[row_id].Height() - 1
-    let sep_pos = a:table.placement.positions[pos_id]['separator_pos']
-    let linenr = a:table.placement.row_start + pos_id
+    let pos_id = a:table2.rows[row_id].placement_id + a:table2.rows[row_id].Height() - 1
+    let sep_pos = a:table2.placement.positions[pos_id]['separator_pos']
+    let linenr = a:table2.placement.row_start + pos_id
     let col = sep_pos[col_id+1][0]
     let bottomright = [linenr, col]
     let text_obj = {
@@ -97,41 +98,37 @@ function! s:TextObjBlock(table, coord1, coord2) abort
                 \ 'start': topleft,
                 \ 'end': bottomright,
                 \ 'v_mode_override': '',
-                \ 'coord1': a:coord1,
-                \ 'coord2': a:coord2,
                 \ }
     return text_obj
 endfunction
 
-function! s:AdjustForType(table, text_obj, text_obj_type, type) abort
+function! s:AdjustForType(table1, coord1, table2, coord2, text_obj, text_obj_type, type) abort
     "check placement for top border
-    let pos_id = a:text_obj.start[0] - a:table.placement.full_bounds[0]
-    let row_id = a:text_obj.coord1[0]
-    let pos_id = a:table.rows[row_id].placement_id
+    let row_id = a:coord1[0]
+    let pos_id = a:table1.rows[row_id].placement_id
     let pos_id = max([0, pos_id - 1])
-    let line_type = a:table.placement.positions[pos_id]['type']
+    let line_type = a:table1.placement.positions[pos_id]['type']
     let has_top_border = (line_type =~# '\v^(separator|top|alignment|bottom)$')
 
     "check placement for bottom border
-    let row_id = a:text_obj.coord2[0]
-    let pos_id = a:table.rows[row_id].placement_id + a:table.rows[row_id].Height() - 1
-    let pos_id = min([pos_id + 1, len(a:table.placement.positions) - 1])
-    let line_type = a:table.placement.positions[pos_id]['type']
-    echom 'bottom pos_id: ' . pos_id . ', line_type: ' . line_type
+    let row_id = a:coord2[0]
+    let pos_id = a:table2.rows[row_id].placement_id + a:table2.rows[row_id].Height() - 1
+    let pos_id = min([pos_id + 1, len(a:table2.placement.positions) - 1])
+    let line_type = a:table2.placement.positions[pos_id]['type']
     let has_bottom_border = (line_type =~# '\v^(separator|top|alignment|bottom)$')
 
     let style_opts = table#config#Style().options
     "check placement for left border
-    let col_id = a:text_obj.coord1[2]
+    let col_id = a:coord1[2]
     let has_left_border = (col_id > 0) ? v:true : !style_opts.omit_left_border
 
     "check placement for right border
-    let col_id = a:text_obj.coord2[2]
-    let has_right_border = (col_id < a:table.rows[0].ColCount() - 1) ? v:true : !style_opts.omit_right_border
+    let col_id = a:coord2[2]
+    let has_right_border = (col_id < a:table2.rows[0].ColCount() - 1) ? v:true : !style_opts.omit_right_border
 
     let top_offset = has_top_border       ? 1 : 0
-    let bottom_offset = has_bottom_border ? 1 : 0
     let left_offset = has_left_border     ? 1 : 0
+    let bottom_offset = has_bottom_border ? 1 : 0
     let right_offset = has_right_border   ? 1 : 0
 
     if a:type ==# 'around'
@@ -145,8 +142,8 @@ function! s:AdjustForType(table, text_obj, text_obj_type, type) abort
             let a:text_obj.start = [ a:text_obj.start[0], a:text_obj.start[1] - left_offset ]
             let a:text_obj.end = [ a:text_obj.end[0] + bottom_offset, a:text_obj.end[1] + right_offset ]
         elseif a:text_obj_type ==# 'column'
-            let a:text_obj.start = [ a:text_obj.start[0] - top_offset, a:text_obj.start[1] - left_offset ]
-            let a:text_obj.end = [ a:text_obj.end[0] + bottom_offset, a:text_obj.end[1] ]
+            let a:text_obj.start = [ a:text_obj.start[0] - top_offset, a:text_obj.start[1] ]
+            let a:text_obj.end = [ a:text_obj.end[0] + bottom_offset, a:text_obj.end[1] + right_offset ]
         endif
     endif
     return a:text_obj
