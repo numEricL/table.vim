@@ -1,59 +1,58 @@
+let s:chunk_size_default = 10
+
 function! table#IsTable(linenr) abort
     return table#parse#IsTable(a:linenr)
 endfunction
 
-function! table#GetTable(linenr) abort
-    return table#table#Get(a:linenr)
-endfunction
-
 function! table#ToDefault(linenr) abort
-    let table = table#GetTable(a:linenr)
+    let table = s:GetFullTable(a:linenr)
     if !table.valid
         return
     endif
-    let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
     let cfg = table#config#Config()
     let style = table#config#Style()
 
     call table#config#SetConfig({ 'style': 'default' })
     call table#format#Align(table)
-    call table#draw#Complete(table)
+    call table#draw#Table(table)
 
     call table#config#SetConfig(cfg)
     call table#config#SetStyle(style)
-    call table#cursor#SetCoord(table, coord)
 endfunction
 
 function! table#Align(linenr) abort
-    let table = table#GetTable(a:linenr)
+    let table = table#table#Get(a:linenr, s:chunk_size_default)
     if !table.valid
         return
     endif
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
-    if coord.type ==# 'alignment'
-        let cell_col = coord.coord[0]/2
-        let coord.coord[0] = 2 * (cell_col+1)
-    endif
     call table#format#Align(table)
-    call table#draw#Incomplete(table)
+    call table#draw#CurrentlyPlaced(table)
+    let table = table#table#Get(a:linenr, 1)
+    if coord.type ==# 'alignment'
+        let coord.type= 'separator'
+        let coord.coord = [ -1, (coord.coord[0]+1)/2 ]
+    elseif coord.type ==# 'cell'
+        let coord.coord[0] = 0
+    elseif coord.type ==# 'separator'
+        let coord.coord[0] = -1
+    endif
     call table#cursor#SetCoord(table, coord)
 endfunction
 
 function! table#Complete(linenr) abort
-    let table = table#GetTable(a:linenr)
+    let table = s:GetFullTable(a:linenr)
     if !table.valid
         return
     endif
-    let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
     call table#format#FillGaps(table)
     call table#format#Align(table)
-    call table#draw#Complete(table)
-    call table#cursor#SetCoord(table, coord)
+    call table#draw#Table(table)
 endfunction
 
 function! table#CycleCursorCell(dir, count1) abort
     let curpos = getpos('.')[1:2]
-    let table = table#GetTable(curpos[0])
+    let table = table#table#Get(curpos[0], s:chunk_size_default)
     if !table.valid
         return
     endif
@@ -62,6 +61,10 @@ function! table#CycleCursorCell(dir, count1) abort
         let coord = s:CycleCursorCell(table, a:dir, coord)
     endfor
     call table#cursor#SetCoord(table, coord)
+endfunction
+
+function! s:GetFullTable(linenr) abort
+    return table#table#Get(a:linenr, -1)
 endfunction
 
 function! s:CycleCursorCell(table, dir, coord) abort
@@ -94,7 +97,8 @@ endfunction
 
 function! table#MoveCursorCell(dir, count1) abort
     let curpos = getpos('.')[1:2]
-    let table = table#GetTable(curpos[0])
+    let chunk_size = (a:dir =~# '\v^(left|right)$') ? 1 : (a:count1 + 1)*2
+    let table = table#table#Get(curpos[0], chunk_size)
     if !table.valid
         return
     endif

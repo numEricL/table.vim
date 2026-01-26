@@ -1,4 +1,5 @@
-function! table#draw#Incomplete(table) abort
+function! table#draw#CurrentlyPlaced(table) abort
+    let cfg_opts = table#config#Config().options
     let pos_id = 0
     let new_id = 0
     while pos_id < len(a:table.placement.positions)
@@ -8,25 +9,23 @@ function! table#draw#Incomplete(table) abort
             let num_cols = len(table#parse#ParseLine(linenr)[0])
             let num_cols = (num_cols == 0)? a:table.ColCount() : num_cols
             let new_id = s:DrawSeparator(a:table, new_id, line_type, num_cols)
-        elseif line_type =~# '\v^row|incomplete$'
+            let pos_id += 1
+        elseif line_type ==# 'row'
             let row_id = a:table.placement.positions[pos_id].row_id
             let new_id = s:DrawRow(a:table, new_id, row_id, v:false)
-            let pos_id += a:table.rows[row_id].Height() - 1
+            let pos_id += a:table.rows[row_id].Height()
+        elseif line_type =~# 'incomplete'
+            let new_id = s:DrawLine(a:table.placement, new_id, cfg_opts.i_vertical)
+            let pos_id += 1
         else
             throw 'unknown line type: ' .. line_type
         endif
-        let pos_id += 1
     endwhile
-    call s:ClearRemaining(a:table.placement, len(a:table.placement.positions))
+    call s:ClearRemaining(a:table.placement, pos_id)
     call table#table#InvalidateCache()
-    call extend(a:table, table#table#Get(a:table.placement.row_start))
 endfunction
 
-function! table#draw#Complete(table) abort
-    let row_count = a:table.RowCount()
-    if row_count == 0
-        return
-    endif
+function! table#draw#Table(table) abort
     let pos_id = 0
     let cfg_opts = table#config#Config().options
     let style_opts = table#config#Style().options
@@ -63,7 +62,6 @@ function! table#draw#Complete(table) abort
     endif
     call s:ClearRemaining(a:table.placement, pos_id)
     call table#table#InvalidateCache()
-    call extend(a:table, table#table#Get(a:table.placement.row_start))
 endfunction
 
 function! s:DrawLine(placement, pos_id, line) abort
@@ -172,19 +170,21 @@ function! s:MakeSeparator(table, type, num_cols) abort
     if a:num_cols == 0
         return ''
     endif
+    let cfg_opts = table#config#Config().options
+    let align_char = cfg_opts.i_alignment
     let line = left
     let show_alignment = (a:type ==# 'alignment')
     for i in range(a:num_cols-1)
         let col_align = get(a:table.col_align, i, '')
-        let pad_left  = (show_alignment && col_align =~# '\v^l|c$') ? ':' : horiz
-        let pad_right = (show_alignment && col_align =~# '\v^r|c$') ? ':' : horiz
+        let pad_left  = (show_alignment && col_align =~# '\v^l|c$') ? align_char : horiz
+        let pad_right = (show_alignment && col_align =~# '\v^r|c$') ? align_char : horiz
         let width = get(a:table.col_widths, i, 2)
         let line ..= pad_left .. repeat(horiz, width) .. pad_right .. sep
     endfor
     let i = a:num_cols - 1
     let col_align = get(a:table.col_align, i, '')
-    let pad_left  = (show_alignment && col_align =~# '\v^l|c$') ? ':' : horiz
-    let pad_right = (show_alignment && col_align =~# '\v^r|c$') ? ':' : horiz
+    let pad_left  = (show_alignment && col_align =~# '\v^l|c$') ? align_char : horiz
+    let pad_right = (show_alignment && col_align =~# '\v^r|c$') ? align_char : horiz
     let width = get(a:table.col_widths, i, 2)
     let line ..= pad_left .. repeat(horiz, width) .. pad_right .. right
     return line

@@ -78,11 +78,11 @@ function! s:GetType(table, linenr) abort
         return ''
     endif
     let type = a:table.placement.positions[placement_id]['type']
-    if type =~# '\v^row|incomplete$'
+    if type ==# 'row'
         return 'cell'
     elseif type =~# '\v^alignment$'
         return 'alignment'
-    elseif type =~# '\v^top|bottom|separator$'
+    elseif type =~# '\v^top|bottom|separator|incomplete$'
         return 'separator'
     else
         throw 'unknown line type: ' .. type
@@ -103,7 +103,10 @@ function! s:SetCursorCell(table, cell_id) abort
     elseif col_id == len(row_cells)
         let col = sep_pos[-1][1] + 1
     else
-        if len(sep_pos) > col_id
+        let cfg_opts = table#config#Config().options
+        if cfg_opts.multiline_cells && col_id >= len(sep_pos)
+            let col = s:FindMultiCellSepCol(a:table, a:cell_id)
+        else
             let col = sep_pos[col_id][1]
             let matchpos = matchstrpos(row_cells[col_id][row_offset], '\m\S')
             if matchpos[1] != -1
@@ -111,14 +114,12 @@ function! s:SetCursorCell(table, cell_id) abort
             else
                 let col += 2
             endif
-        else
-            let col = s:FindCellSepCol(a:table, a:cell_id)
         endif
     endif
     call cursor(linenr, col)
 endfunction
 
-function! s:FindCellSepCol(table, cell_id) abort
+function! s:FindMultiCellSepCol(table, cell_id) abort
     let [row_id, _, col_id] = a:cell_id
 
     let pos_id_start = a:table.rows[row_id].placement_id
@@ -154,8 +155,11 @@ endfunction
 
 function! s:SetCursorSeparator(table, sep_id) abort
     let [row_id, col_id] = a:sep_id
-    let row = a:table.rows[row_id]
-    let pos_id = row.placement_id + row.Height()
+    let pos_id = 0
+    if row_id >= 0
+        let row = a:table.rows[row_id]
+        let pos_id = row.placement_id + row.Height()
+    endif
 
     let linenr = a:table.placement.row_start + pos_id
     let sep_pos = a:table.placement.positions[pos_id]['separator_pos']

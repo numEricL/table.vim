@@ -3,6 +3,7 @@ let s:table_default_config = {
             \ 'options': {
             \   'i_vertical': '|',
             \   'i_horizontal': '-',
+            \   'i_alignment': ':',
             \   'default_alignment': 'l',
             \   'multiline_cells': v:false,
             \   'multiline_preserve_indentation': v:true,
