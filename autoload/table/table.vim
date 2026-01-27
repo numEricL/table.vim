@@ -4,113 +4,87 @@ function! table#table#Get(linenr, chunk_size, ...) abort
     let cache_table = a:0 ? a:1 : s:cache_table
     if !cache_table
         return s:Generate(a:linenr, a:chunk_size)
-    endif
-
-    " cache initialization
-    if !exists('b:table_cache')
-        let b:table_cache = {}
-        let b:table_cache_bounds = []
-        call s:SetupCacheInvalidation()
-    endif
-
-    " check cache
-    for i in range(len(b:table_cache_bounds))
-        let bounds = b:table_cache_bounds[i]
-        if a:linenr >= bounds[0] && a:linenr <= bounds[1]
-            let cache_key = string(bounds)
-            if has_key(b:table_cache, cache_key)
-                return b:table_cache[cache_key]
-            endif
-        endif
-    endfor
-
-    let table = s:Generate(a:linenr, a:chunk_size)
-    if table.valid
-        let bounds = [table.placement.row_start,
-                    \ table.placement.row_start + len(table.placement.positions) - 1]
-        let cache_key = string(bounds)
-        let b:table_cache[cache_key] = table
-
-        " track bounds for invalidation
-        let found = v:false
-        for existing_bounds in b:table_cache_bounds
-            if existing_bounds == bounds
-                let found = v:true
-                break
-            endif
-        endfor
-        if !found
-            call add(b:table_cache_bounds, bounds)
-        endif
-    endif
-
-    return table
-endfunction
-
-function! table#table#InvalidateCache() abort
-    if exists('b:table_cache')
-        let b:table_cache = {}
-        let b:table_cache_bounds = []
+    else
+        throw 'caching disabled'
+        " return s:TryCache(a:linenr, a:chunk_size)
     endif
 endfunction
 
-function! s:SetupCacheInvalidation() abort
-    augroup TableCacheInvalidation
-        autocmd! * <buffer>
-        autocmd TextChanged,TextChangedI <buffer> call table#table#InvalidateCache()
-    augroup END
-endfunction
-
-function! s:CalculateChunkBounds(linenr, full_bounds, chunk_size) abort
-    if a:chunk_size == -1
+function! s:ComputeChunkBounds(linenr, full_bounds, chunk_size) abort
+    if a:chunk_size == [0, -1]
         return a:full_bounds
     endif
 
-    let chunk_above = (a:chunk_size / 2)
-    let chunk_below = (a:chunk_size - 1) / 2
-    let start_line = a:linenr - chunk_above
-    let end_line = a:linenr + chunk_below
-    if start_line < a:full_bounds[0]
-        let diff = a:full_bounds[0] - start_line
-        let end_line += diff
-    endif
-    if end_line > a:full_bounds[1]
-        let diff = end_line - a:full_bounds[1]
-        let start_line -= diff
-    endif
+    let start_line = a:linenr + a:chunk_size[0]
+    let end_line = a:linenr + a:chunk_size[1]
+
     let start_line = max([a:full_bounds[0], start_line])
     let end_line = min([a:full_bounds[1], end_line])
-    
-     " expand to complete rows if multiline cells enabled
-     let cfg_opts = table#config#Config().options
-     if cfg_opts.multiline_cells
-         let start_line = s:ExpandToCompleteRow(start_line, a:full_bounds[0], -1)
-         let end_line = s:ExpandToCompleteRow(end_line, a:full_bounds[1], 1)
-     endif
+
+    let [start_line, end_line] = s:ExpandEmptyChunk(start_line, end_line, a:full_bounds)
+    let start_line = s:ExpandToCompleteRow(start_line, a:full_bounds[0], -1)
+    let end_line = s:ExpandToCompleteRow(end_line, a:full_bounds[1], 1)
 
     return [start_line, end_line]
 endfunction
 
-function! s:ExpandToCompleteRow(linenr, boundary, direction) abort
-    let current = a:linenr
-
-    while current != a:boundary
+function! s:ExpandEmptyChunk(start_line, end_line, full_bounds) abort
+    if a:start_line == a:end_line
+        let current = a:start_line
         let [_, _, _, type] = table#parse#ParseLine(current)
         if type =~# '\v^separator|alignment|top|bottom$'
-            break
+            " try expanding downwards
+            let current += 1
+            while current <= a:full_bounds[1]
+                let [_, _, _, type] = table#parse#ParseLine(current)
+                if type =~# '\v^row|incomplete$'
+                    return [a:start_line, current]
+                else
+                    let current += 1
+                endif
+            endwhile
+            " try expanding upwards
+            let current = a:start_line - 1
+            while current >= a:full_bounds[0]
+                let [_, _, _, type] = table#parse#ParseLine(current)
+                if type =~# '\v^row|incomplete$'
+                    return [current, a:end_line]
+                else
+                    let current -= 1
+                endif
+            endwhile
         endif
+    endif       
+    return [a:start_line, a:end_line]
+endfunction
 
-        let next = current + a:direction
-        if next < 1 || next > line('$')
-            break
+function! s:ExpandToCompleteRow(linenr, boundary, direction) abort
+    let current = a:linenr
+    let cfg_opts = table#config#Config().options
+    if !cfg_opts.multiline_cells
+        let [_, _, _, type] = table#parse#ParseLine(current)
+        if type =~# '\v^row|incomplete$' && current != a:boundary
+            let [_, _, _, type] = table#parse#ParseLine(current + a:direction)
+            if type =~# '\v^separator|alignment|top|bottom$'
+                let current += a:direction
+            endif
         endif
-        if (a:direction == -1 && next < a:boundary) || (a:direction == 1 && next > a:boundary)
-            break
-        endif
-
-        let current = next
-    endwhile
-
+    else
+        while current != a:boundary
+            let [_, _, _, type] = table#parse#ParseLine(current)
+            if type =~# '\v^separator|alignment|top|bottom$'
+                break
+            endif
+            let next = current + a:direction
+            if next < 1 || next > line('$')
+                break
+            endif
+            if (a:direction == -1 && next < a:boundary) || (a:direction == 1 && next > a:boundary)
+                break
+            endif
+            let current = next
+        endwhile
+    endif
     return current
 endfunction
 
@@ -119,10 +93,9 @@ function! s:Generate(linenr, chunk_size) abort
     if full_bounds[0] == -1
         return {'valid': v:false}
     endif
-    let bounds = s:CalculateChunkBounds(a:linenr, full_bounds, a:chunk_size)
+    let bounds = s:ComputeChunkBounds(a:linenr, full_bounds, a:chunk_size)
     let placement = {
-                \ 'row_start'     : bounds[0],
-                \ 'chunk_size'    : a:chunk_size,
+                \ 'bounds'        : bounds,
                 \ 'full_bounds'   : full_bounds,
                 \ 'positions'     : [],
                 \ 'align_id'      : -1,
@@ -249,4 +222,59 @@ function! s:TableAppendRow(table, line_type, last_type, line_cells, pos_id) abor
         endfor
         call add(row.types, a:line_type)
     endif
+endfunction
+
+function! s:TryCache(linenr, chunk_size) abort
+    " cache initialization
+    if !exists('b:table_cache')
+        let b:table_cache = {}
+        let b:table_cache_bounds = []
+        call s:SetupCacheInvalidation()
+    endif
+
+    " check cache
+    for i in range(len(b:table_cache_bounds))
+        let bounds = b:table_cache_bounds[i]
+        if a:linenr >= bounds[0] && a:linenr <= bounds[1]
+            let cache_key = string(bounds)
+            if has_key(b:table_cache, cache_key)
+                return b:table_cache[cache_key]
+            endif
+        endif
+    endfor
+
+    let table = table#table#Get(a:linenr, a:chunk_size, v:false)
+    if table.valid
+        let bounds = table.placement.bounds
+        let cache_key = string(bounds)
+        let b:table_cache[cache_key] = table
+
+        " track bounds for invalidation
+        let found = v:false
+        for existing_bounds in b:table_cache_bounds
+            if existing_bounds == bounds
+                let found = v:true
+                break
+            endif
+        endfor
+        if !found
+            call add(b:table_cache_bounds, bounds)
+        endif
+    endif
+
+    return table
+endfunction
+
+function! table#table#InvalidateCache() abort
+    if exists('b:table_cache')
+        let b:table_cache = {}
+        let b:table_cache_bounds = []
+    endif
+endfunction
+
+function! s:SetupCacheInvalidation() abort
+    augroup TableCacheInvalidation
+        autocmd! * <buffer>
+        autocmd TextChanged,TextChangedI <buffer> call table#table#InvalidateCache()
+    augroup END
 endfunction

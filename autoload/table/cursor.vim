@@ -9,7 +9,7 @@ function! table#cursor#GetCoord(table, pos, ...) abort
     endif
     let coord = { 'type': s:GetType(a:table, a:pos[0]), 'coord': [] }
 
-    let placement_id = a:pos[0] - a:table.placement.row_start
+    let placement_id = a:pos[0] - a:table.placement.bounds[0]
     if placement_id < 0 || placement_id >= len(a:table.placement.positions)
         return {'type': 'invalid', 'coord': []}
     endif
@@ -73,7 +73,7 @@ function! s:GetType(table, linenr) abort
     if !a:table.valid
         return ''
     endif
-    let placement_id = a:linenr - a:table.placement.row_start
+    let placement_id = a:linenr - a:table.placement.bounds[0]
     if placement_id < 0 || placement_id >= len(a:table.placement.positions)
         return ''
     endif
@@ -93,7 +93,7 @@ function! s:SetCursorCell(table, cell_id) abort
     let [row_id, row_offset, col_id] = a:cell_id
     let pos_id = a:table.rows[row_id].placement_id + row_offset
 
-    let linenr = a:table.placement.row_start + pos_id
+    let linenr = a:table.placement.bounds[0] + pos_id
     let sep_pos = a:table.placement.positions[pos_id]['separator_pos']
     let col = 0
 
@@ -137,7 +137,7 @@ endfunction
 function! s:SetCursorAlignmentSeparator(table, col_id) abort
     let id = a:table.placement.align_id
 
-    let linenr = a:table.placement.row_start + id
+    let linenr = a:table.placement.bounds[0] + id
     let sep_pos = a:table.placement.positions[id]['separator_pos']
     let col = 0
 
@@ -161,7 +161,7 @@ function! s:SetCursorSeparator(table, sep_id) abort
         let pos_id = row.placement_id + row.Height()
     endif
 
-    let linenr = a:table.placement.row_start + pos_id
+    let linenr = a:table.placement.bounds[0] + pos_id
     let sep_pos = a:table.placement.positions[pos_id]['separator_pos']
     let col = 0
 

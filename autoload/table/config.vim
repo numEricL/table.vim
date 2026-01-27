@@ -1,12 +1,13 @@
 let s:table_default_config = {
             \ 'style': 'default',
             \ 'options': {
-            \   'i_vertical': '|',
-            \   'i_horizontal': '-',
-            \   'i_alignment': ':',
-            \   'default_alignment': 'l',
-            \   'multiline_cells': v:false,
-            \   'multiline_preserve_indentation': v:true,
+            \   'i_vertical'                     : '|',
+            \   'i_horizontal'                   : '-',
+            \   'i_alignment'                    : ':',
+            \   'default_alignment'              : 'l',
+            \   'chunk_size'                     : [-10, 10],
+            \   'multiline_cells'                : v:false,
+            \   'multiline_preserve_indentation' : v:true,
             \ },
             \ }
 

@@ -17,6 +17,7 @@ function! table#parse#IsTable(linenr) abort
     return v:false
 endfunction
 
+" type may be: 'row', 'separator', 'alignment', 'incomplete'
 function! table#parse#ParseLine(linenr) abort
     let line = getline(a:linenr)
     let [line_stripped, prefix, _] = s:CommentAwareTrim(line)

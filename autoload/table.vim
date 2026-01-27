@@ -1,5 +1,3 @@
-let s:chunk_size_default = 10
-
 function! table#IsTable(linenr) abort
     return table#parse#IsTable(a:linenr)
 endfunction
@@ -21,14 +19,14 @@ function! table#ToDefault(linenr) abort
 endfunction
 
 function! table#Align(linenr) abort
-    let table = table#table#Get(a:linenr, s:chunk_size_default)
+    let cfg_opts = table#config#Config().options
+    let table = table#table#Get(a:linenr, cfg_opts.chunk_size)
     if !table.valid
         return
     endif
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
     call table#format#Align(table)
     call table#draw#CurrentlyPlaced(table)
-    let table = table#table#Get(a:linenr, 1)
     if coord.type ==# 'alignment'
         let coord.type= 'separator'
         let coord.coord = [ -1, (coord.coord[0]+1)/2 ]
@@ -37,6 +35,7 @@ function! table#Align(linenr) abort
     elseif coord.type ==# 'separator'
         let coord.coord[0] = -1
     endif
+    let table = table#table#Get(a:linenr, [0,0])
     call table#cursor#SetCoord(table, coord)
 endfunction
 
@@ -52,19 +51,47 @@ endfunction
 
 function! table#CycleCursorCell(dir, count1) abort
     let curpos = getpos('.')[1:2]
-    let table = table#table#Get(curpos[0], s:chunk_size_default)
+    let table = table#table#Get(curpos[0], [0,0])
     if !table.valid
         return
     endif
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
+    if coord.type ==# 'separator'
+        let coord = table#cursor#GetCoord(table, getpos('.')[1:2], 'cell')
+    endif
     for _ in range(a:count1)
         let coord = s:CycleCursorCell(table, a:dir, coord)
+        let table = s:UpdateTableOnCycleWrap(table, a:dir, coord)
     endfor
     call table#cursor#SetCoord(table, coord)
 endfunction
 
+function! s:UpdateTableOnCycleWrap(table, dir, coord) abort
+    let new_table = a:table
+    if a:dir ==# 'forward' && a:coord.coord == [0, 0, 0]
+        let is_bottom_hunk = (a:table.placement.bounds[1] == a:table.placement.full_bounds[1])
+        if !is_bottom_hunk
+            let new_table = table#table#Get(a:table.placement.bounds[1] + 1, [0,0])
+        else
+            let new_table = table#table#Get(a:table.placement.full_bounds[0], [0,1])
+        endif
+    elseif a:dir ==# 'backward'
+        let last_row = a:table.RowCount() - 1
+        let last_col = a:table.rows[last_row].ColCount() - 1
+        if a:coord.coord == [last_row, 0, last_col]
+            let is_top_hunk = (a:table.placement.bounds[0] == a:table.placement.full_bounds[0])
+            if !is_top_hunk
+                let new_table = table#table#Get(a:table.placement.bounds[0] - 1, [0,0])
+            else
+                let new_table = table#table#Get(a:table.placement.full_bounds[1], [-1,0])
+            endif
+        endif
+    endif
+    return new_table
+endfunction
+
 function! s:GetFullTable(linenr) abort
-    return table#table#Get(a:linenr, -1)
+    return table#table#Get(a:linenr, [0, -1])
 endfunction
 
 function! s:CycleCursorCell(table, dir, coord) abort
@@ -97,14 +124,14 @@ endfunction
 
 function! table#MoveCursorCell(dir, count1) abort
     let curpos = getpos('.')[1:2]
-    let chunk_size = (a:dir =~# '\v^(left|right)$') ? 1 : (a:count1 + 1)*2
-    let table = table#table#Get(curpos[0], chunk_size)
+    let table = table#table#Get(curpos[0], [0,0])
     if !table.valid
         return
     endif
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2], 'cell')
     for _ in range(a:count1)
         let coord = s:MoveCursorCell(table, a:dir, coord)
+        let [table, coord] = s:UpdateOnOutOfBounds(table, a:dir, coord)
     endfor
     call table#cursor#SetCoord(table, coord)
 endfunction
@@ -113,10 +140,38 @@ function! s:MoveCursorCell(table, dir, coord) abort
     let [row_id, row_offset, col_id] = a:coord.coord
     let x_offset = a:dir ==# 'left' ? -1 : (a:dir ==# 'right' ? 1 : 0)
     let y_offset = a:dir ==# 'up' ? -1 : (a:dir ==# 'down' ? 1 : 0)
+    " let coord go out of bounds so caller can update table if needed
     let new_row_id = row_id + y_offset
-    let new_row_id = min([max([0, new_row_id]), a:table.RowCount() - 1])
     let new_col_id = col_id + x_offset
-    let new_col_id = min([max([0, new_col_id]), len(a:table.rows[new_row_id].cells) - 1])
+    " let new_row_id = min([max([0, new_row_id]), a:table.RowCount() - 1])
+    " let new_col_id = min([max([0, new_col_id]), len(a:table.rows[new_row_id].cells) - 1])
     let a:coord.coord = [ new_row_id, 0, new_col_id ]
     return a:coord
+endfunction
+
+function! s:UpdateOnOutOfBounds(table, dir, coord) abort
+    let new_table = a:table
+    if a:dir ==# 'down' && a:coord.coord[0] == a:table.RowCount()
+        let is_bottom_hunk = (a:table.placement.bounds[1] == a:table.placement.full_bounds[1])
+        if !is_bottom_hunk
+            let new_table = table#table#Get(a:table.placement.bounds[1] + 1, [0,0])
+            let a:coord.coord[0] = 0
+        else
+            let a:coord.coord[0] += -1
+        endif
+    elseif a:dir ==# 'up' && a:coord.coord[0] == -1
+        let is_top_hunk = (a:table.placement.bounds[0] == a:table.placement.full_bounds[0])
+        if !is_top_hunk
+            let new_table = table#table#Get(a:table.placement.bounds[0] - 1, [0,0])
+        else
+            let a:coord.coord[0] += 1
+        endif
+    elseif a:dir ==# 'right'
+        let row = new_table.rows[a:coord.coord[0]]
+        let col_bound = row.ColCount()
+        if a:coord.coord[2] == col_bound
+            let a:coord.coord[2] = col_bound - 1
+        endif
+    endif
+    return [ new_table, a:coord ]
 endfunction

@@ -5,7 +5,7 @@ function! table#draw#CurrentlyPlaced(table) abort
     while pos_id < len(a:table.placement.positions)
         let line_type = a:table.placement.positions[pos_id].type
         if line_type =~# '\v^top|bottom|separator|alignment$'
-            let linenr = a:table.placement.row_start + pos_id
+            let linenr = a:table.placement.bounds[0] + pos_id
             let num_cols = len(table#parse#ParseLine(linenr)[0])
             let num_cols = (num_cols == 0)? a:table.ColCount() : num_cols
             let new_id = s:DrawSeparator(a:table, new_id, line_type, num_cols)
@@ -84,7 +84,7 @@ function! s:DrawLine(placement, pos_id, line) abort
     endif
 
     if a:pos_id == len(a:placement.positions)
-        let linenr = a:placement.row_start + len(a:placement.positions) - 1
+        let linenr = a:placement.bounds[0] + len(a:placement.positions) - 1
         call s:AppendConditionalCommentLine(linenr)
         let [col_start, col_end] = [display_col_start, display_col_start]
         call add(a:placement.positions, {})
@@ -96,7 +96,7 @@ function! s:DrawLine(placement, pos_id, line) abort
         let col_end   = a:placement.positions[a:pos_id]['separator_pos'][-1][1]
     endif
 
-    let linenr = a:placement.row_start + a:pos_id
+    let linenr = a:placement.bounds[0] + a:pos_id
     let current_line = getline(linenr)
     let newline = strpart(current_line, 0, col_start)
     let newline ..= repeat(' ', display_col_start - strdisplaywidth(newline))
@@ -195,7 +195,8 @@ function! s:AppendConditionalCommentLine(linenr) abort
     let found = v:false
     if len(cs) > 0
         let line = getline(a:linenr)
-        let cs_pattern = table#util#CommentStringPattern()[0]
+        let cs = table#util#CommentString()
+        let cs_pattern = table#util#AnyPattern([cs[0]])
         let match = matchstrpos(line, '\V\^' .. cs_pattern)
         let found = !empty(match[0])
     endif
@@ -206,7 +207,7 @@ endfunction
 function! s:ClearRemaining(placement, pos_id) abort
     let [cs_left, cs_right] = table#util#CommentStringPattern()
     for id in reverse(range(a:pos_id, len(a:placement.positions)-1))
-        let linenr = a:placement.row_start + id
+        let linenr = a:placement.bounds[0] + id
         let line = getline(linenr)
         let newline = strpart(line, 0, a:placement.max_col_start)
         let newline ..= strpart(line, a:placement.positions[id]['separator_pos'][-1][1])

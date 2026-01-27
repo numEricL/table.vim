@@ -19,7 +19,7 @@ endfunction
 
 function! table#textobj#Cell(count1, type) abort
     let pos = getpos('.')[1:2]
-    let table = table#table#Get(pos[0], 1)
+    let table = table#table#Get(pos[0], [0,0])
     if !table.valid
         return { 'valid': v:false }
     endif
@@ -37,7 +37,7 @@ endfunction
 
 function! table#textobj#Row(count1, type) abort
     let pos = getpos('.')[1:2]
-    let table = table#table#Get(pos[0], 1)
+    let table = table#table#Get(pos[0], [0,0])
     if !table.valid
         return { 'valid': v:false }
     endif
@@ -55,7 +55,8 @@ endfunction
 
 function! table#textobj#Column(count1, type) abort
     let pos = getpos('.')[1:2]
-    let table = table#table#Get(pos[0], 2)
+    let chunk_size = [ 0, 0 ]
+    let table = table#table#Get(pos[0], chunk_size)
     if !table.valid
         return { 'valid': v:false }
     endif
@@ -65,10 +66,10 @@ function! table#textobj#Column(count1, type) abort
     let col2 = col1 + a:count1 - 1
     let col2 = min([col2, table.rows[row].ColCount() - 1])
 
-    let table1 = table#table#Get(table.placement.full_bounds[0], 2)
+    let table1 = table#table#Get(table.placement.full_bounds[0], chunk_size)
     let coord1 = [ 0, 0, col1 ]
     
-    let table2 = table#table#Get(table.placement.full_bounds[1], 2)
+    let table2 = table#table#Get(table.placement.full_bounds[1], chunk_size)
     let coord2 = [ table2.RowCount() - 1, 0, col2 ]
 
     let text_obj = s:TextObjBlock(table1, coord1, table2, coord2)
@@ -82,7 +83,7 @@ function! s:TextObjBlock(table1, coord1, table2, coord2) abort
     let [row_id, _, col_id] = a:coord1
     let pos_id = a:table1.rows[row_id].placement_id
     let sep_pos = a:table1.placement.positions[pos_id]['separator_pos']
-    let linenr = a:table1.placement.row_start + pos_id
+    let linenr = a:table1.placement.bounds[0] + pos_id
     let col = sep_pos[col_id][1] + 1
     let topleft = [linenr, col]
 
@@ -90,7 +91,7 @@ function! s:TextObjBlock(table1, coord1, table2, coord2) abort
     let [row_id, _, col_id] = a:coord2
     let pos_id = a:table2.rows[row_id].placement_id + a:table2.rows[row_id].Height() - 1
     let sep_pos = a:table2.placement.positions[pos_id]['separator_pos']
-    let linenr = a:table2.placement.row_start + pos_id
+    let linenr = a:table2.placement.bounds[0] + pos_id
     let col = sep_pos[col_id+1][0]
     let bottomright = [linenr, col]
     let text_obj = {
