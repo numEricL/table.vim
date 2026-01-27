@@ -2,22 +2,6 @@ function! table#IsTable(linenr) abort
     return table#parse#IsTable(a:linenr)
 endfunction
 
-function! table#ToDefault(linenr) abort
-    let table = s:GetFullTable(a:linenr)
-    if !table.valid
-        return
-    endif
-    let cfg = table#config#Config()
-    let style = table#config#Style()
-
-    call table#config#SetConfig({ 'style': 'default' })
-    call table#format#Align(table)
-    call table#draw#Table(table)
-
-    call table#config#SetConfig(cfg)
-    call table#config#SetStyle(style)
-endfunction
-
 function! table#Align(linenr) abort
     let cfg_opts = table#config#Config().options
     let table = table#table#Get(a:linenr, cfg_opts.chunk_size)
@@ -27,15 +11,17 @@ function! table#Align(linenr) abort
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
     call table#format#Align(table)
     call table#draw#CurrentlyPlaced(table)
-    if coord.type ==# 'alignment'
-        let coord.type= 'separator'
-        let coord.coord = [ -1, (coord.coord[0]+1)/2 ]
-    elseif coord.type ==# 'cell'
-        let coord.coord[0] = 0
-    elseif coord.type ==# 'separator'
-        let coord.coord[0] = -1
-    endif
+
     let table = table#table#Get(a:linenr, [0,0])
+    let sep_id = (a:linenr - table.placement.bounds[0]) > 0? 0 : -1
+    if coord.type ==# 'cell'
+        let coord.coord[0] = 0
+    elseif coord.type ==# 'alignment'
+        let coord.type= 'separator'
+        let coord.coord = [ sep_id, (coord.coord[0]+1)/2 ]
+    elseif coord.type ==# 'separator'
+        let coord.coord[0] = sep_id
+    endif
     call table#cursor#SetCoord(table, coord)
 endfunction
 
@@ -47,6 +33,23 @@ function! table#Complete(linenr) abort
     call table#format#FillGaps(table)
     call table#format#Align(table)
     call table#draw#Table(table)
+endfunction
+
+function! table#ToDefault(linenr) abort
+    let table = s:GetFullTable(a:linenr)
+    if !table.valid
+        return
+    endif
+    let cfg = table#config#Config()
+    let style = table#config#Style()
+
+    call table#config#SetConfig({ 'style': 'default' })
+    call table#format#FillGaps(table)
+    call table#format#Align(table)
+    call table#draw#Table(table)
+
+    call table#config#SetConfig(cfg)
+    call table#config#SetStyle(style)
 endfunction
 
 function! table#CycleCursorCell(dir, count1) abort
@@ -143,8 +146,6 @@ function! s:MoveCursorCell(table, dir, coord) abort
     " let coord go out of bounds so caller can update table if needed
     let new_row_id = row_id + y_offset
     let new_col_id = col_id + x_offset
-    " let new_row_id = min([max([0, new_row_id]), a:table.RowCount() - 1])
-    " let new_col_id = min([max([0, new_col_id]), len(a:table.rows[new_row_id].cells) - 1])
     let a:coord.coord = [ new_row_id, 0, new_col_id ]
     return a:coord
 endfunction

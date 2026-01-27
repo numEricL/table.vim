@@ -23,10 +23,8 @@ function! table#parse#ParseLine(linenr) abort
     let [line_stripped, prefix, _] = s:CommentAwareTrim(line)
     let [cells, sep_pos, seps] = s:SplitPos(line_stripped)
     let [cells, sep_pos] = s:HandleOmittedBorders(line_stripped, cells, sep_pos)
-    let type = ''
-    if !empty(cells)
-        let type = s:LineType(cells)
-    else
+    let type = s:LineType(line_stripped)
+    if empty(cells)
         let [ sep_pos, type ] = s:ParseIncompleteBorders(line_stripped, seps, sep_pos)
     endif
     if type ==# 'separator' && s:CheckAlignmentSeparator(line_stripped)
@@ -96,13 +94,13 @@ function! s:IsIncompleteTableLine(line) abort
     return v:false
 endfunction
 
-function! s:LineType(cells) abort
-    let horiz = s:GeneralHorizPattern()
-    let is_sep = v:true
-    for cell in a:cells
-        let is_sep = is_sep && (cell =~#  '\V\^\s\*' .. horiz ..  '\+\s\*\$')
-    endfor
-    return (is_sep)? 'separator' : 'row'
+function! s:LineType(line) abort
+    let sep_line = s:GeneralSeparatorLinePattern()
+    if a:line =~# '\V\^' .. sep_line .. '\+\$'
+        return 'separator'
+    else
+        return 'row'
+    endif
 endfunction
 
 function! s:ParseIncompleteBorders(line, seps, sep_pos) abort
@@ -145,24 +143,50 @@ endfunction
 function! s:GeneralSeparatorPattern() abort
     let box = table#config#Style().box_drawing
     let cfg_opts = table#config#Config().options
-    let i_vertical = cfg_opts.i_vertical
     let separators = [
-                \ box.top_left,
-                \ box.top_right,
-                \ box.top_sep,
-                \ box.bottom_left,
-                \ box.bottom_right,
-                \ box.bottom_sep,
                 \ box.align_left,
                 \ box.align_right,
                 \ box.align_sep,
                 \ box.sep_left,
                 \ box.sep_right,
                 \ box.sep_sep,
+                \ box.top_left,
+                \ box.top_right,
+                \ box.top_sep,
+                \ box.bottom_left,
+                \ box.bottom_right,
+                \ box.bottom_sep,
                 \ box.row_left,
                 \ box.row_right,
                 \ box.row_sep,
-                \ i_vertical,
+                \ cfg_opts.i_vertical,
+                \ ]
+    return table#util#AnyPattern(separators)
+endfunction
+
+function! s:GeneralSeparatorLinePattern() abort
+    let box = table#config#Style().box_drawing
+    let cfg_opts = table#config#Config().options
+    let separators = [
+                \ box.align_left,
+                \ box.align_right,
+                \ box.align_sep,
+                \ box.align_horiz,
+                \ box.sep_left,
+                \ box.sep_right,
+                \ box.sep_sep,
+                \ box.sep_horiz,
+                \ box.top_left,
+                \ box.top_right,
+                \ box.top_sep,
+                \ box.top_horiz,
+                \ box.bottom_left,
+                \ box.bottom_right,
+                \ box.bottom_sep,
+                \ box.bottom_horiz,
+                \ cfg_opts.i_vertical,
+                \ cfg_opts.i_horizontal,
+                \ cfg_opts.i_alignment,
                 \ ]
     return table#util#AnyPattern(separators)
 endfunction
@@ -171,10 +195,10 @@ function! s:GeneralHorizPattern() abort
     let box = table#config#Style().box_drawing
     let cfg_opts = table#config#Config().options
     let horizs = [
-                \ box.top_horiz,
-                \ box.bottom_horiz,
                 \ box.align_horiz,
                 \ box.sep_horiz,
+                \ box.top_horiz,
+                \ box.bottom_horiz,
                 \ cfg_opts.i_horizontal,
                 \ cfg_opts.i_alignment,
                 \ ]

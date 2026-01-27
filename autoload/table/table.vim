@@ -30,11 +30,10 @@ endfunction
 
 function! s:ExpandEmptyChunk(start_line, end_line, full_bounds) abort
     if a:start_line == a:end_line
-        let current = a:start_line
-        let [_, _, _, type] = table#parse#ParseLine(current)
+        let [_, _, _, type] = table#parse#ParseLine(a:start_line)
         if type =~# '\v^separator|alignment|top|bottom$'
             " try expanding downwards
-            let current += 1
+            let current = a:start_line + 1
             while current <= a:full_bounds[1]
                 let [_, _, _, type] = table#parse#ParseLine(current)
                 if type =~# '\v^row|incomplete$'
@@ -127,8 +126,7 @@ function! s:Generate(linenr, chunk_size) abort
             endif
         endif
 
-        " incomplete at pos_id 0 shouldn't disrupt alignment separator
-        if type ==# 'row' || ( type ==# 'incomplete' && pos_id != 0 )
+        if type =~# '\v^(row|incomplete)$'
             call s:TableAppendRow(table, type, last_type, line_cells, pos_id)
             let table.max_col_count = max([table.max_col_count, len(line_cells)])
         endif
