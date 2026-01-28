@@ -9,7 +9,6 @@ function! table#Align(linenr) abort
         return
     endif
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
-    call table#format#Align(table)
     call table#draw#CurrentlyPlaced(table)
 
     let table = table#table#Get(a:linenr, [0,0])
@@ -30,8 +29,6 @@ function! table#Complete(linenr) abort
     if !table.valid
         return
     endif
-    call table#format#FillGaps(table)
-    call table#format#Align(table)
     call table#draw#Table(table)
 endfunction
 
@@ -44,8 +41,6 @@ function! table#ToDefault(linenr) abort
     let style = table#config#Style()
 
     call table#config#SetConfig({ 'style': 'default' })
-    call table#format#FillGaps(table)
-    call table#format#Align(table)
     call table#draw#Table(table)
 
     call table#config#SetConfig(cfg)

@@ -1,4 +1,5 @@
 function! table#draw#CurrentlyPlaced(table) abort
+    call table#format#Align(a:table)
     let cfg_opts = table#config#Config().options
     let pos_id = 0
     let new_id = 0
@@ -26,6 +27,8 @@ function! table#draw#CurrentlyPlaced(table) abort
 endfunction
 
 function! table#draw#Table(table) abort
+    call table#format#FillGaps(table)
+    call table#format#Align(table)
     let pos_id = 0
     let cfg_opts = table#config#Config().options
     let style_opts = table#config#Style().options
@@ -45,7 +48,7 @@ function! table#draw#Table(table) abort
     if a:table.RowCount() > 2
         for row_id in range(1, a:table.RowCount() - 2)
             let pos_id = s:DrawRow(a:table, pos_id, row_id)
-            if cfg_opts.multiline_cells || !style_opts.omit_separator_rows
+            if cfg_opts.multiline || !style_opts.omit_separator_rows
                 let num_cols = max([a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
                 let pos_id = s:DrawSeparator(a:table, pos_id, 'separator', num_cols)
             endif
@@ -65,6 +68,7 @@ function! table#draw#Table(table) abort
 endfunction
 
 function! s:DrawLine(placement, pos_id, line) abort
+    echom 'DrawLine: pos_id=' . a:pos_id . ' line="' . a:line . '"'
     if a:pos_id > len(a:placement.positions)
         throw 'pos_id out of range'
     endif
@@ -78,7 +82,7 @@ function! s:DrawLine(placement, pos_id, line) abort
     let style_opts = table#config#Style().options
     if style_opts.omit_left_border
         let display_col_start = a:placement.min_col_start
-        if a:placement.align_id == -1 && style_opts.omit_separator_rows && !cfg_opts.multiline_cells
+        if a:placement.align_id == -1 && style_opts.omit_separator_rows && !cfg_opts.multiline
             let display_col_start -= 1
         endif
     endif

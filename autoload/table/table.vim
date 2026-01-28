@@ -60,7 +60,7 @@ endfunction
 function! s:ExpandToCompleteRow(linenr, boundary, direction) abort
     let current = a:linenr
     let cfg_opts = table#config#Config().options
-    if !cfg_opts.multiline_cells
+    if !cfg_opts.multiline
         let [_, _, _, type] = table#parse#ParseLine(current)
         if type =~# '\v^row|incomplete$' && current != a:boundary
             let [_, _, _, type] = table#parse#ParseLine(current + a:direction)
@@ -178,12 +178,12 @@ function! s:TableGetCell(row, col) dict abort
     return copy(row_obj.cells[a:col])
 endfunction
 
-function! s:TableSetCell(row, col, cell) dict abort
-    if type(a:cell) != v:t_list
-        throw 'cell must be a list of strings'
+function! s:TableSetCell(row, col, lines) dict abort
+    if len(a:lines) > 1
+        execute('Table Option multiline 1')
     endif
     let row_obj = self.rows[a:row]
-    let self.rows[a:row].cells[a:col] = a:cell
+    let self.rows[a:row].cells[a:col] = a:lines
 endfunction
 
 function! s:CellColCount() dict abort
@@ -200,7 +200,7 @@ endfunction
 
 function! s:TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
     let cfg_opts = table#config#Config().options
-    if !cfg_opts.multiline_cells ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
+    if !cfg_opts.multiline ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
         let cells = empty(a:line_cells)? [['']] : map(copy(a:line_cells), '[v:val]')
         let row = {
                     \ 'cells'         : cells,
