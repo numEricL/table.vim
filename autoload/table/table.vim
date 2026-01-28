@@ -94,6 +94,7 @@ function! s:Generate(linenr, chunk_size) abort
     endif
     let bounds = s:ComputeChunkBounds(a:linenr, full_bounds, a:chunk_size)
     let placement = {
+                \ 'bufnr'         : bufnr('%'),
                 \ 'bounds'        : bounds,
                 \ 'full_bounds'   : full_bounds,
                 \ 'positions'     : [],

@@ -68,7 +68,6 @@ function! table#draw#Table(table) abort
 endfunction
 
 function! s:DrawLine(placement, pos_id, line) abort
-    echom 'DrawLine: pos_id=' . a:pos_id . ' line="' . a:line . '"'
     if a:pos_id > len(a:placement.positions)
         throw 'pos_id out of range'
     endif
@@ -89,7 +88,7 @@ function! s:DrawLine(placement, pos_id, line) abort
 
     if a:pos_id == len(a:placement.positions)
         let linenr = a:placement.bounds[0] + len(a:placement.positions) - 1
-        call s:AppendConditionalCommentLine(linenr)
+        call s:AppendConditionalCommentLine(a:placement, linenr)
         let [col_start, col_end] = [display_col_start, display_col_start]
         call add(a:placement.positions, {})
     elseif style_opts.omit_left_border
@@ -107,7 +106,7 @@ function! s:DrawLine(placement, pos_id, line) abort
     let newline ..= a:line
     let newline ..= strpart(current_line, col_end)
     if newline !=# current_line
-        call setline(linenr, newline)
+        call setbufline(a:placement.bufnr, linenr, newline)
     endif
     return a:pos_id + 1
 endfunction
@@ -205,7 +204,7 @@ function! s:AppendConditionalCommentLine(linenr) abort
         let found = !empty(match[0])
     endif
     let new_line = found? cs[0] : ''
-    call append(a:linenr, new_line)
+    call appendbufline(a:placement.bufnr, a:linenr, new_line)
 endfunction
 
 function! s:ClearRemaining(placement, pos_id) abort
@@ -218,7 +217,7 @@ function! s:ClearRemaining(placement, pos_id) abort
         if newline =~# '\V\^' .. cs_left .. cs_right .. '\$'
             call deletebufline('%', linenr)
         else
-            call setline(linenr, newline)
+            call setbufline(a:placement.bufnr, linenr, newline)
         endif
     endfor
 endfunction

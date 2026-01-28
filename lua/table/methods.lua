@@ -27,9 +27,10 @@ function M.table_col_count(tbl)
 end
 
 function M.table_col_align(tbl, col)
-    local cfg_opts = require('table.config').config().options
-    local default_align = cfg_opts.default_col_align
+    local cfg_opts = require('vimscript.config').config().options
+    local default_align = cfg_opts.default_alignment
     local lua_array_offset = 1
+    col = col + lua_array_offset
     local align = tbl.col_align[col] or default_align
     align = (align == '') and default_align or align
     return align

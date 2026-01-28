@@ -42,12 +42,13 @@ local function update_cell(tbl, cell_id, bufnr)
     tbl:SetCell(row_id, col_id, lines)
 end
 
-local function update_table_on_window_close(tbl, cell_id, winid, bufnr)
+local function update_table_on_window_close(tbl, cell_id, winid)
     local group = vim.api.nvim_create_augroup("table.vim", {})
     vim.api.nvim_create_autocmd("WinClosed", {
         callback = function(args)
             if tonumber(args.match) == winid then
-                update_cell(tbl, cell_id, bufnr)
+                local scracth_bufnr = vim.api.nvim_win_get_buf(winid)
+                update_cell(tbl, cell_id, scracth_bufnr)
                 interface.table.set_vim_methods(tbl)
                 interface.draw.currently_placed(tbl)
             end
@@ -63,7 +64,7 @@ function M.edit_cell(tbl, cell_id)
     local row_id, _, col_id = unpack(cell_id)
     local cell = tbl:Cell(row_id, col_id)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, cell)
-    update_table_on_window_close(tbl, cell_id, winid, bufnr)
+    update_table_on_window_close(tbl, cell_id, winid)
 end
 
 function Foo()
