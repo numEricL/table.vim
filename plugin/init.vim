@@ -3,7 +3,7 @@ call table#style#fancy#Register()
 Table Style markdown
 " Table StyleOption omit_left_border 1
 " Table StyleOption omit_right_border 1
-" Table Option multiline 1
+Table Option multiline 1
 execute 'luafile ~/.vim/plug/table.vim/lua/edit_cell.lua'
 nnoremap <leader>Q :lua Foo()<cr>
 

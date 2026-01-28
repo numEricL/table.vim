@@ -1,34 +1,29 @@
 function! table#draw#CurrentlyPlaced(table) abort
     call table#format#Align(a:table)
     let cfg_opts = table#config#Config().options
-    let pos_id = 0
+    let positions = a:table.placement.positions
     let new_id = 0
-    while pos_id < len(a:table.placement.positions)
-        let line_type = a:table.placement.positions[pos_id].type
-        if line_type =~# '\v^top|bottom|separator|alignment$'
-            let linenr = a:table.placement.bounds[0] + pos_id
-            let num_cols = len(table#parse#ParseLine(linenr)[0])
-            let num_cols = (num_cols == 0)? a:table.ColCount() : num_cols
+    for pos_id in range(len(positions))
+        let line_type = positions[pos_id].type
+        if line_type =~# '\v^(top|bottom|separator|alignment)$'
+            let num_cols = len(positions[pos_id]['separator_pos']) - 1
             let new_id = s:DrawSeparator(a:table, new_id, line_type, num_cols)
-            let pos_id += 1
-        elseif line_type ==# 'row'
-            let row_id = a:table.placement.positions[pos_id].row_id
-            let new_id = s:DrawRow(a:table, new_id, row_id, v:false)
-            let pos_id += a:table.rows[row_id].Height()
-        elseif line_type =~# 'incomplete'
-            let new_id = s:DrawLine(a:table.placement, new_id, cfg_opts.i_vertical)
-            let pos_id += 1
+        elseif line_type =~# '\v^(row|incomplete)$'
+            if positions[pos_id].row_offset == 0
+                let row_id = positions[pos_id].row_id
+                let new_id = s:DrawRow(a:table, new_id, row_id, v:false)
+            endif
         else
             throw 'unknown line type: ' .. line_type
         endif
-    endwhile
-    call s:ClearRemaining(a:table.placement, pos_id)
+    endfor
+    call s:ClearRemaining(a:table.placement, new_id)
     call table#table#InvalidateCache()
 endfunction
 
 function! table#draw#Table(table) abort
-    call table#format#FillGaps(table)
-    call table#format#Align(table)
+    call table#format#FillGaps(a:table)
+    call table#format#Align(a:table)
     let pos_id = 0
     let cfg_opts = table#config#Config().options
     let style_opts = table#config#Style().options
@@ -140,9 +135,6 @@ function! s:DrawRow(table, pos_id, row_id, ...) abort
                 let rowline = left .. join(single_row_cells[0:num_cols-1], sep) .. sep
             endif
         endif
-        if i == 0
-            let row.placement_id = pos_id
-        endif
         let pos_id = s:DrawLine(a:table.placement, pos_id, rowline)
     endfor
     return pos_id
@@ -193,7 +185,7 @@ function! s:MakeSeparator(table, type, num_cols) abort
     return line
 endfunction
 
-function! s:AppendConditionalCommentLine(linenr) abort
+function! s:AppendConditionalCommentLine(placement, linenr) abort
     let cs = split(&commentstring, '%s')
     let found = v:false
     if len(cs) > 0
