@@ -277,3 +277,19 @@ function! s:SetupCacheInvalidation() abort
         autocmd TextChanged,TextChangedI <buffer> call table#table#InvalidateCache()
     augroup END
 endfunction
+
+" used when interoperating with lua, which cannot serialize function references
+function! table#table#RestoreMethods(tbl) abort
+    " Restore table-level methods
+    let a:tbl.RowCount = function('s:TableRowCount')
+    let a:tbl.ColCount = function('s:TableColCount')
+    let a:tbl.ColAlign = function('s:TableColAlign')
+    let a:tbl.Cell = function('s:TableGetCell')
+    let a:tbl.SetCell = function('s:TableSetCell')
+    
+    " Restore row-level methods
+    for row in a:tbl.rows
+        let row.Height = function('s:CellRowHeight')
+        let row.ColCount = function('s:CellColCount')
+    endfor
+endfunction

@@ -48,7 +48,6 @@ function! s:TrimCells(table) abort
     for row in a:table.rows
         for j in range(len(row.cells))
             if cfg_opts.multiline_preserve_indentation
-                echom string(a:table.ColAlign(0))
                 call s:TrimBlock(row.cells[j], a:table.ColAlign(j))
             else
                 for i in range(len(row.cells[j]))

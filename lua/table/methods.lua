@@ -22,30 +22,30 @@ function M.table_set_cell(tbl, row, col, lines)
     row_obj.cells[col] = lines
 end
 
-function M.table_col_count(tbl)
-    return tbl.max_col_count
-end
-
-function M.table_col_align(tbl, col)
-    local cfg_opts = require('vimscript.config').config().options
-    local default_align = cfg_opts.default_alignment
-    local lua_array_offset = 1
-    col = col + lua_array_offset
-    local align = tbl.col_align[col] or default_align
-    align = (align == '') and default_align or align
-    return align
-end
-
-function M.cell_row_height(row)
-    local height = 0
-    for _, cell in ipairs(row.cells) do
-        height = math.max(height, #cell)
-    end
-    return height
-end
-
-function M.cell_col_count(row)
-    return #row.cells
-end
+-- function M.table_col_count(tbl)
+--     return tbl.max_col_count
+-- end
+-- 
+-- function M.table_col_align(tbl, col)
+--     local cfg_opts = require('vim_bridge').config__config().options
+--     local default_align = cfg_opts.default_alignment
+--     local lua_array_offset = 1
+--     col = col + lua_array_offset
+--     local align = tbl.col_align[col] or default_align
+--     align = (align == '') and default_align or align
+--     return align
+-- end
+-- 
+-- function M.cell_row_height(row)
+--     local height = 0
+--     for _, cell in ipairs(row.cells) do
+--         height = math.max(height, #cell)
+--     end
+--     return height
+-- end
+-- 
+-- function M.cell_col_count(row)
+--     return #row.cells
+-- end
 
 return M

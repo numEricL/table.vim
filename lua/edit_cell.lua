@@ -1,4 +1,4 @@
-local interface = require('vimscript')
+local bridge = require('vim_bridge')
 
 local M = {}
 
@@ -49,8 +49,7 @@ local function update_table_on_window_close(tbl, cell_id, winid)
             if tonumber(args.match) == winid then
                 local scracth_bufnr = vim.api.nvim_win_get_buf(winid)
                 update_cell(tbl, cell_id, scracth_bufnr)
-                interface.table.set_vim_methods(tbl)
-                interface.draw.currently_placed(tbl)
+                bridge.draw__currently_placed(tbl)
             end
         end,
         once = true,
@@ -69,9 +68,9 @@ end
 
 function Foo()
     local cursor = vim.api.nvim_win_get_cursor(0)
-    local cfg_opts = interface.config.config().options
-    local tbl = interface.table.get(cursor[1], cfg_opts.chunk_size)
-    local cell_id = interface.cursor.get_coord(tbl, cursor, 'cell').coord
+    local cfg_opts = bridge.config__config().options
+    local tbl = bridge.table__get(cursor[1], cfg_opts.chunk_size)
+    local cell_id = bridge.cursor__get_coord(tbl, cursor, 'cell').coord
     M.edit_cell(tbl, cell_id)
 end
 
