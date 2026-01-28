@@ -215,7 +215,7 @@ function! s:ClearRemaining(placement, pos_id) abort
         let newline = strpart(line, 0, a:placement.max_col_start)
         let newline ..= strpart(line, a:placement.positions[id]['separator_pos'][-1][1])
         if newline =~# '\V\^' .. cs_left .. cs_right .. '\$'
-            call deletebufline('%', linenr)
+            call deletebufline(a:placement.bufnr, linenr)
         else
             call setbufline(a:placement.bufnr, linenr, newline)
         endif
