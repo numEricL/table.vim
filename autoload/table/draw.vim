@@ -115,8 +115,7 @@ function! s:DrawRow(table, pos_id, row_id, ...) abort
     let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars('row')
     
     for i in range(row.Height())
-        " let fill_cell = fill_cell_multirows || s:HasRightMostSeparator(a:table, a:row_id, i)
-        let fill_cell = fill_cell_multirows
+        let fill_cell = fill_cell_multirows || s:HasRightMostSeparator(a:table, a:row_id, i)
         let rowline = ''
 
         if get(row.types, i, '') ==# 'incomplete'
@@ -147,6 +146,7 @@ function! s:DrawSeparator(table, pos_id, type, num_cols) abort
     return pos_id
 endfunction
 
+" used for multi-row cells with unfinished rows and styles that omit right borders
 function! s:HasRightMostSeparator(table, row_id, row_offset) abort
     let pos_id = get(a:table.rows[a:row_id], 'placement_id', -1)
     if pos_id == -1
@@ -210,8 +210,10 @@ function! s:ClearRemaining(placement, pos_id) abort
     for id in reverse(range(a:pos_id, len(a:placement.positions)-1))
         let linenr = a:placement.bounds[0] + id
         let line = getbufoneline(a:placement.bufnr, linenr)
-        let newline = strpart(line, 0, a:placement.max_col_start)
-        let newline ..= strpart(line, a:placement.positions[id]['separator_pos'][-1][1])
+        let col_start = a:placement.positions[id]['separator_pos'][0][0]
+        let col_end   = a:placement.positions[id]['separator_pos'][-1][1]
+        let newline = strpart(line, 0, col_start)
+        let newline ..= strpart(line, col_end)
         if newline =~# '\V\^' .. cs_left .. cs_right .. '\$'
             call deletebufline(a:placement.bufnr, linenr)
         else
