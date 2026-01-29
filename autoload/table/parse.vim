@@ -96,7 +96,7 @@ endfunction
 
 function! s:LineType(line) abort
     let sep_line = s:GeneralSeparatorLinePattern()
-    if a:line =~# '\V\^' .. sep_line .. '\+\$'
+    if a:line =~# '\V\^' .. sep_line .. '\$'
         return 'separator'
     else
         return 'row'
@@ -108,7 +108,8 @@ function! s:ParseIncompleteBorders(line, seps, sep_pos) abort
     let type = ''
     if empty(a:seps)
         let match = matchstrpos(a:line, '\V' .. horiz .. '\+')
-        call add(a:sep_pos, match[1:2])
+        call add(a:sep_pos, [match[1], match[1]])
+        call add(a:sep_pos, [match[2], match[2]])
         let type = 'separator'
     else
         let match = matchstrpos(a:line, '\V\^' .. horiz .. '\+', a:sep_pos[0][1])
@@ -164,33 +165,6 @@ function! s:GeneralSeparatorPattern() abort
     return table#util#AnyPattern(separators)
 endfunction
 
-function! s:GeneralSeparatorLinePattern() abort
-    let box = table#config#Style().box_drawing
-    let cfg_opts = table#config#Config().options
-    let separators = [
-                \ box.align_left,
-                \ box.align_right,
-                \ box.align_sep,
-                \ box.align_horiz,
-                \ box.sep_left,
-                \ box.sep_right,
-                \ box.sep_sep,
-                \ box.sep_horiz,
-                \ box.top_left,
-                \ box.top_right,
-                \ box.top_sep,
-                \ box.top_horiz,
-                \ box.bottom_left,
-                \ box.bottom_right,
-                \ box.bottom_sep,
-                \ box.bottom_horiz,
-                \ cfg_opts.i_vertical,
-                \ cfg_opts.i_horizontal,
-                \ cfg_opts.i_alignment,
-                \ ]
-    return table#util#AnyPattern(separators)
-endfunction
-
 function! s:GeneralHorizPattern() abort
     let box = table#config#Style().box_drawing
     let cfg_opts = table#config#Config().options
@@ -203,6 +177,17 @@ function! s:GeneralHorizPattern() abort
                 \ cfg_opts.i_alignment,
                 \ ]
     return table#util#AnyPattern(horizs)
+endfunction
+
+function! s:GeneralSeparatorLinePattern() abort
+    let box = table#config#Style().box_drawing
+    let cfg_opts = table#config#Config().options
+    let sep = s:GeneralSeparatorPattern()
+    let horiz = s:GeneralHorizPattern()
+
+    let cell = sep .. '\? \?' .. horiz .. '\{2,} \?'
+    let pattern = '\%(' .. cell .. '\)\+' .. sep .. '\?'
+    return pattern
 endfunction
 
 function! s:CommentAwareTrim(line) abort

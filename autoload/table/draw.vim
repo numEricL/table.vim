@@ -95,7 +95,7 @@ function! s:DrawLine(placement, pos_id, line) abort
     endif
 
     let linenr = a:placement.bounds[0] + a:pos_id
-    let current_line = getline(linenr)
+    let current_line = getbufoneline(a:placement.bufnr, linenr)
     let newline = strpart(current_line, 0, col_start)
     let newline ..= repeat(' ', display_col_start - strdisplaywidth(newline))
     let newline ..= a:line
@@ -115,7 +115,8 @@ function! s:DrawRow(table, pos_id, row_id, ...) abort
     let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars('row')
     
     for i in range(row.Height())
-        let fill_cell = fill_cell_multirows || s:HasRightMostSeparator(a:table, a:row_id, i)
+        " let fill_cell = fill_cell_multirows || s:HasRightMostSeparator(a:table, a:row_id, i)
+        let fill_cell = fill_cell_multirows
         let rowline = ''
 
         if get(row.types, i, '') ==# 'incomplete'
@@ -156,8 +157,13 @@ function! s:HasRightMostSeparator(table, row_id, row_offset) abort
 endfunction
 
 function! s:NumSubRowCols(table, row_id, row_offset) abort
+    let positions = a:table.placement.positions
     let pos_id = a:table.rows[a:row_id].placement_id + a:row_offset
-    return len(a:table.placement.positions[pos_id]['separator_pos']) - 1
+    if len(positions) <= pos_id || positions[pos_id].row_id != a:row_id
+        return a:table.rows[a:row_id].ColCount()
+    else
+        return len(positions[pos_id]['separator_pos']) - 1
+    endif
 endfunction
 
 function! s:MakeSeparator(table, type, num_cols) abort
@@ -189,7 +195,7 @@ function! s:AppendConditionalCommentLine(placement, linenr) abort
     let cs = split(&commentstring, '%s')
     let found = v:false
     if len(cs) > 0
-        let line = getline(a:linenr)
+        let line = getbufoneline(a:placement.bufnr, a:linenr)
         let cs = table#util#CommentString()
         let cs_pattern = table#util#AnyPattern([cs[0]])
         let match = matchstrpos(line, '\V\^' .. cs_pattern)
@@ -203,7 +209,7 @@ function! s:ClearRemaining(placement, pos_id) abort
     let [cs_left, cs_right] = table#util#CommentStringPattern()
     for id in reverse(range(a:pos_id, len(a:placement.positions)-1))
         let linenr = a:placement.bounds[0] + id
-        let line = getline(linenr)
+        let line = getbufoneline(a:placement.bufnr, linenr)
         let newline = strpart(line, 0, a:placement.max_col_start)
         let newline ..= strpart(line, a:placement.positions[id]['separator_pos'][-1][1])
         if newline =~# '\V\^' .. cs_left .. cs_right .. '\$'

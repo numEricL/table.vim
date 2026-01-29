@@ -1,7 +1,8 @@
 " table drawing
-nnoremap <plug>(table_complete) :call table#Complete(line('.'))<CR>
-nnoremap <plug>(table_align) :call table#Align(line('.'))<CR>
-nnoremap <plug>(table_to_default) :call table#ToDefault(line('.'))<CR>
+nnoremap <silent> <plug>(table_complete)   <cmd>call table#Complete(line('.'))<cr>
+nnoremap <silent> <plug>(table_align)      <cmd>call table#Align(line('.'))<cr>
+nnoremap <silent> <plug>(table_to_default) <cmd>call table#ToDefault(line('.'))<cr>
+nnoremap <silent> <plug>(table_cell_edit)  <cmd>lua require('edit_cell').edit_cell_under_cursor()<cr>
 
 " table navigation cycle
 inoremap <silent> <plug>(table_next) <c-o><cmd>call table#CycleCursorCell('forward', v:count1)<cr>
@@ -48,27 +49,3 @@ xnoremap <silent> <plug>(table_around_row_textobj)    <cmd>call table#textobj#Se
 onoremap <silent> <plug>(table_around_row_textobj)    <cmd>call table#textobj#Select(function('table#textobj#Row'),    v:count1, 'around')<cr>
 xnoremap <silent> <plug>(table_around_column_textobj) <cmd>call table#textobj#Select(function('table#textobj#Column'), v:count1, 'around')<cr>
 onoremap <silent> <plug>(table_around_column_textobj) <cmd>call table#textobj#Select(function('table#textobj#Column'), v:count1, 'around')<cr>
-
-"
-" suggested key mappings 
-"
-xnoremap tx <plug>(table_cell_textobj)
-onoremap tx <plug>(table_cell_textobj)
-xnoremap tr <plug>(table_row_textobj)
-onoremap tr <plug>(table_row_textobj)
-xnoremap tc <plug>(table_column_textobj)
-onoremap tc <plug>(table_column_textobj)
-
-xnoremap ix <plug>(table_inner_cell_textobj)
-onoremap ix <plug>(table_inner_cell_textobj)
-xnoremap ir <plug>(table_inner_row_textobj)
-onoremap ir <plug>(table_inner_row_textobj)
-xnoremap ic <plug>(table_inner_column_textobj)
-onoremap ic <plug>(table_inner_column_textobj)
-
-xnoremap ax <plug>(table_around_cell_textobj)
-onoremap ax <plug>(table_around_cell_textobj)
-xnoremap ar <plug>(table_around_row_textobj)
-onoremap ar <plug>(table_around_row_textobj)
-xnoremap ac <plug>(table_around_column_textobj)
-onoremap ac <plug>(table_around_column_textobj)

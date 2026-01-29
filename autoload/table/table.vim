@@ -180,9 +180,6 @@ function! s:TableGetCell(row, col) dict abort
 endfunction
 
 function! s:TableSetCell(row, col, lines) dict abort
-    if len(a:lines) > 1
-        execute('Table Option multiline 1')
-    endif
     let row_obj = self.rows[a:row]
     let self.rows[a:row].cells[a:col] = a:lines
 endfunction
@@ -214,7 +211,7 @@ function! s:TableAppendRow(table, line_type, last_type, line_cells, pos_id) abor
     else
         let row = a:table.rows[-1]
         while len(row.cells) < len(a:line_cells)
-            call add(row.cells, [''])
+            call add(row.cells, repeat([''], row.Height()))
         endwhile
         for j in range(len(row.cells))
             call add(row.cells[j], get(a:line_cells, j, ''))

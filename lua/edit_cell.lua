@@ -1,7 +1,6 @@
 local bridge = require('vim_bridge')
 
 local M = {}
-
 local CellBufNr = nil
 
 local function find_window(bufnr)
@@ -57,7 +56,7 @@ local function update_table_on_window_close(tbl, cell_id, winid)
     })
 end
 
-function M.edit_cell(tbl, cell_id)
+local function edit_cell(tbl, cell_id)
     local winid, bufnr = open_window()
     ---@diagnostic disable-next-line: deprecated
     local row_id, _, col_id = unpack(cell_id)
@@ -66,12 +65,12 @@ function M.edit_cell(tbl, cell_id)
     update_table_on_window_close(tbl, cell_id, winid)
 end
 
-function Foo()
+function M.edit_cell_under_cursor()
     local cursor = vim.api.nvim_win_get_cursor(0)
     local cfg_opts = bridge.config__config().options
     local tbl = bridge.table__get(cursor[1], cfg_opts.chunk_size)
     local cell_id = bridge.cursor__get_coord(tbl, cursor, 'cell').coord
-    M.edit_cell(tbl, cell_id)
+    edit_cell(tbl, cell_id)
 end
 
 return M

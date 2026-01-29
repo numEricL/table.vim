@@ -12,9 +12,6 @@ function M.table_get_cell(tbl, row, col)
 end
 
 function M.table_set_cell(tbl, row, col, lines)
-    if #lines > 1 then
-        vim.cmd('Table Option multiline 1')
-    end
     local lua_array_offset = 1
     row = row + lua_array_offset
     col = col + lua_array_offset
