@@ -47,7 +47,7 @@ function! table#ToDefault(linenr) abort
     call table#config#SetStyle(style)
 endfunction
 
-function! table#CycleCursorCell(dir, count1) abort
+function! table#CycleCursor(dir, count1) abort
     let curpos = getpos('.')[1:2]
     let table = table#table#Get(curpos[0], [0,0])
     if !table.valid
@@ -58,15 +58,19 @@ function! table#CycleCursorCell(dir, count1) abort
         let coord = table#cursor#GetCoord(table, getpos('.')[1:2], 'cell')
     endif
     for _ in range(a:count1)
-        let coord = s:CycleCursorCell(table, a:dir, coord)
-        let table = s:UpdateTableOnCycleWrap(table, a:dir, coord)
+        let coord = s:CycleCursor(table, a:dir, coord)
+        if coord.type ==# 'cell'
+            let [table, coord] = s:UpdateOnCycleWrapCell(table, a:dir, coord)
+        endif
     endfor
     call table#cursor#SetCoord(table, coord)
 endfunction
 
-function! s:UpdateTableOnCycleWrap(table, dir, coord) abort
+function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
     let new_table = a:table
-    if a:dir ==# 'forward' && a:coord.coord == [0, 0, 0]
+    let new_coord = a:coord
+    if a:dir ==# 'forward' && new_coord.coord[0] == 0 && new_coord.coord[2] == 0
+        let new_coord.coord[1] = 0
         let is_bottom_hunk = (a:table.placement.bounds[1] == a:table.placement.full_bounds[1])
         if !is_bottom_hunk
             let new_table = table#table#Get(a:table.placement.bounds[1] + 1, [0,0])
@@ -76,7 +80,8 @@ function! s:UpdateTableOnCycleWrap(table, dir, coord) abort
     elseif a:dir ==# 'backward'
         let last_row = a:table.RowCount() - 1
         let last_col = a:table.rows[last_row].ColCount() - 1
-        if a:coord.coord == [last_row, 0, last_col]
+        if new_coord.coord[0] == last_row && new_coord.coord[2] == last_col
+            let new_coord.coord[1] = 0
             let is_top_hunk = (a:table.placement.bounds[0] == a:table.placement.full_bounds[0])
             if !is_top_hunk
                 let new_table = table#table#Get(a:table.placement.bounds[0] - 1, [0,0])
@@ -85,14 +90,14 @@ function! s:UpdateTableOnCycleWrap(table, dir, coord) abort
             endif
         endif
     endif
-    return new_table
+    return [ new_table, new_coord ]
 endfunction
 
 function! s:GetFullTable(linenr) abort
     return table#table#Get(a:linenr, [0, -1])
 endfunction
 
-function! s:CycleCursorCell(table, dir, coord) abort
+function! s:CycleCursor(table, dir, coord) abort
     let step = (a:dir ==# 'forward') ? 1 : -1
     if a:coord.type ==# 'alignment'
         let n = 2*len(a:table.col_align)
@@ -107,8 +112,9 @@ function! s:CycleCursorCell(table, dir, coord) abort
         endfor
         let old_cell_id = [ a:coord.coord[0], a:coord.coord[2] ]
         let new_cell_id = table#util#Step2D(old_cell_id, col_bounds, row_bound, {'step': step, 'least_significant': 'right'})
-        let row_offset = (old_cell_id[0] == new_cell_id[0]) ? a:coord.coord[1] : 0
-        let a:coord.coord = [ new_cell_id[0], row_offset, new_cell_id[1] ]
+        let a:coord.coord[0] = new_cell_id[0]
+        let a:coord.coord[1] = (old_cell_id[0] == new_cell_id[0]) ? a:coord.coord[1] : 0
+        let a:coord.coord[2] = new_cell_id[1]
     elseif a:coord.type ==# 'separator'
         let row_id = (a:coord.coord[0] + 1) % a:table.RowCount()
         let col_id = (row_id == 0 )? 0 : min([a:coord.coord[1], a:table.rows[row_id].ColCount()])

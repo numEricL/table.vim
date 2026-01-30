@@ -5,12 +5,12 @@ nnoremap <silent> <plug>(table_to_default) <cmd>call table#ToDefault(line('.'))<
 nnoremap <silent> <plug>(table_cell_edit)  <cmd>lua require('edit_cell').edit_cell_under_cursor()<cr>
 
 " table navigation cycle
-inoremap <silent> <plug>(table_next) <c-o><cmd>call table#CycleCursorCell('forward', v:count1)<cr>
-inoremap <silent> <plug>(table_prev) <c-o><cmd>call table#CycleCursorCell('backward', v:count1)<cr>
-nnoremap <silent> <plug>(table_next) <cmd>call table#CycleCursorCell('forward', v:count1)<cr>
-nnoremap <silent> <plug>(table_prev) <cmd>call table#CycleCursorCell('backward', v:count1)<cr>
-xnoremap <silent> <plug>(table_next) <cmd>call table#CycleCursorCell('forward', v:count1)<cr>
-xnoremap <silent> <plug>(table_prev) <cmd>call table#CycleCursorCell('backward', v:count1)<cr>
+inoremap <silent> <plug>(table_next) <c-o><cmd>call table#CycleCursor('forward', v:count1)<cr>
+inoremap <silent> <plug>(table_prev) <c-o><cmd>call table#CycleCursor('backward', v:count1)<cr>
+nnoremap <silent> <plug>(table_next) <cmd>call table#CycleCursor('forward', v:count1)<cr>
+nnoremap <silent> <plug>(table_prev) <cmd>call table#CycleCursor('backward', v:count1)<cr>
+xnoremap <silent> <plug>(table_next) <cmd>call table#CycleCursor('forward', v:count1)<cr>
+xnoremap <silent> <plug>(table_prev) <cmd>call table#CycleCursor('backward', v:count1)<cr>
 
 " table navigation directional
 inoremap <silent> <plug>(table_move_left)  <c-o><cmd>call table#MoveCursorCell('left', v:count1)<cr>
