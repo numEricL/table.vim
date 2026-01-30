@@ -76,45 +76,32 @@ function! s:TrimBlock(lines, alignment) abort
     endif
 
     if a:alignment =~# '\v^l|c$'
-        let [indent, indices] = s:MinTrimIndent(a:lines, 'left')
-        for i in indices
+        let indent = s:MinTrimIndent(a:lines, 'left')
+        for i in range(len(a:lines))
             let a:lines[i] = strpart(a:lines[i], indent)
         endfor
     endif
     if a:alignment =~# '\v^r|c$'
-        let [indent, indices] = s:MinTrimIndent(a:lines, 'right')
-        for i in indices
+        let indent = s:MinTrimIndent(a:lines, 'right')
+        for i in range(len(a:lines))
             let a:lines[i] = strpart(a:lines[i], 0, strlen(a:lines[i]) - indent)
         endfor
     endif
 endfunction
 
 function! s:MinTrimIndent(lines, side) abort
-    let trim_indices = []
-
-    if a:side ==# 'left'
-        let min_indent = -1
-        for i in range(len(a:lines))
-            let [match, start, _] = matchstrpos(a:lines[i], '\S')
-            let indent = strdisplaywidth(strpart(a:lines[i], 0, start))
-            if indent > 0
-                call add(trim_indices, i)
-                let min_indent = (min_indent == -1) ? indent : min([min_indent, indent])
-            endif
-        endfor
-        return [ min_indent, trim_indices ]
-    elseif a:side ==# 'right'
-        let min_indent = -1
-        for i in range(len(a:lines))
-            let [match, start, end] = matchstrpos(a:lines[i], '\S\ze\s*$')
-            let indent = strdisplaywidth(strpart(a:lines[i], end))
-            if indent > 0
-                call add(trim_indices, i)
-                let min_indent = (min_indent == -1) ? indent : min([min_indent, indent])
-            endif
-        endfor
-        return [ min_indent, trim_indices ]
-    else
-        throw 'unknown side: ' .. a:side
-    endif
+    let min_indent = -1
+    let indent = -1
+    for i in range(len(a:lines))
+        if a:side ==# 'left'
+            let [_, indent, _] = matchstrpos(a:lines[i], '\S')
+        elseif a:side ==# 'right'
+            let [_, _, end] = matchstrpos(a:lines[i], '\S\ze\s*$')
+            let indent = strlen(a:lines[i]) - end
+        endif
+        if indent >= 0
+            let min_indent = (min_indent == -1) ? indent : min([min_indent, indent])
+        endif
+    endfor
+    return min_indent
 endfunction
