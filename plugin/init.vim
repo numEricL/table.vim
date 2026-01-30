@@ -3,14 +3,14 @@ Table Style markdown
 " Table StyleOption omit_right_border 1
 " Table Option multiline 1
 
-"""
-nnoremap <leader><leader> <plug>(table_align)
-"""
-
+inoremap <bar>         <bar><c-o><plug>(table_align)
 nnoremap <leader><bar> <plug>(table_complete)
-inoremap <bar> <bar><c-o><plug>(table_align)
-nnoremap <leader>td <plug>(table_to_default)
-nnoremap <leader>te <plug>(table_cell_edit)
+nnoremap <leader>ta    <plug>(table_align)
+nnoremap <leader>td    <plug>(table_to_default)
+
+if has('nvim')
+    nnoremap <leader>te <plug>(table_cell_edit)
+endif
 
 nmap <expr> <tab> table#IsTable(line('.')) ? "\<plug>(table_next)" : "\<tab>"
 xmap <expr> <tab> table#IsTable(line('.')) ? "\<plug>(table_next)" : "\<tab>"
