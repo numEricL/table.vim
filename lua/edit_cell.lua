@@ -46,8 +46,8 @@ local function update_table_on_window_close(tbl, cell_id, winid)
     vim.api.nvim_create_autocmd("WinClosed", {
         callback = function(args)
             if tonumber(args.match) == winid then
-                local scracth_bufnr = vim.api.nvim_win_get_buf(winid)
-                update_cell(tbl, cell_id, scracth_bufnr)
+                local scratch_bufnr = vim.api.nvim_win_get_buf(winid)
+                update_cell(tbl, cell_id, scratch_bufnr)
                 bridge.draw__currently_placed(tbl)
             end
         end,

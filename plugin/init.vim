@@ -1,5 +1,3 @@
-call table#style#fancy#Register()
-" Table Style stars
 Table Style markdown
 " Table StyleOption omit_left_border 1
 " Table StyleOption omit_right_border 1

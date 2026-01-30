@@ -56,7 +56,7 @@ function! table#parse#FindTableRange(linenr) abort
         let view = winsaveview()
         call cursor(a:linenr, 1)
     endif
-    let cs = table#util#CommentStringPattern('%')
+    let cs = table#util#CommentStringPattern(bufnr('%'))
     let empty_line = '\V\^' .. cs[0] .. cs[1] .. '\$'
     let top = search(empty_line, 'bnW')
     let top = (top == 0) ? 1 : top + 1
@@ -81,7 +81,7 @@ function! s:IsTableLine(line) abort
         endif
     endif
 
-    let cs = table#util#CommentStringPattern('%')[0]
+    let cs = table#util#CommentStringPattern(bufnr('%'))[0]
     let horiz = s:GeneralHorizPattern()
     if a:line =~# '\V\^' .. cs .. horiz .. '\+\s\*\$'
         return v:true
@@ -90,7 +90,7 @@ function! s:IsTableLine(line) abort
 endfunction
 
 function! s:IsIncompleteTableLine(line) abort
-    let cs = table#util#CommentStringPattern('%')[0]
+    let cs = table#util#CommentStringPattern(bufnr('%'))[0]
     let sep = s:GeneralSeparatorPattern()
     if a:line =~# '\V\^' .. cs .. sep
         return v:true
@@ -220,19 +220,19 @@ function! s:GeneralSeparatorLinePattern() abort
 endfunction
 
 function! s:CommentAwareTrim(line) abort
-    let cs = table#util#CommentString('%')
+    let cs = table#util#CommentString(bufnr('%'))
     if empty(cs[0])
         return [a:line, '', '']
     endif
     let line = a:line
     
-    let cs_pattern = '\V\^' .. table#util#CommentStringPattern('%')[0]
+    let cs_pattern = '\V\^' .. table#util#CommentStringPattern(bufnr('%'))[0]
     let prefix = matchstrpos(line, cs_pattern)
     if prefix[1] != -1
         let line = strpart(line, prefix[2])
     endif
 
-    let cs_pattern = '\V' .. table#util#CommentStringPattern('%')[1] .. '\$'
+    let cs_pattern = '\V' .. table#util#CommentStringPattern(bufnr('%'))[1] .. '\$'
     let suffix = matchstrpos(line, cs_pattern)
     if suffix[1] != -1
         let line = strpart(line, 0, suffix[1])
