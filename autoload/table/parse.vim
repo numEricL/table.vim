@@ -23,7 +23,11 @@ function! table#parse#ParseLine(linenr) abort
     let [line_stripped, prefix, _] = s:CommentAwareTrim(line)
     let [cells, sep_pos, seps] = s:SplitPos(line_stripped)
     let [cells, sep_pos] = s:HandleOmittedBorders(line_stripped, cells, sep_pos)
-    let type = s:LineType(line_stripped)
+
+    " strip lines of text before/after the table borders for determining type
+    let line_table_only = strpart(line_stripped, sep_pos[0][0], sep_pos[-1][1] - sep_pos[0][0])
+    let type = s:LineType(line_table_only)
+
     if empty(cells)
         let [ sep_pos, type ] = s:ParseIncompleteBorders(line_stripped, seps, sep_pos)
     endif
@@ -52,7 +56,7 @@ function! table#parse#FindTableRange(linenr) abort
         let view = winsaveview()
         call cursor(a:linenr, 1)
     endif
-    let cs = table#util#CommentStringPattern()
+    let cs = table#util#CommentStringPattern(bufnr('%'))
     let empty_line = '\V\^' .. cs[0] .. cs[1] .. '\$'
     let top = search(empty_line, 'bnW')
     let top = (top == 0) ? 1 : top + 1
@@ -77,7 +81,7 @@ function! s:IsTableLine(line) abort
         endif
     endif
 
-    let cs = table#util#CommentStringPattern()[0]
+    let cs = table#util#CommentStringPattern(bufnr('%'))[0]
     let horiz = s:GeneralHorizPattern()
     if a:line =~# '\V\^' .. cs .. horiz .. '\+\s\*\$'
         return v:true
@@ -86,7 +90,7 @@ function! s:IsTableLine(line) abort
 endfunction
 
 function! s:IsIncompleteTableLine(line) abort
-    let cs = table#util#CommentStringPattern()[0]
+    let cs = table#util#CommentStringPattern(bufnr('%'))[0]
     let sep = s:GeneralSeparatorPattern()
     if a:line =~# '\V\^' .. cs .. sep
         return v:true
@@ -96,7 +100,8 @@ endfunction
 
 function! s:LineType(line) abort
     let sep_line = s:GeneralSeparatorLinePattern()
-    if a:line =~# '\V\^' .. sep_line .. '\+\$'
+    let horiz = s:GeneralHorizPattern()
+    if a:line =~# '\V\^' .. sep_line .. '\+\$' && a:line =~# '\V' .. horiz
         return 'separator'
     else
         return 'row'
@@ -108,10 +113,11 @@ function! s:ParseIncompleteBorders(line, seps, sep_pos) abort
     let type = ''
     if empty(a:seps)
         let match = matchstrpos(a:line, '\V' .. horiz .. '\+')
-        call add(a:sep_pos, match[1:2])
+        call add(a:sep_pos, [match[1], match[1]])
+        call add(a:sep_pos, [match[2], match[2]])
         let type = 'separator'
     else
-        let match = matchstrpos(a:line, '\V\^' .. horiz .. '\+', a:sep_pos[0][1])
+        let match = matchstrpos(a:line, '\V' .. horiz .. '\+', a:sep_pos[0][1])
         if match[1] != -1
             call add(a:sep_pos, match[1:2])
             let type = 'separator'
@@ -164,10 +170,24 @@ function! s:GeneralSeparatorPattern() abort
     return table#util#AnyPattern(separators)
 endfunction
 
+function! s:GeneralHorizPattern() abort
+    let box = table#config#Style().box_drawing
+    let cfg_opts = table#config#Config().options
+    let horizs = [
+                \ box.align_horiz,
+                \ box.sep_horiz,
+                \ box.top_horiz,
+                \ box.bottom_horiz,
+                \ cfg_opts.i_horizontal,
+                \ cfg_opts.i_alignment,
+                \ ]
+    return table#util#AnyPattern(horizs)
+endfunction
+
 function! s:GeneralSeparatorLinePattern() abort
     let box = table#config#Style().box_drawing
     let cfg_opts = table#config#Config().options
-    let separators = [
+    let sep_line_chars = [
                 \ box.align_left,
                 \ box.align_right,
                 \ box.align_sep,
@@ -188,37 +208,31 @@ function! s:GeneralSeparatorLinePattern() abort
                 \ cfg_opts.i_horizontal,
                 \ cfg_opts.i_alignment,
                 \ ]
-    return table#util#AnyPattern(separators)
-endfunction
+    let pattern = table#util#AnyPattern(sep_line_chars)
+    let pattern = '\%(\s\|' .. pattern[3:]
+    return pattern
 
-function! s:GeneralHorizPattern() abort
-    let box = table#config#Style().box_drawing
-    let cfg_opts = table#config#Config().options
-    let horizs = [
-                \ box.align_horiz,
-                \ box.sep_horiz,
-                \ box.top_horiz,
-                \ box.bottom_horiz,
-                \ cfg_opts.i_horizontal,
-                \ cfg_opts.i_alignment,
-                \ ]
-    return table#util#AnyPattern(horizs)
+    " let sep = s:GeneralSeparatorPattern()
+    " let horiz = s:GeneralHorizPattern()
+    " let cell = sep .. '\?\s\*' .. horiz .. '\+\s\*'
+    " let pattern = '\%(' .. cell .. '\)\+' .. sep .. '\?'
+    " return pattern
 endfunction
 
 function! s:CommentAwareTrim(line) abort
-    let cs = split(&commentstring, '%s')
-    if empty(cs)
+    let cs = table#util#CommentString(bufnr('%'))
+    if empty(cs[0])
         return [a:line, '', '']
     endif
     let line = a:line
     
-    let cs_pattern = '\V\^' .. table#util#CommentStringPattern()[0]
+    let cs_pattern = '\V\^' .. table#util#CommentStringPattern(bufnr('%'))[0]
     let prefix = matchstrpos(line, cs_pattern)
     if prefix[1] != -1
         let line = strpart(line, prefix[2])
     endif
 
-    let cs_pattern = '\V' .. table#util#CommentStringPattern()[1] .. '\$'
+    let cs_pattern = '\V' .. table#util#CommentStringPattern(bufnr('%'))[1] .. '\$'
     let suffix = matchstrpos(line, cs_pattern)
     if suffix[1] != -1
         let line = strpart(line, 0, suffix[1])

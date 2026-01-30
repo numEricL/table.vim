@@ -6,7 +6,7 @@ let s:table_default_config = {
             \   'i_alignment'                    : ':',
             \   'default_alignment'              : 'l',
             \   'chunk_size'                     : [-10, 10],
-            \   'multiline_cells'                : v:false,
+            \   'multiline'                      : v:false,
             \   'multiline_preserve_indentation' : v:true,
             \ },
             \ }

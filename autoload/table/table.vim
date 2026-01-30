@@ -60,7 +60,7 @@ endfunction
 function! s:ExpandToCompleteRow(linenr, boundary, direction) abort
     let current = a:linenr
     let cfg_opts = table#config#Config().options
-    if !cfg_opts.multiline_cells
+    if !cfg_opts.multiline
         let [_, _, _, type] = table#parse#ParseLine(current)
         if type =~# '\v^row|incomplete$' && current != a:boundary
             let [_, _, _, type] = table#parse#ParseLine(current + a:direction)
@@ -94,6 +94,7 @@ function! s:Generate(linenr, chunk_size) abort
     endif
     let bounds = s:ComputeChunkBounds(a:linenr, full_bounds, a:chunk_size)
     let placement = {
+                \ 'bufnr'         : bufnr('%'),
                 \ 'bounds'        : bounds,
                 \ 'full_bounds'   : full_bounds,
                 \ 'positions'     : [],
@@ -178,12 +179,9 @@ function! s:TableGetCell(row, col) dict abort
     return copy(row_obj.cells[a:col])
 endfunction
 
-function! s:TableSetCell(row, col, cell) dict abort
-    if type(a:cell) != v:t_list
-        throw 'cell must be a list of strings'
-    endif
+function! s:TableSetCell(row, col, lines) dict abort
     let row_obj = self.rows[a:row]
-    let self.rows[a:row].cells[a:col] = a:cell
+    let self.rows[a:row].cells[a:col] = a:lines
 endfunction
 
 function! s:CellColCount() dict abort
@@ -200,7 +198,7 @@ endfunction
 
 function! s:TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
     let cfg_opts = table#config#Config().options
-    if !cfg_opts.multiline_cells ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
+    if !cfg_opts.multiline ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
         let cells = empty(a:line_cells)? [['']] : map(copy(a:line_cells), '[v:val]')
         let row = {
                     \ 'cells'         : cells,
@@ -213,7 +211,7 @@ function! s:TableAppendRow(table, line_type, last_type, line_cells, pos_id) abor
     else
         let row = a:table.rows[-1]
         while len(row.cells) < len(a:line_cells)
-            call add(row.cells, [''])
+            call add(row.cells, repeat([''], row.Height()))
         endwhile
         for j in range(len(row.cells))
             call add(row.cells[j], get(a:line_cells, j, ''))
@@ -275,4 +273,20 @@ function! s:SetupCacheInvalidation() abort
         autocmd! * <buffer>
         autocmd TextChanged,TextChangedI <buffer> call table#table#InvalidateCache()
     augroup END
+endfunction
+
+" used when interoperating with lua, which cannot serialize function references
+function! table#table#RestoreMethods(tbl) abort
+    " Restore table-level methods
+    let a:tbl.RowCount = function('s:TableRowCount')
+    let a:tbl.ColCount = function('s:TableColCount')
+    let a:tbl.ColAlign = function('s:TableColAlign')
+    let a:tbl.Cell = function('s:TableGetCell')
+    let a:tbl.SetCell = function('s:TableSetCell')
+    
+    " Restore row-level methods
+    for row in a:tbl.rows
+        let row.Height = function('s:CellRowHeight')
+        let row.ColCount = function('s:CellColCount')
+    endfor
 endfunction
