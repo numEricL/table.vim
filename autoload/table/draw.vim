@@ -149,7 +149,7 @@ endfunction
 " used for multi-row cells with unfinished rows and styles that omit right borders
 function! s:HasRightMostSeparator(table, row_id, row_offset) abort
     let pos_id = get(a:table.rows[a:row_id], 'placement_id', -1)
-    if pos_id == -1
+    if pos_id == -1 || pos_id + a:row_offset >= len(a:table.placement.positions)
         return v:true
     endif
     let pos_id += a:row_offset
@@ -192,11 +192,10 @@ function! s:MakeSeparator(table, type, num_cols) abort
 endfunction
 
 function! s:AppendConditionalCommentLine(placement, linenr) abort
-    let cs = split(&commentstring, '%s')
+    let cs = table#util#CommentString(a:placement.bufnr)
     let found = v:false
-    if len(cs) > 0
+    if !empty(cs[0])
         let line = getbufoneline(a:placement.bufnr, a:linenr)
-        let cs = table#util#CommentString()
         let cs_pattern = table#util#AnyPattern([cs[0]])
         let match = matchstrpos(line, '\V\^' .. cs_pattern)
         let found = !empty(match[0])
@@ -206,7 +205,7 @@ function! s:AppendConditionalCommentLine(placement, linenr) abort
 endfunction
 
 function! s:ClearRemaining(placement, pos_id) abort
-    let [cs_left, cs_right] = table#util#CommentStringPattern()
+    let [cs_left, cs_right] = table#util#CommentStringPattern(a:placement.bufnr)
     for id in reverse(range(a:pos_id, len(a:placement.positions)-1))
         let linenr = a:placement.bounds[0] + id
         let line = getbufoneline(a:placement.bufnr, linenr)

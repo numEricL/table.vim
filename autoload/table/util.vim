@@ -12,14 +12,15 @@ function! table#util#AnyPattern(list) abort
     return pattern
 endfunction
 
-function! table#util#CommentString() abort
-    let cs = split(&commentstring, '%s')
-    call map(cs, 'trim(v:val)')
-    return [get(cs, 0, ''), get(cs, 1, '')]
+function! table#util#CommentString(bufnr) abort
+    let cs = getbufvar(a:bufnr, '&commentstring')
+    let cs_list = split(cs, '%s')
+    call map(cs_list, 'trim(v:val)')
+    return [get(cs_list, 0, ''), get(cs_list, 1, '')]
 endfunction
 
-function! table#util#CommentStringPattern() abort
-    let cs = table#util#CommentString()
+function! table#util#CommentStringPattern(bufnr) abort
+    let cs = table#util#CommentString(a:bufnr)
     for i in range(len(cs))
         if !empty(cs[i])
             let cs[i] = table#util#AnyPattern([cs[i]])
