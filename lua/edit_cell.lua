@@ -13,22 +13,41 @@ local function find_window(bufnr)
     return nil
 end
 
-local function open_window()
+local function get_buf_size(buf)
+    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    local max_width = 0
+    for _, line in ipairs(lines) do
+        local width = vim.fn.strdisplaywidth(line)
+        max_width = math.max(max_width, width)
+    end
+    return #lines, max_width
+end
+
+local function resize_win_to_fit_buf(winid)
+    local bufnr = vim.api.nvim_win_get_buf(winid)
+    local height, width = get_buf_size(bufnr)
+    vim.api.nvim_win_set_config(winid, {
+        width = width,
+        height = height,
+    })
+    vim.fn.winrestview({
+        topline = 1,
+        leftcol = 0,
+    })
+
+end
+
+local function open_resizable_window(cfg)
     if not CellBufNr then
         CellBufNr = vim.api.nvim_create_buf(false, true)
     end
     local bufnr = CellBufNr
     local winid = find_window(bufnr)
     if not winid then
-        local opts = {
-            relative = 'cursor',
-            row = 5,
-            col = 0,
-            width = 20,
-            height = 5,
-        }
-        winid = vim.api.nvim_open_win(bufnr, false, opts)
+        winid = vim.api.nvim_open_win(bufnr, true, cfg)
         vim.wo[winid].number = false
+        vim.wo[winid].scrolloff = 0
+        vim.wo[winid].sidescrolloff = 0
     end
     vim.api.nvim_set_current_win(winid)
     return winid, bufnr
@@ -41,28 +60,52 @@ local function update_cell(tbl, cell_id, bufnr)
     tbl:SetCell(row_id, col_id, lines)
 end
 
-local function update_table_on_window_close(tbl, cell_id, winid)
+local function set_window_autocmds(tbl, cell_id, winid)
     local group = vim.api.nvim_create_augroup("table.vim", {})
-    vim.api.nvim_create_autocmd("WinClosed", {
-        callback = function(args)
-            if tonumber(args.match) == winid then
-                local scratch_bufnr = vim.api.nvim_win_get_buf(winid)
-                update_cell(tbl, cell_id, scratch_bufnr)
-                bridge.draw__currently_placed(tbl)
-            end
+
+    -- resize window on text change
+    vim.api.nvim_create_autocmd({"TextChanged", "TextChangedI"}, {
+        group = group,
+        buffer = vim.api.nvim_win_get_buf(winid),
+        callback = function()
+            resize_win_to_fit_buf(winid)
         end,
+    })
+
+    -- update cell on winleave, and then delete the augroup
+    vim.api.nvim_create_autocmd("WinLeave", {
         once = true,
         group = group,
+        callback = function()
+            if vim.api.nvim_get_current_win() == winid then
+                local bufnr = vim.api.nvim_win_get_buf(winid)
+                update_cell(tbl, cell_id, bufnr)
+                bridge.draw__currently_placed(tbl)
+                vim.api.nvim_win_close(winid, false)
+                vim.api.nvim_del_augroup_by_id(group)
+            end
+        end,
     })
 end
 
 local function edit_cell(tbl, cell_id)
-    local winid, bufnr = open_window()
+    local textobj = bridge.textobj__cell(1, 'inner')
+
+    local current_winid = vim.api.nvim_get_current_win()
+    local screenpos = vim.fn.screenpos(current_winid, textobj['start'][1], textobj['start'][2])
+    local win_cfg = {
+       relative = 'editor',
+       row = screenpos.row - 2,
+       col = screenpos.col - 2,
+       height = textobj['end'][1] - textobj['start'][1] + 1,
+       width  = textobj['end'][2] - textobj['start'][2] + 1,
+    }
+    local winid, bufnr = open_resizable_window(win_cfg)
     ---@diagnostic disable-next-line: deprecated
     local row_id, _, col_id = unpack(cell_id)
     local cell = tbl:Cell(row_id, col_id)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, cell)
-    update_table_on_window_close(tbl, cell_id, winid)
+    set_window_autocmds(tbl, cell_id, winid)
 end
 
 function M.edit_cell_under_cursor()

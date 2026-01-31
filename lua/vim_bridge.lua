@@ -32,4 +32,8 @@ function M.table__get(linenr, chunk_size)
     return tbl
 end
 
+function M.textobj__cell(count1, type)
+    return vim.fn['table#textobj#Cell'](count1, type)
+end
+
 return M
