@@ -50,3 +50,18 @@ xnoremap ar <plug>(table_around_row_textobj)
 onoremap ar <plug>(table_around_row_textobj)
 xnoremap ac <plug>(table_around_column_textobj)
 onoremap ac <plug>(table_around_column_textobj)
+
+if has('nvim')
+lua << EOF
+vim.api.nvim_create_autocmd('User', {
+    pattern = 'TableCellEditOpened',
+    callback = function(args)
+    local bufnr = args.data.bufnr
+    local winid = args.data.winid
+    local cell_id = args.data.cell_id
+    local row_id, _, col_id = unpack(cell_id)
+    print('Cell (' .. row_id .. ', ' .. col_id .. ') opened in window ' .. winid .. ' and buffer ' .. bufnr)
+    end
+})
+EOF
+endif

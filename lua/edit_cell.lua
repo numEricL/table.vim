@@ -60,13 +60,13 @@ local function update_cell(tbl, cell_id, bufnr)
     tbl:SetCell(row_id, col_id, lines)
 end
 
-local function set_window_autocmds(tbl, cell_id, winid)
+local function set_window_autocmds(tbl, cell_id, winid, bufnr)
     local group = vim.api.nvim_create_augroup("table.vim", {})
 
     -- resize window on text change
     vim.api.nvim_create_autocmd({"TextChanged", "TextChangedI"}, {
         group = group,
-        buffer = vim.api.nvim_win_get_buf(winid),
+        buffer = bufnr,
         callback = function()
             resize_win_to_fit_buf(winid)
         end,
@@ -78,11 +78,16 @@ local function set_window_autocmds(tbl, cell_id, winid)
         group = group,
         callback = function()
             if vim.api.nvim_get_current_win() == winid then
-                local bufnr = vim.api.nvim_win_get_buf(winid)
                 update_cell(tbl, cell_id, bufnr)
                 bridge.draw__currently_placed(tbl)
                 vim.api.nvim_win_close(winid, false)
                 vim.api.nvim_del_augroup_by_id(group)
+                
+                -- Fire user event for cell edit window closed
+                vim.api.nvim_exec_autocmds('User', { 
+                    pattern = 'TableCellEditClosed',
+                    data = { bufnr = bufnr, winid = winid, cell_id = cell_id }
+                })
             end
         end,
     })
@@ -105,7 +110,13 @@ local function edit_cell(tbl, cell_id)
     local row_id, _, col_id = unpack(cell_id)
     local cell = tbl:Cell(row_id, col_id)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, cell)
-    set_window_autocmds(tbl, cell_id, winid)
+    set_window_autocmds(tbl, cell_id, winid, bufnr)
+    
+    -- Fire user event for cell edit window opened
+    vim.api.nvim_exec_autocmds('User', { 
+        pattern = 'TableCellEditOpened',
+        data = { bufnr = bufnr, winid = winid, cell_id = cell_id }
+    })
 end
 
 function M.edit_cell_under_cursor()
