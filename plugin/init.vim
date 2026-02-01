@@ -54,13 +54,14 @@ onoremap ac <plug>(table_around_column_textobj)
 if has('nvim')
 lua << EOF
 vim.api.nvim_create_autocmd('User', {
-    pattern = 'TableCellEditOpened',
+    pattern = 'TableCellEditOpen',
     callback = function(args)
-    local bufnr = args.data.bufnr
-    local winid = args.data.winid
-    local cell_id = args.data.cell_id
+    local bufnr     = args.data.bufnr
+    local winid     = args.data.winid
+    local placement = args.data.table.placement
+    local cell_id   = args.data.cell_id
     local row_id, _, col_id = unpack(cell_id)
-    print('Cell (' .. row_id .. ', ' .. col_id .. ') opened in window ' .. winid .. ' and buffer ' .. bufnr)
+    print('Cell (' .. row_id .. ', ' .. col_id .. ') of table with range [' .. placement.bounds[1] .. ', ' .. placement.bounds[2] .. '] opened in window ' .. winid .. ' and buffer ' .. bufnr)
     end
 })
 EOF

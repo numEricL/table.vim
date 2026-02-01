@@ -18,7 +18,8 @@ function M.config__config()
 end
 
 function M.cursor__get_coord(tbl, pos, type_override)
-    return vim.fn['table#cursor#GetCoord'](tbl, pos, type_override)
+    set_vim_methods(tbl)
+    return vim.fn['table#lua_bridge#Cursor_GetCoord'](pos, type_override)
 end
 
 function M.draw__currently_placed(tbl)
