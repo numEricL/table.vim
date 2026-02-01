@@ -5,12 +5,18 @@ function! table#textobj#Select(GetTextObj, ...) abort
         let v_mode = mode()
         let v_block = [ getpos('v')[1:2], getpos('.')[1:2] ]
         let text_obj = call(a:GetTextObj, args)
+        if !text_obj.valid
+            return
+        endif
         let [text_obj.start, text_obj.end] = s:ConvexUnion(v_block, [text_obj.start, text_obj.end])
         call s:SetVisualSelection(v_mode, text_obj)
     elseif mode(1)[0:1] ==# 'no'
         let v_mode = mode(1)[-1:]
         let v_mode = (v_mode =~# '\v^[vV]$')? v_mode : 'v'
         let text_obj = call(a:GetTextObj, args)
+        if !text_obj.valid
+            return
+        endif
         call s:SetVisualSelection(v_mode, text_obj)
     else
         throw 'Unsupported mode for TextObj'

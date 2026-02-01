@@ -32,17 +32,17 @@ end
 --     align = (align == '') and default_align or align
 --     return align
 -- end
--- 
--- function M.cell_row_height(row)
---     local height = 0
---     for _, cell in ipairs(row.cells) do
---         height = math.max(height, #cell)
---     end
---     return height
--- end
--- 
--- function M.cell_col_count(row)
---     return #row.cells
--- end
+
+function M.cell_row_height(row)
+   local height = 0
+   for _, cell in ipairs(row.cells) do
+       height = math.max(height, #cell)
+   end
+   return height
+end
+
+function M.cell_col_count(row)
+   return #row.cells
+end
 
 return M

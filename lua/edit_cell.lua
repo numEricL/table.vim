@@ -3,6 +3,15 @@ local bridge = require('vim_bridge')
 local M = {}
 local CellBufNr = nil
 
+local function win_get_cursor_vim_indexed(winid)
+    local pos = vim.api.nvim_win_get_cursor(winid)
+    return {pos[1], pos[2] + 1}
+end
+
+local function win_set_cursor_vim_indexed(winid, pos)
+    vim.api.nvim_win_set_cursor(winid, {pos[1], pos[2] - 1})
+end
+
 local function find_window(bufnr)
     local wins = vim.api.nvim_list_wins()
     for _, win in ipairs(wins) do
@@ -29,8 +38,8 @@ local function resize_win_to_fit_buf(winid)
 
     local extra_col = 0
     if vim.fn.mode():match('^[i]') then
-        local cursor = vim.api.nvim_win_get_cursor(winid)
-        if cursor[2] >= width then
+        local cursor = win_get_cursor_vim_indexed(winid)
+        if cursor[2] > width then
             extra_col = 1
         end
     end
@@ -85,9 +94,8 @@ end
 
 local function update_cell(tbl, cell_id, bufnr)
     ---@diagnostic disable-next-line: deprecated
-    local row_id, _, col_id = unpack(cell_id)
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    tbl:SetCell(row_id, col_id, lines)
+    tbl:SetCell(cell_id[1], cell_id[2], lines)
 end
 
 local function set_window_autocmds(tbl, cell_id, winid, bufnr)
@@ -134,17 +142,18 @@ local function set_window_autocmds(tbl, cell_id, winid, bufnr)
 end
 
 local function edit_cell(tbl, cell_id)
-    local cell = tbl:Cell(cell_id[1], cell_id[3])
+    local cell = tbl:Cell(cell_id[1], cell_id[2])
     local bufnr = init_buffer(cell)
 
     local textobj = bridge.textobj__cell(1, 'inner')
     local winid = init_window(bufnr, textobj)
     set_window_autocmds(tbl, cell_id, winid, bufnr)
 
-    local pos = vim.api.nvim_win_get_cursor(0)
+    local pos = win_get_cursor_vim_indexed(0)
     pos = {pos[1] - textobj['start'][1] + 1, pos[2] - textobj['start'][2] + 1}
+    pos = {math.max(pos[1], 1), math.max(pos[2], 1)}
     vim.api.nvim_set_current_win(winid)
-    vim.api.nvim_win_set_cursor(winid, pos)
+    win_set_cursor_vim_indexed(winid, pos)
 
     -- Fire user event for cell edit window open
     vim.api.nvim_exec_autocmds('User', {
@@ -154,10 +163,19 @@ local function edit_cell(tbl, cell_id)
 end
 
 function M.edit_cell_under_cursor()
-    local cursor = vim.api.nvim_win_get_cursor(0)
+    local cursor = win_get_cursor_vim_indexed(0)
     local cfg_opts = bridge.config__config().options
     local tbl = bridge.table__get(cursor[1], cfg_opts.chunk_size)
-    local cell_id = bridge.cursor__get_coord(tbl, cursor, 'cell').coord
+    if not tbl.valid then
+        return
+    end
+    local coord = bridge.cursor__get_coord(tbl, cursor, 'cell')
+    local cell_id = { coord.coord[1], coord.coord[3] }
+
+    local lua_array_offset = 1
+    if cell_id[2] < 0 or cell_id[2] > tbl.rows[cell_id[1]+lua_array_offset]:ColCount() - 1 then
+        return
+    end
     edit_cell(tbl, cell_id)
 end
 

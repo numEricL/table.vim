@@ -3,8 +3,15 @@ local methods = require('vim_bridge_methods')
 local M = {}
 
 local function set_lua_methods(tbl)
+    if not tbl.valid then
+        return
+    end
     tbl.Cell = methods.table_get_cell
     tbl.SetCell = methods.table_set_cell
+    for _, row in ipairs(tbl.rows) do
+        row.RowHeight = methods.cell_row_height
+        row.ColCount = methods.cell_col_count
+    end
 end
 
 local function set_vim_methods(tbl)

@@ -20,6 +20,9 @@ endfunction
 
 function! table#config#Style() abort
     if empty(s:style_cache)
+        if s:config.style ==# 'default' && !table#style#Exists('default')
+            call table#style#Register('default', s:GenerateDefaultStyle())
+        endif
         let s:style_cache = deepcopy(table#style#Get(s:config.style))
     endif
     return s:style_cache
@@ -50,9 +53,6 @@ function! table#config#SetConfig(config) abort
         call extend(s:config.options, a:config.options)
     endif
     if has_key(a:config, 'style')
-        if a:config.style ==# 'default' && !table#style#Exists('default')
-            call table#style#Register('default', s:GenerateDefaultStyle())
-        endif
         let s:config.style = a:config.style
         let s:style_cache = {}
     endif
