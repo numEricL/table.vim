@@ -40,10 +40,10 @@ function! table#ToDefault(linenr) abort
     let cfg = table#config#Config()
     let style = table#config#Style()
 
-    call table#config#SetConfig({ 'style': 'default' })
+    call table#config#Setup({ 'style': 'default' })
     call table#draw#Table(table)
 
-    call table#config#SetConfig(cfg)
+    call table#config#Setup(cfg)
     call table#config#SetStyle(style)
 endfunction
 

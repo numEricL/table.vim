@@ -1,4 +1,4 @@
-let s:table_default_config = {
+let s:default_config = {
             \ 'style': 'default',
             \ 'options': {
             \   'i_vertical'           : '|',
@@ -11,43 +11,10 @@ let s:table_default_config = {
             \ },
             \ }
 
-let s:config = deepcopy(s:table_default_config)
+let s:config = deepcopy(s:default_config)
 let s:style_cache = {}
 
-function! table#config#Config() abort
-    return deepcopy(s:config)
-endfunction
-
-function! table#config#Style() abort
-    if empty(s:style_cache)
-        if s:config.style ==# 'default' && !table#style#Exists('default')
-            call table#style#Register('default', s:GenerateDefaultStyle())
-        endif
-        let s:style_cache = deepcopy(table#style#Get(s:config.style))
-    endif
-    return s:style_cache
-endfunction
-
-function! s:ValidateConfig(config) abort
-    for key in keys(a:config)
-        if !has_key(s:table_default_config, key)
-            throw 'Invalid configuration key: ' .. key
-        endif
-        if key ==# 'options'
-            for opt_key in keys(a:config.options)
-                if !has_key(s:table_default_config.options, opt_key)
-                    throw 'Invalid configuration option key: ' .. opt_key
-                endif
-            endfor
-        elseif key ==# 'style' && a:config.style !=# 'default'
-            if !table#style#Exists(a:config.style)
-                throw 'Style "' . a:config.style . '" is not registered.'
-            endif
-        endif
-    endfor
-endfunction
-
-function! table#config#SetConfig(config) abort
+function! table#config#Setup(config) abort
     call s:ValidateConfig(a:config)
     if has_key(a:config, 'options')
         call extend(s:config.options, a:config.options)
@@ -65,7 +32,40 @@ function! table#config#SetStyle(style_dict) abort
 endfunction
 
 function! table#config#RestoreDefault() abort
-    call table#config#SetConfig(s:table_default_config)
+    call table#config#Setup(s:default_config)
+endfunction
+
+function! table#config#Config() abort
+    return deepcopy(s:config)
+endfunction
+
+function! table#config#Style() abort
+    if empty(s:style_cache)
+        if s:config.style ==# 'default' && !table#style#Exists('default')
+            call table#style#Register('default', s:GenerateDefaultStyle())
+        endif
+        let s:style_cache = deepcopy(table#style#Get(s:config.style))
+    endif
+    return s:style_cache
+endfunction
+
+function! s:ValidateConfig(config) abort
+    for key in keys(a:config)
+        if !has_key(s:default_config, key)
+            throw 'Invalid configuration key: ' .. key
+        endif
+        if key ==# 'options'
+            for opt_key in keys(a:config.options)
+                if !has_key(s:default_config.options, opt_key)
+                    throw 'Invalid configuration option key: ' .. opt_key
+                endif
+            endfor
+        elseif key ==# 'style' && a:config.style !=# 'default'
+            if !table#style#Exists(a:config.style)
+                throw 'Style "' . a:config.style . '" is not registered.'
+            endif
+        endif
+    endfor
 endfunction
 
 function! s:GenerateDefaultStyle() abort

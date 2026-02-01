@@ -92,7 +92,7 @@ function! s:SetTableOption(args) abort
         return
     endif
     let value = s:ConvertValue(a:args[1])
-    call table#config#SetConfig({ 'options': { key : value } })
+    call table#config#Setup({ 'options': { key : value } })
 endfunction
 
 function! s:SetTableStyle(args) abort
@@ -102,7 +102,7 @@ function! s:SetTableStyle(args) abort
         echo 'Available styles: ' .. join(styles, ', ')
         return
     endif
-    call table#config#SetConfig({ 'style': a:args[0] })
+    call table#config#Setup({ 'style': a:args[0] })
 endfunction
 
 function! s:RegisterTableStyle(args) abort
@@ -115,7 +115,7 @@ function! s:RegisterTableStyle(args) abort
     let style_name = a:args[0]
     let current_style = deepcopy(table#config#Style())
     call table#style#Register(style_name, current_style)
-    call table#config#SetConfig({ 'style': style_name })
+    call table#config#Setup({ 'style': style_name })
     echomsg 'Registered style "' .. style_name .. '"'
 endfunction
 
