@@ -21,6 +21,14 @@ function! table#commands#TableCommand(...) abort
         call s:SetTableStyle(args)
     elseif subcommand ==? 'RegisterStyle'
         call s:RegisterTableStyle(args)
+    elseif subcommand ==# 'EditCell'
+        if has('nvim')
+            lua require('edit_cell').edit_cell_under_cursor()
+        else
+            echohl ErrorMsg
+            echomsg 'Table EditCell: requires Neovim'
+            echohl None
+        endif
     else
         echohl ErrorMsg
         echomsg "Table: unknown subcommand '" .. subcommand .. "'"
@@ -36,6 +44,7 @@ function! table#commands#Complete(ArgLead, CmdLine, CursorPos) abort
     if num_args <= 1
         " Complete subcommand names
         let subcommands = ['Option', 'StyleOption', 'Style', 'RegisterStyle']
+        let subcommands += has('nvim') ? ['EditCell'] : []
         return filter(copy(subcommands), 'v:val =~? "^" .. a:ArgLead')
     endif
 
@@ -141,7 +150,7 @@ function! s:CompleteTableOption(ArgLead, CmdLine, CursorPos) abort
     elseif num_args == 2
         let option_key = parts[1]
         if option_key ==# 'default_alignment'
-            return filter(['l', 'c', 'r'], 'v:val =~? "^" .. a:ArgLead')
+            return filter(['left', 'center', 'right'], 'v:val =~? "^" .. a:ArgLead')
         elseif option_key =~# 'enable\|indentation'
             return filter(['v:true', 'v:false'], 'v:val =~? "^" .. a:ArgLead')
         endif

@@ -54,7 +54,7 @@ onoremap ac <plug>(table_around_column_textobj)
 if has('nvim')
 lua << EOF
 vim.api.nvim_create_autocmd('User', {
-    pattern = 'TableCellEditOpen',
+    pattern = 'TableCellEditPre',
     callback = function(args)
     local bufnr     = args.data.bufnr
     local winid     = args.data.winid

@@ -166,7 +166,7 @@ endfunction
 
 function! s:TableColAlign(col) dict abort
     let cfg_opts = table#config#Config().options
-    let default_align = cfg_opts.default_alignment
+    let default_align = cfg_opts.default_alignment[0]
     let align = get(self.col_align, a:col, default_align)
     return empty(align)? default_align : align
 endfunction

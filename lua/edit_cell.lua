@@ -26,8 +26,17 @@ end
 local function resize_win_to_fit_buf(winid)
     local bufnr = vim.api.nvim_win_get_buf(winid)
     local height, width = get_buf_size(bufnr)
+
+    local extra_col = 0
+    if vim.fn.mode():match('^[i]') then
+        local cursor = vim.api.nvim_win_get_cursor(winid)
+        if cursor[2] >= width then
+            extra_col = 1
+        end
+    end
+
     vim.api.nvim_win_set_config(winid, {
-        width = math.max(width, 1),
+        width = math.max(width + extra_col, 1),
         height = math.max(height, 1),
     })
     vim.fn.winrestview({
@@ -81,11 +90,11 @@ local function update_cell(tbl, cell_id, bufnr)
     tbl:SetCell(row_id, col_id, lines)
 end
 
-local function set_window_autocmds(tbl, cell_id, topleft_pos, winid, bufnr)
+local function set_window_autocmds(tbl, cell_id, winid, bufnr)
     local group = vim.api.nvim_create_augroup("table.vim", {})
 
     -- resize window on text change
-    vim.api.nvim_create_autocmd({"TextChanged", "TextChangedI"}, {
+    vim.api.nvim_create_autocmd({"CursorMovedI", "InsertLeave"}, {
         group = group,
         buffer = bufnr,
         callback = function()
@@ -112,7 +121,7 @@ local function set_window_autocmds(tbl, cell_id, topleft_pos, winid, bufnr)
             if closed_winid == winid then
                 -- Fire user event for cell edit window close
                 vim.api.nvim_exec_autocmds('User', {
-                    pattern = 'TableCellEditClose',
+                    pattern = 'TableCellEditPost',
                     data = { bufnr = bufnr, winid = winid, table = tbl, cell_id = cell_id }
                 })
 
@@ -130,7 +139,7 @@ local function edit_cell(tbl, cell_id)
 
     local textobj = bridge.textobj__cell(1, 'inner')
     local winid = init_window(bufnr, textobj)
-    set_window_autocmds(tbl, cell_id, textobj['start'], winid, bufnr)
+    set_window_autocmds(tbl, cell_id, winid, bufnr)
 
     local pos = vim.api.nvim_win_get_cursor(0)
     pos = {pos[1] - textobj['start'][1] + 1, pos[2] - textobj['start'][2] + 1}
@@ -139,7 +148,7 @@ local function edit_cell(tbl, cell_id)
 
     -- Fire user event for cell edit window open
     vim.api.nvim_exec_autocmds('User', {
-        pattern = 'TableCellEditOpen',
+        pattern = 'TableCellEditPre',
         data = { bufnr = bufnr, winid = winid, table = tbl, cell_id = cell_id }
     })
 end

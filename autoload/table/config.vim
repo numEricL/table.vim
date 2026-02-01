@@ -4,7 +4,7 @@ let s:table_default_config = {
             \   'i_vertical'           : '|',
             \   'i_horizontal'         : '-',
             \   'i_alignment'          : ':',
-            \   'default_alignment'    : 'l',
+            \   'default_alignment'    : 'left',
             \   'chunk_size'           : [-10, 10],
             \   'multiline'            : v:false,
             \   'preserve_indentation' : v:true,
