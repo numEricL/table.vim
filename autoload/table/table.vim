@@ -1,4 +1,5 @@
 let s:cache_table = v:false
+let s:debug_table = v:false
 
 function! table#table#Get(linenr, chunk_size, ...) abort
     let cache_table = a:0 ? a:1 : s:cache_table
@@ -151,8 +152,9 @@ function! s:Generate(linenr, chunk_size) abort
         endif
     endfor
     let table.col_widths = table#util#ComputeWidths(table)
-    " TEMP: for debugging
-    let g:t = table
+    if s:debug_table
+        let g:t = table
+    endif
     return table
 endfunction
 

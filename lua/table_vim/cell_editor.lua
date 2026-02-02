@@ -102,7 +102,7 @@ local function set_window_autocmds(tbl, cell_id, winid, bufnr)
     local group = vim.api.nvim_create_augroup("table.vim", {})
 
     -- resize window on text change
-    vim.api.nvim_create_autocmd({"CursorMovedI", "InsertLeave"}, {
+    vim.api.nvim_create_autocmd({"TextChanged", "CursorMovedI", "InsertLeave"}, {
         group = group,
         buffer = bufnr,
         callback = function()
@@ -169,7 +169,7 @@ function M.edit_at_cursor()
     if not tbl.valid then
         return
     end
-    local coord = bridge.cursor__get_coord(tbl, cursor, 'cell')
+    local coord = bridge.cursor__get_coord(tbl, cursor, {type_override = 'cell'})
     local cell_id = { coord.coord[1], coord.coord[3] }
 
     local lua_array_offset = 1

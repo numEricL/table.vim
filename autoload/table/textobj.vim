@@ -29,7 +29,7 @@ function! table#textobj#Cell(count1, type) abort
     if !table.valid
         return { 'valid': v:false }
     endif
-    let coord = table#cursor#GetCoord(table, pos, 'cell')
+    let coord = table#cursor#GetCoord(table, pos, {'type_override': 'cell'})
     let row = coord.coord[0]
     let col1 = coord.coord[2]
     let col2 = col1 + a:count1 - 1
@@ -47,7 +47,7 @@ function! table#textobj#Row(count1, type) abort
     if !table.valid
         return { 'valid': v:false }
     endif
-    let coord = table#cursor#GetCoord(table, pos, 'cell')
+    let coord = table#cursor#GetCoord(table, pos, {'type_override': 'cell'})
     let row1 = coord.coord[0]
     let row2 = row1 + a:count1 - 1
     let row2 = min([row2, table.RowCount() - 1])
@@ -66,7 +66,7 @@ function! table#textobj#Column(count1, type) abort
     if !table.valid
         return { 'valid': v:false }
     endif
-    let coord = table#cursor#GetCoord(table, pos, 'cell')
+    let coord = table#cursor#GetCoord(table, pos, {'type_override': 'cell'})
     let row = coord.coord[0]
     let col1 = coord.coord[2]
     let col2 = col1 + a:count1 - 1
