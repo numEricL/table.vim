@@ -10,6 +10,13 @@ redrawn with style characters automatically on pipe insertion.
 Use the `:Table Align` command to perform alignment manually.
 Use the `:Table Complete` command fill missing cells and borders.
 
+## Features
+
+- **Multiline rows** - Support for cells containing newlines (must be enabled)
+- **Cell editing window** - Edit in a floating window, hooks provided (Neovim only)
+- **Chunk processing** - Align only nearby lines for fast operation with large tables
+- **Multiple table styles** - Use a built-in style or define your own
+
 ## Table Detection
 
 Tables must be
@@ -100,7 +107,7 @@ See `:help table-commands` and `:help table-styles` for details.
 
 Auto-alignment, navigational, and text object keybindings are mapped by default.
 <Plug> mappings are available. Keybindings for table actions are not provided
-but can bee added easily:
+but can be added easily:
 
 ```vim
 " Example mappings (add to vimrc/init.vim)
