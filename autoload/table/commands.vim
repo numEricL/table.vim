@@ -1,31 +1,15 @@
+" :Table command - for actions
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        let subcommands = sort(['Option', 'StyleOption', 'Style', 'RegisterStyle'] + (has('nvim') ? ['EditCell'] : []))
-        let subcommand_msg = 'Table subcommands: ' .. join(subcommands, ', ')
-
-        echomsg subcommand_msg
-        echomsg ' '
-        " display current options
-        call s:SetTableOption([])
-        echomsg ' '
-        echomsg "Table Style = " .. table#config#Config().style
-        " display current style options
-        call s:SetTableStyleOption([])
+        let actions = has('nvim') ? ['EditCell', 'CompleteTable', 'AlignTable', 'ToDefault'] : ['CompleteTable', 'AlignTable', 'ToDefault']
+        echomsg 'Table actions: ' .. join(actions, ', ')
         return
     endif
 
-    let subcommand = a:1
+    let action = a:1
     let args = a:000[1:]
 
-    if subcommand ==? 'Option'
-        call s:SetTableOption(args)
-    elseif subcommand ==? 'StyleOption'
-        call s:SetTableStyleOption(args)
-    elseif subcommand ==? 'Style'
-        call s:SetTableStyle(args)
-    elseif subcommand ==? 'RegisterStyle'
-        call s:RegisterTableStyle(args)
-    elseif subcommand ==# 'EditCell'
+    if action ==# 'EditCell'
         if has('nvim')
             lua require('table_vim.cell_editor').edit_at_cursor()
         else
@@ -33,33 +17,83 @@ function! table#commands#TableCommand(...) abort
             echomsg 'Table EditCell: requires Neovim'
             echohl None
         endif
+    elseif action ==# 'CompleteTable'
+        call table#Complete(line('.'))
+    elseif action ==# 'AlignTable'
+        call table#Align(line('.'))
+    elseif action ==# 'ToDefault'
+        call table#ToDefault(line('.'))
     else
         echohl ErrorMsg
-        echomsg "Table: unknown subcommand '" .. subcommand .. "'"
+        echomsg "Table: unknown action '" .. action .. "'"
         echohl None
     endif
 endfunction
 
-function! table#commands#Complete(ArgLead, CmdLine, CursorPos) abort
+function! table#commands#TableComplete(ArgLead, CmdLine, CursorPos) abort
     let parts = split(a:CmdLine, '\s\+', 1)
     let num_args = len(parts) - 1
 
-    " If no args yet or completing the first arg (subcommand)
+    " Complete action names
     if num_args <= 1
-        " Complete subcommand names
-        let subcommands = sort(['Option', 'StyleOption', 'Style', 'RegisterStyle'] + (has('nvim') ? ['EditCell'] : []))
+        let actions = has('nvim') ? ['EditCell', 'CompleteTable', 'AlignTable', 'ToDefault'] : ['CompleteTable', 'AlignTable', 'ToDefault']
+        return filter(copy(actions), 'v:val =~? "^" .. a:ArgLead')
+    endif
+
+    return []
+endfunction
+
+" :TableOption command - for configuration
+function! table#commands#TableOptionCommand(...) abort
+    if a:0 == 0
+        let subcommands = ['Option', 'StyleOption', 'Style', 'RegisterStyle']
+        echomsg 'TableOption subcommands: ' .. join(subcommands, ', ')
+        echomsg ' '
+        echomsg "Current Style = " .. table#config#Config().style
+        echomsg ' '
+        call s:ShowOption([])
+        echomsg ' '
+        call s:ShowStyleOption([])
+        return
+    endif
+
+    let subcommand = a:1
+    let args = a:000[1:]
+
+    if subcommand ==? 'Option'
+        call s:SetOption(args)
+    elseif subcommand ==? 'StyleOption'
+        call s:SetStyleOption(args)
+    elseif subcommand ==? 'Style'
+        call s:SetStyle(args)
+    elseif subcommand ==? 'RegisterStyle'
+        call s:RegisterStyle(args)
+    else
+        echohl ErrorMsg
+        echomsg "TableOption: unknown subcommand '" .. subcommand .. "'"
+        echohl None
+    endif
+endfunction
+
+function! table#commands#TableOptionComplete(ArgLead, CmdLine, CursorPos) abort
+    let parts = split(a:CmdLine, '\s\+', 1)
+    let num_args = len(parts) - 1
+
+    " Complete subcommand names
+    if num_args <= 1
+        let subcommands = ['Option', 'StyleOption', 'Style', 'RegisterStyle']
         return filter(copy(subcommands), 'v:val =~? "^" .. a:ArgLead')
     endif
 
-    " fake cmdline is the cmdline starting from the subcommand (i.e. no Table)
+    " Delegate to appropriate completion function
     let subcommand = parts[1]
     let fake_cmdline = join([subcommand] + parts[2:], ' ')
     if subcommand ==? 'Option'
-        return s:CompleteTableOption(a:ArgLead, fake_cmdline, a:CursorPos)
+        return s:CompleteOption(a:ArgLead, fake_cmdline, a:CursorPos)
     elseif subcommand ==? 'Style'
-        return s:CompleteTableStyle(a:ArgLead, fake_cmdline, a:CursorPos)
+        return s:CompleteStyle(a:ArgLead, fake_cmdline, a:CursorPos)
     elseif subcommand ==? 'StyleOption'
-        return s:CompleteTableStyleOption(a:ArgLead, fake_cmdline, a:CursorPos)
+        return s:CompleteStyleOption(a:ArgLead, fake_cmdline, a:CursorPos)
     endif
 
     return []
@@ -77,16 +111,10 @@ function! s:ConvertValue(value) abort
     endif
 endfunction
 
-function! s:SetTableOption(args) abort
+function! s:SetOption(args) abort
     let cfg_opts = table#config#Config().options
     if len(a:args) == 0
-        echomsg "Table Options:"
-        let maxlen = max(map(keys(cfg_opts), 'len(v:val)'))
-        let sorted_items = sort(items(cfg_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
-        for [key, value] in sorted_items
-            let padded_key = table#util#Pad(key, maxlen)
-            echomsg '  ' .. padded_key .. ' = ' .. string(value)
-        endfor
+        call s:ShowOption(a:args)
         return
     endif
     let key = a:args[0]
@@ -98,7 +126,18 @@ function! s:SetTableOption(args) abort
     call table#config#Setup({ 'options': { key : value } })
 endfunction
 
-function! s:SetTableStyle(args) abort
+function! s:ShowOption(args) abort
+    let cfg_opts = table#config#Config().options
+    echomsg "Table Options:"
+    let maxlen = max(map(keys(cfg_opts), 'len(v:val)'))
+    let sorted_items = sort(items(cfg_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
+    for [key, value] in sorted_items
+        let padded_key = table#util#Pad(key, maxlen)
+        echomsg '  ' .. padded_key .. ' = ' .. string(value)
+    endfor
+endfunction
+
+function! s:SetStyle(args) abort
     if len(a:args) == 0
         echo 'Current style: ' .. table#config#Config().style
         let styles = ['default'] + table#style#GetNames()
@@ -108,7 +147,7 @@ function! s:SetTableStyle(args) abort
     call table#config#Setup({ 'style': a:args[0] })
 endfunction
 
-function! s:RegisterTableStyle(args) abort
+function! s:RegisterStyle(args) abort
     if len(a:args) == 0
         echohl ErrorMsg
         echomsg 'RegisterStyle: style name required'
@@ -122,16 +161,10 @@ function! s:RegisterTableStyle(args) abort
     echomsg 'Registered style "' .. style_name .. '"'
 endfunction
 
-function! s:SetTableStyleOption(args) abort
+function! s:SetStyleOption(args) abort
     let style_opts = table#config#Style().options
     if len(a:args) == 0
-        echomsg "Table StyleOptions:"
-        let maxlen = max(map(keys(style_opts), 'len(v:val)'))
-        let sorted_items = sort(items(style_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
-        for [key, value] in sorted_items
-            let padded_key = table#util#Pad(key, maxlen)
-            echomsg '  ' .. padded_key .. ' = ' .. string(value)
-        endfor
+        call s:ShowStyleOption(a:args)
         return
     endif
     let key = a:args[0]
@@ -143,7 +176,18 @@ function! s:SetTableStyleOption(args) abort
     call table#config#Setup({ 'style_options': { key : value } })
 endfunction
 
-function! s:CompleteTableOption(ArgLead, CmdLine, CursorPos) abort
+function! s:ShowStyleOption(args) abort
+    let style_opts = table#config#Style().options
+    echomsg "Table StyleOptions:"
+    let maxlen = max(map(keys(style_opts), 'len(v:val)'))
+    let sorted_items = sort(items(style_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
+    for [key, value] in sorted_items
+        let padded_key = table#util#Pad(key, maxlen)
+        echomsg '  ' .. padded_key .. ' = ' .. string(value)
+    endfor
+endfunction
+
+function! s:CompleteOption(ArgLead, CmdLine, CursorPos) abort
     let options = keys(table#config#Config().options)
     let parts = split(a:CmdLine, '\s\+')
     let num_args = len(parts) - 1
@@ -161,12 +205,12 @@ function! s:CompleteTableOption(ArgLead, CmdLine, CursorPos) abort
     return []
 endfunction
 
-function! s:CompleteTableStyle(ArgLead, CmdLine, CursorPos) abort
+function! s:CompleteStyle(ArgLead, CmdLine, CursorPos) abort
     let styles = ['default'] + table#style#GetNames()
     return filter(copy(styles), 'v:val =~? "^" .. a:ArgLead')
 endfunction
 
-function! s:CompleteTableStyleOption(ArgLead, CmdLine, CursorPos) abort
+function! s:CompleteStyleOption(ArgLead, CmdLine, CursorPos) abort
     let style = table#config#Style()
     let parts = split(a:CmdLine, '\s\+')
     let num_args = len(parts) - 1

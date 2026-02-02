@@ -33,13 +33,54 @@ REQUIREMENTS                                              *table-requirements*
 COMMANDS                                                      *table-commands*
 
                                                                        *:Table*
-:Table [subcommand] [args]
+:Table [action] [args]
+    Main command for table actions. Without arguments, lists available actions.
+
+    Actions:
+
+    :Table EditCell                                         *:Table-EditCell*
+        Edit current cell in a floating window (Neovim only). Opens an
+        auto-resizing floating window for editing cell content.
+
+        Equivalent to <Plug>(table_cell_edit) mapping.
+
+        Example: >
+            :Table EditCell
+<
+    :Table CompleteTable                                 *:Table-CompleteTable*
+        Complete table structure by adding borders and alignment rows.
+
+        Equivalent to <Plug>(table_complete) mapping.
+
+        Example: >
+            :Table CompleteTable
+<
+    :Table AlignTable                                       *:Table-AlignTable*
+        Align table at the current line. Adjusts column widths and formats
+        borders.
+
+        Equivalent to <Plug>(table_align) mapping.
+
+        Example: >
+            :Table AlignTable
+<
+    :Table ToDefault                                         *:Table-ToDefault*
+        Convert table to default style.
+
+        Equivalent to <Plug>(table_to_default) mapping.
+
+        Example: >
+            :Table ToDefault
+<
+
+                                                                 *:TableOption*
+:TableOption [subcommand] [args]
     Main command for configuration. Without arguments, displays current
     configuration.
 
     Subcommands:
 
-    :Table Option [key] [value]                             *:Table-Option*
+    :TableOption Option [key] [value]                   *:TableOption-Option*
         Get or set table options. Without arguments, lists all options.
         With only key, shows current value. With key and value, sets option.
 
@@ -57,19 +98,19 @@ COMMANDS                                                      *table-commands*
           (default: true)
 
         Examples: >
-            :Table Option default_alignment c
-            :Table Option multiline true
+            :TableOption Option default_alignment c
+            :TableOption Option multiline true
 <
-    :Table Style [name]                                      *:Table-Style*
+    :TableOption Style [name]                            *:TableOption-Style*
         Get or set the current style. Without arguments, lists available
         styles.
 
         Built-in styles: default, markdown, orgmode, rest, single, double
 
         Example: >
-            :Table Style markdown
+            :TableOption Style markdown
 <
-    :Table StyleOption [key] [value]                   *:Table-StyleOption*
+    :TableOption StyleOption [key] [value]         *:TableOption-StyleOption*
         Get or set style options. Without arguments, lists all style options.
 
         Style options:
@@ -81,24 +122,15 @@ COMMANDS                                                      *table-commands*
           (default: false)
 
         Example: >
-            :Table StyleOption omit_left_border true
+            :TableOption StyleOption omit_left_border true
 <
-    :Table RegisterStyle [name]                       *:Table-RegisterStyle*
+    :TableOption RegisterStyle [name]             *:TableOption-RegisterStyle*
         Save current style configuration under a custom name.
 
         Example: >
-            :Table Style markdown
-            :Table StyleOption omit_left_border true
-            :Table RegisterStyle minimal_markdown
-<
-    :Table EditCell                                      *:Table-EditCell*
-        Edit current cell in a floating window (Neovim only). Opens an
-        auto-resizing floating window for editing cell content.
-
-        Equivalent to <Leader>te mapping.
-
-        Example: >
-            :Table EditCell
+            :TableOption Style markdown
+            :TableOption StyleOption omit_left_border true
+            :TableOption RegisterStyle minimal_markdown
 <
 
 ==============================================================================
@@ -106,31 +138,49 @@ MAPPINGS                                                      *table-mappings*
 
 <plug> mappings are provided for table operations, navigation, and text objects.
 
-Default mappings are provided, and may be disabled by setting the
-|g:table_disable_mappings| variable, or by calling the config setup function
-with the disable_mappings option before the VimEnter event.
+Default mappings are provided for auto-alignment, navigation, and text objects.
+These may be disabled by setting |g:table_disable_mappings|, or by calling the
+config setup function with the disable_mappings option before the VimEnter event.
+
+For table actions (EditCell, AlignTable, CompleteTable, ToDefault), <Plug>
+mappings are provided but not mapped by default.
+
+Suggested Keybindings ~
+
+Suggested keybindings for table actions: >
+    " Table actions
+    nnoremap <leader>ta    <Plug>(table_align)
+    nnoremap <leader><bar> <Plug>(table_complete)
+    nnoremap <leader>td    <Plug>(table_to_default)
+
+    " Cell editing (Neovim only)
+    if has('nvim')
+        nnoremap <leader>te <Plug>(table_cell_edit)
+    endif
+<
 
 Table Operations ~
                                                         *<Plug>(table_align)*
 <Plug>(table_align)
     Align table at the current line. Adjusts column widths and formats borders.
-    Default: <Leader>ta (normal), | (insert, auto-aligns on typing |)
+    Default: | in insert mode (auto-aligns on typing)
+    No default normal mode mapping
 
                                                      *<Plug>(table_complete)*
 <Plug>(table_complete)
     Complete table structure by adding borders and alignment rows.
-    Default: <Leader>| (normal)
+    No default mapping
 
                                                    *<Plug>(table_to_default)*
 <Plug>(table_to_default)
     Convert current table to default style.
-    Default: <Leader>td (normal)
+    No default mapping
 
                                                    *<Plug>(table_cell_edit)*
 <Plug>(table_cell_edit)
     Edit current cell in floating window (Neovim only). Useful for multiline
     editing. Changes save on WinLeave.
-    Default: <Leader>te (normal)
+    No default mapping
 
 Navigation ~
                                                         *<Plug>(table_next)*
@@ -345,17 +395,26 @@ g:table_disable_mappings
 
 Runtime Configuration Commands ~
 
-Use |:Table| commands to view or change configuration at runtime: >
+Use |:TableOption| commands to view or change configuration at runtime: >
     " Configure table options
-    :Table Style markdown
-    :Table Option multiline 1
-    :Table Option default_alignment c
-    :Table StyleOption omit_left_border 1
+    :TableOption Style markdown
+    :TableOption Option multiline 1
+    :TableOption Option default_alignment c
+    :TableOption StyleOption omit_left_border 1
+
+    " Use :Table for actions
+    :Table AlignTable
+    :Table CompleteTable
+    :Table EditCell
 
     " Disable default mappings and create custom ones
     let g:table_disable_mappings = 1
     nmap <Leader>tt <Plug>(table_align)
     nmap <Leader>tc <Plug>(table_complete)
+    
+    " Or set custom mappings for table actions
+    nmap <Leader>ta <Plug>(table_align)
+    nmap <Leader>| <Plug>(table_complete)
 <
 
 ==============================================================================
@@ -413,10 +472,10 @@ double - Unicode double-line box-drawing: >
 Custom Styles ~
 
 Create custom styles by modifying style options and registering: >
-    :Table Style markdown
-    :Table StyleOption omit_left_border true
-    :Table StyleOption omit_right_border true
-    :Table RegisterStyle minimal
+    :TableOption Style markdown
+    :TableOption StyleOption omit_left_border true
+    :TableOption StyleOption omit_right_border true
+    :TableOption RegisterStyle minimal
 <
 Style options:
 - omit_left_border: Hide left border

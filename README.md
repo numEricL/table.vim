@@ -31,8 +31,7 @@ See `:help table-text-objects` for details.
 
 ## Cell Editing (Neovim only)
 
-Cells may be edited in a floating window for easier multiline editing. A command
-and a mapping are provided by default: `Table EditCell` and `<Leader>te`. The
+Cells may be edited in a floating window with the `:Table EditCell` command. The
 window resizes automatically as you type. Close or leave the window to save
 changes. Especially useful for multiline cells.
 
@@ -56,14 +55,54 @@ available options.
 
 ### Runtime Commands
 
-Use `:Table` subcommands to view or change configuration at runtime:
+Table.vim provides two main commands:
+
+#### :Table - Actions
 
 ```vim
-:Table                           " Show current configuration
-:Table Option [key] [value]      " Get or set an option
-:Table Style [name]              " Get or set style
-:Table StyleOption [key] [value] " Get or set style option
-:Table RegisterStyle [name]      " Save current style as custom style
+:Table EditCell        " Edit current cell in floating window (Neovim only)
+:Table CompleteTable   " Complete table structure with borders
+:Table AlignTable      " Align table columns
+:Table ToDefault       " Convert table to default style
+```
+
+### Keybindings
+
+Table.vim provides a default mapping for auto-alignment: typing `|` in insert 
+mode automatically aligns the table.
+
+<Plug> mappings are provided for table actions (EditCell, AlignTable,
+CompleteTable, ToDefault) but not mapped by default. You can map them in
+your vim/nvim configuration as desired.
+
+**Suggested keybindings** (add to your vimrc/init.vim):
+
+```vim
+" Table actions
+nnoremap <leader>ta    <Plug>(table_align)
+nnoremap <leader><bar> <Plug>(table_complete)
+nnoremap <leader>td    <Plug>(table_to_default)
+
+" Cell editing (Neovim only)
+if has('nvim')
+    nnoremap <leader>te <Plug>(table_cell_edit)
+endif
+```
+
+**Default mappings:**
+- `|` in insert mode - Auto-align table
+- `<Tab>` / `<S-Tab>` - Navigate cells forward/backward
+- `<C-h>` / `<C-j>` / `<C-k>` / `<C-l>` - Navigate cells directionally
+- Text objects: `tx/ix/ax`, `tr/ir/ar`, `tc/ic/ac`
+
+#### :TableOption - Configuration
+
+```vim
+:TableOption                           " Show current configuration
+:TableOption Option [key] [value]      " Get or set an option
+:TableOption Style [name]              " Get or set style
+:TableOption StyleOption [key] [value] " Get or set style option
+:TableOption RegisterStyle [name]      " Save current style as custom style
 ```
 
 Common options:
@@ -78,9 +117,9 @@ Built-in styles: `default`, `markdown`, `orgmode`, `rest`, `single`, `double`
 
 Example runtime configuration:
 ```vim
-:Table Style markdown
-:Table Option multiline true
-:Table StyleOption omit_left_border true
+:TableOption Style markdown
+:TableOption Option multiline true
+:TableOption StyleOption omit_left_border true
 ```
 
 See `:help table-commands` and `:help table-styles` for details.

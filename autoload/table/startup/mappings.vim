@@ -10,15 +10,9 @@ endfunction
 
 function! s:SetDefault() abort
     call s:DefinePlugMaps()
-    " Table operations
-    inoremap <bar>         <bar><c-o><plug>(table_align)
-    nnoremap <leader><bar> <plug>(table_complete)
-    nnoremap <leader>ta    <plug>(table_align)
-    nnoremap <leader>td    <plug>(table_to_default)
 
-    if has('nvim')
-        nnoremap <leader>te <plug>(table_cell_edit)
-    endif
+    " Auto-align on pipe
+    inoremap <bar> <bar><c-o><plug>(table_align)
 
     " Navigation with context-aware mappings
     nmap <expr> <tab> table#IsTable(line('.')) ? "\<plug>(table_next)" : "\<tab>"
