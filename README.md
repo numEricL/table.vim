@@ -84,6 +84,17 @@ Example runtime configuration:
 
 See `:help table-commands` and `:help table-styles` for details.
 
+## Limitations
+
+- **Border characters in cells**: The parser does not differentiate between
+border characters (e.g., `i_vertical`) inside cells versus as actual borders. By
+default, pipes (`|`) cannot be used as cell content.
+- **No merged/spanning cells**: While multiline rows are fully supported, merged
+or spanning cells across columns are not supported.
+- **Border character constraints**: `i_vertical` and `i_horizontal` must be
+different characters. Tables where all border characters are the same (e.g., all
+`#`) are not supported.
+
 ## License
 
 Mozilla Public License 2.0 - See [LICENSE](LICENSE)
