@@ -4,8 +4,12 @@ Text table manipulation for Vim and Neovim.
 
 ## Quick Start
 
-Type tables using pipes (`|`) and dashes (`-`). The table is aligned and borders
-drawn automatically when pipes are typed on tables with at least two rows.
+Type tables using pipes (`|`) and dashes (`-`). The table is aligned and redrawn
+with the chosen style characters automatically when pipes are typed on tables
+with at least two rows. Perform this action manually with the `:Table Align`
+command.
+
+Use the `:Table Complete` command fill missing cells and borders.
 
 ## Navigation
 
@@ -61,8 +65,8 @@ Table.vim provides two main commands:
 
 ```vim
 :Table EditCell        " Edit current cell in floating window (Neovim only)
-:Table CompleteTable   " Complete table structure with borders
-:Table AlignTable      " Align table columns
+:Table Complete   " Complete table structure with borders
+:Table Align      " Align table columns
 :Table ToDefault       " Convert table to default style
 ```
 
@@ -71,11 +75,11 @@ Table.vim provides two main commands:
 Table.vim provides a default mapping for auto-alignment: typing `|` in insert 
 mode automatically aligns the table.
 
-<Plug> mappings are provided for table actions (EditCell, AlignTable,
-CompleteTable, ToDefault) but not mapped by default. You can map them in
+<Plug> mappings are provided for table actions (EditCell, Align,
+Complete, ToDefault) but not mapped by default. You can map them in
 your vim/nvim configuration as desired.
 
-**Suggested keybindings** (add to your vimrc/init.vim):
+**Example keybindings** (add to your vimrc/init.vim):
 
 ```vim
 " Table actions
@@ -104,6 +108,10 @@ endif
 :TableOption StyleOption [key] [value] " Get or set style option
 :TableOption RegisterStyle [name]      " Save current style as custom style
 ```
+
+**Note:** Custom style are saved only for the current session. Store them in
+your vim/nvim config file to persist across sessions.
+
 
 Common options:
 

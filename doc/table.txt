@@ -47,22 +47,22 @@ COMMANDS                                                      *table-commands*
         Example: >
             :Table EditCell
 <
-    :Table CompleteTable                                 *:Table-CompleteTable*
+    :Table Complete                                          *:Table-Complete*
         Complete table structure by adding borders and alignment rows.
 
         Equivalent to <Plug>(table_complete) mapping.
 
         Example: >
-            :Table CompleteTable
+            :Table Complete
 <
-    :Table AlignTable                                       *:Table-AlignTable*
+    :Table Align                                               *:Table-Align*
         Align table at the current line. Adjusts column widths and formats
         borders.
 
         Equivalent to <Plug>(table_align) mapping.
 
         Example: >
-            :Table AlignTable
+            :Table Align
 <
     :Table ToDefault                                         *:Table-ToDefault*
         Convert table to default style.
@@ -125,7 +125,9 @@ COMMANDS                                                      *table-commands*
             :TableOption StyleOption omit_left_border true
 <
     :TableOption RegisterStyle [name]             *:TableOption-RegisterStyle*
-        Save current style configuration under a custom name.
+        Save the current style configuration under a custom name. This will
+        persist only for the current session; to use it regularly, add it to
+        your vim/nvim configuration.
 
         Example: >
             :TableOption Style markdown
@@ -142,7 +144,7 @@ Default mappings are provided for auto-alignment, navigation, and text objects.
 These may be disabled by setting |g:table_disable_mappings|, or by calling the
 config setup function with the disable_mappings option before the VimEnter event.
 
-For table actions (EditCell, AlignTable, CompleteTable, ToDefault), <Plug>
+For table actions (EditCell, Align, Complete, ToDefault), <Plug>
 mappings are provided but not mapped by default.
 
 Suggested Keybindings ~
@@ -403,8 +405,8 @@ Use |:TableOption| commands to view or change configuration at runtime: >
     :TableOption StyleOption omit_left_border 1
 
     " Use :Table for actions
-    :Table AlignTable
-    :Table CompleteTable
+    :Table Align
+    :Table Complete
     :Table EditCell
 
     " Disable default mappings and create custom ones

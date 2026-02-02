@@ -1,7 +1,7 @@
 " :Table command - for actions
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        let actions = has('nvim') ? ['EditCell', 'CompleteTable', 'AlignTable', 'ToDefault'] : ['CompleteTable', 'AlignTable', 'ToDefault']
+        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault']
         echomsg 'Table actions: ' .. join(actions, ', ')
         return
     endif
@@ -17,9 +17,9 @@ function! table#commands#TableCommand(...) abort
             echomsg 'Table EditCell: requires Neovim'
             echohl None
         endif
-    elseif action ==# 'CompleteTable'
+    elseif action ==# 'Complete'
         call table#Complete(line('.'))
-    elseif action ==# 'AlignTable'
+    elseif action ==# 'Align'
         call table#Align(line('.'))
     elseif action ==# 'ToDefault'
         call table#ToDefault(line('.'))
@@ -36,7 +36,7 @@ function! table#commands#TableComplete(ArgLead, CmdLine, CursorPos) abort
 
     " Complete action names
     if num_args <= 1
-        let actions = has('nvim') ? ['EditCell', 'CompleteTable', 'AlignTable', 'ToDefault'] : ['CompleteTable', 'AlignTable', 'ToDefault']
+        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault']
         return filter(copy(actions), 'v:val =~? "^" .. a:ArgLead')
     endif
 
