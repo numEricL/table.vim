@@ -435,8 +435,11 @@ Event Data ~
 Both events provide data via `args.data` in Lua autocommands:
 - bufnr: Buffer number of cell edit window
 - winid: Window ID of cell edit window
+- table: Table object (internal details, advanced use cases)
 - cell_id: Cell identifier {row_id, byte_offset, col_id}
-- tbl: Table object (internal)
+
+Note: cell_id is 0-indexed to the chunked table, it may not
+correspond to the full table.
 
                                                        *User-TableCellEditPre*
 TableCellEditPre

@@ -1,5 +1,3 @@
-" provided styles: markdown, orgmode, single, double, double_single, ribbed
-
 let s:styles = {}
 
 function! table#style#Get(style) abort

@@ -31,7 +31,8 @@ See `:help table-text-objects` for details.
 
 ## Cell Editing (Neovim only)
 
-`<Leader>te` opens a floating window to edit the cell under the cursor. The
+Cells may be edited in a floating window for easier multiline editing. A command
+and a mapping are provided by default: `Table EditCell` and `<Leader>te`. The
 window resizes automatically as you type. Close or leave the window to save
 changes. Especially useful for multiline cells.
 
