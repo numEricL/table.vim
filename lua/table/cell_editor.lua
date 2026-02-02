@@ -1,4 +1,4 @@
-local bridge = require('vim_bridge')
+local bridge = require('table.vim_bridge')
 
 local M = {}
 local CellBufNr = nil
@@ -162,7 +162,7 @@ local function edit_cell(tbl, cell_id)
     })
 end
 
-function M.edit_cell_under_cursor()
+function M.edit_at_cursor()
     local cursor = win_get_cursor_vim_indexed(0)
     local cfg_opts = bridge.config__config().options
     local tbl = bridge.table__get(cursor[1], cfg_opts.chunk_size)

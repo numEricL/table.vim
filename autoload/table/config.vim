@@ -1,14 +1,16 @@
 let s:default_config = {
+            \ 'disable_mappings' : v:false,
             \ 'style': 'default',
             \ 'options': {
+            \   'multiline'            : v:false,
+            \   'preserve_indentation' : v:true,
+            \   'default_alignment'    : 'left',
+            \   'chunk_size'           : [-10, 10],
             \   'i_vertical'           : '|',
             \   'i_horizontal'         : '-',
             \   'i_alignment'          : ':',
-            \   'default_alignment'    : 'left',
-            \   'chunk_size'           : [-10, 10],
-            \   'multiline'            : v:false,
-            \   'preserve_indentation' : v:true,
             \ },
+            \ 'style_options': {},
             \ }
 
 let s:config = deepcopy(s:default_config)
@@ -16,12 +18,19 @@ let s:style_cache = {}
 
 function! table#config#Setup(config) abort
     call s:ValidateConfig(a:config)
+    if has_key(a:config, 'disable_mappings')
+        let g:table_disable_mappings = a:config.disable_mappings
+    endif
     if has_key(a:config, 'options')
         call extend(s:config.options, a:config.options)
     endif
     if has_key(a:config, 'style')
         let s:config.style = a:config.style
         let s:style_cache = {}
+    endif
+    if has_key(a:config, 'style_options')
+        let s:style_cache = table#config#Style()
+        call extend(s:style_cache.options, a:config.style_options)
     endif
     call table#table#InvalidateCache()
 endfunction
@@ -51,7 +60,8 @@ endfunction
 
 function! s:ValidateConfig(config) abort
     for key in keys(a:config)
-        if !has_key(s:default_config, key)
+        " disable_mappings key use by lua setup
+        if !has_key(s:default_config, key) && key !=# 'disable_mappings'
             throw 'Invalid configuration key: ' .. key
         endif
         if key ==# 'options'

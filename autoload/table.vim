@@ -1,3 +1,7 @@
+function! table#Setup(config) abort
+    call table#config#Setup(a:config)
+endfunction
+
 function! table#IsTable(linenr) abort
     return table#parse#IsTable(a:linenr)
 endfunction

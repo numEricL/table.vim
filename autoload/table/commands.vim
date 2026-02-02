@@ -1,10 +1,14 @@
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        echomsg 'Available subcommands: Option, Style, StyleOption, RegisterStyle'
+        let subcommand_msg = 'Table subcommands: Option, Style, StyleOption, RegisterStyle'
+        let subcommand_msg ..= has('nvim') ? ', EditCell' : ''
+
+        echomsg subcommand_msg
         echomsg ' '
         " display current options
         call s:SetTableOption([])
-        echomsg "Table style = " .. table#config#Config().style
+        echomsg ' '
+        echomsg "Table Style = " .. table#config#Config().style
         " display current style options
         call s:SetTableStyleOption([])
         return
@@ -23,7 +27,7 @@ function! table#commands#TableCommand(...) abort
         call s:RegisterTableStyle(args)
     elseif subcommand ==# 'EditCell'
         if has('nvim')
-            lua require('edit_cell').edit_cell_under_cursor()
+            lua require('table.cell_editor').edit_at_cursor()
         else
             echohl ErrorMsg
             echomsg 'Table EditCell: requires Neovim'
@@ -122,7 +126,7 @@ endfunction
 function! s:SetTableStyleOption(args) abort
     let style_opts = table#config#Style().options
     if len(a:args) == 0
-        echomsg "Table Style Options:"
+        echomsg "Table StyleOptions:"
         let maxlen = max(map(keys(style_opts), 'len(v:val)'))
         let sorted_items = sort(items(style_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
         for [key, value] in sorted_items
