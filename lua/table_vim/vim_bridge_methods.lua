@@ -24,7 +24,7 @@ end
 -- end
 -- 
 -- function M.table_col_align(tbl, col)
---     local cfg_opts = require('table.vim_bridge').config__config().options
+--     local cfg_opts = require('table_vim.vim_bridge').config__config().options
 --     local default_align = cfg_opts.default_alignment[1]
 --     local lua_array_offset = 1
 --     col = col + lua_array_offset

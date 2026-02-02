@@ -72,7 +72,7 @@ function! s:DefinePlugMaps() abort
     nnoremap <silent> <plug>(table_complete)   <cmd>call table#Complete(line('.'))<cr>
     nnoremap <silent> <plug>(table_align)      <cmd>call table#Align(line('.'))<cr>
     nnoremap <silent> <plug>(table_to_default) <cmd>call table#ToDefault(line('.'))<cr>
-    nnoremap <silent> <plug>(table_cell_edit)  <cmd>lua require('table.cell_editor').edit_at_cursor()<cr>
+    nnoremap <silent> <plug>(table_cell_edit)  <cmd>lua require('table_vim.cell_editor').edit_at_cursor()<cr>
 
     " table navigation cycle
     inoremap <silent> <plug>(table_next) <c-o><cmd>call table#CycleCursor('forward', v:count1)<cr>

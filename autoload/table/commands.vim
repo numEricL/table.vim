@@ -1,7 +1,7 @@
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        let subcommand_msg = 'Table subcommands: Option, Style, StyleOption, RegisterStyle'
-        let subcommand_msg ..= has('nvim') ? ', EditCell' : ''
+        let subcommands = sort(['Option', 'StyleOption', 'Style', 'RegisterStyle'] + (has('nvim') ? ['EditCell'] : []))
+        let subcommand_msg = 'Table subcommands: ' .. join(subcommands, ', ')
 
         echomsg subcommand_msg
         echomsg ' '
@@ -27,7 +27,7 @@ function! table#commands#TableCommand(...) abort
         call s:RegisterTableStyle(args)
     elseif subcommand ==# 'EditCell'
         if has('nvim')
-            lua require('table.cell_editor').edit_at_cursor()
+            lua require('table_vim.cell_editor').edit_at_cursor()
         else
             echohl ErrorMsg
             echomsg 'Table EditCell: requires Neovim'
@@ -47,8 +47,7 @@ function! table#commands#Complete(ArgLead, CmdLine, CursorPos) abort
     " If no args yet or completing the first arg (subcommand)
     if num_args <= 1
         " Complete subcommand names
-        let subcommands = ['Option', 'StyleOption', 'Style', 'RegisterStyle']
-        let subcommands += has('nvim') ? ['EditCell'] : []
+        let subcommands = sort(['Option', 'StyleOption', 'Style', 'RegisterStyle'] + (has('nvim') ? ['EditCell'] : []))
         return filter(copy(subcommands), 'v:val =~? "^" .. a:ArgLead')
     endif
 

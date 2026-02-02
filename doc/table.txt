@@ -236,7 +236,7 @@ at runtime using |:Table| commands.
 
 Setup Function ~
                                                                *table#Setup()*
-                                                           *require('table')*
+                                                           *require('table_vim')*
 
 The setup function provides a declarative way to configure table.vim. Call it
 during initialization to set options, style, and mappings. This function must
@@ -244,7 +244,7 @@ be called before the |VimEnter| event for the disable_mappings option to take
 effect.
 
 Neovim (Lua): >
-    require('table').setup({
+    require('table_vim').setup({
         disable_mappings = false,        -- Disable default keymaps
         style            = 'markdown',   -- Built-in style name
         options = {

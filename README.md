@@ -47,7 +47,7 @@ function with a configuration table. Default mappings can be disabled with the
 `disable_mappings` or by setting `g:table_disable_mappings` before the
 `VimEnter` event.
 
-- **Neovim (Lua):** `require('table').setup({ ... })`
+- **Neovim (Lua):** `require('table_vim').setup({ ... })`
 - **Vim (VimScript):** `call table#Setup({ ... })`
 
 See `:help table-configuration` for complete setup documentation and all

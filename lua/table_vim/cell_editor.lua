@@ -1,4 +1,4 @@
-local bridge = require('table.vim_bridge')
+local bridge = require('table_vim.vim_bridge')
 
 local M = {}
 local CellBufNr = nil
