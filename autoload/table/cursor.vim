@@ -3,7 +3,8 @@
 "   type alignment: coord: [ col_id ]
 "   type separator: coord: [ row_id, col_id ]
 function! table#cursor#GetCoord(table, pos, ...) abort
-    let type_override = get(a:000, 0, '')
+    let opts = a:0 ? a:1 : {}
+    let type_override = get(opts, 'type_override', '')
     if !a:table.valid
         return {'type': 'invalid', 'coord': []}
     endif
@@ -37,10 +38,16 @@ function! table#cursor#GetCoord(table, pos, ...) abort
         let col = table#util#SearchSorted(a:pos[1], boundaries)
         let coord.coord = [ row, offset, col ]
     elseif coord.type ==# 'alignment'
+        let dir = get(opts, 'dir', 'forward')
         let boundaries = []
         for j in range(len(sep_pos)-1)
-            call add(boundaries, sep_pos[j][1] + 1)
-            call add(boundaries, sep_pos[j][1] + 2)
+            if dir ==# 'forward'
+                call add(boundaries, sep_pos[j][1] + 1)
+                call add(boundaries, sep_pos[j+1][0] - 1)
+            else
+                call add(boundaries, sep_pos[j][1] + 1)
+                call add(boundaries, sep_pos[j][1] + 2)
+            endif
         endfor
         let col = table#util#SearchSorted(a:pos[1], boundaries)
         let coord.coord = [ col ]

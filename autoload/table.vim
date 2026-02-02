@@ -57,9 +57,9 @@ function! table#CycleCursor(dir, count1) abort
     if !table.valid
         return
     endif
-    let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
+    let coord = table#cursor#GetCoord(table, getpos('.')[1:2], {'dir': a:dir})
     if coord.type ==# 'separator'
-        let coord = table#cursor#GetCoord(table, getpos('.')[1:2], 'cell')
+        let coord = table#cursor#GetCoord(table, getpos('.')[1:2], {'type_override': 'cell'})
     endif
     for _ in range(a:count1)
         let coord = s:CycleCursor(table, a:dir, coord)
@@ -136,7 +136,7 @@ function! table#MoveCursorCell(dir, count1) abort
     if !table.valid
         return
     endif
-    let coord = table#cursor#GetCoord(table, getpos('.')[1:2], 'cell')
+    let coord = table#cursor#GetCoord(table, getpos('.')[1:2], {'type_override': 'cell'})
     for _ in range(a:count1)
         let coord = s:MoveCursorCell(table, a:dir, coord)
         let [table, coord] = s:UpdateOnOutOfBounds(table, a:dir, coord)
