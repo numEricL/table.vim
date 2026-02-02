@@ -141,7 +141,7 @@ function! s:SetTableStyleOption(args) abort
         return
     endif
     let value = s:ConvertValue(a:args[1])
-    let style_opts[key] = value
+    call table#config#Setup({ 'style_options': { key : value } })
 endfunction
 
 function! s:CompleteTableOption(ArgLead, CmdLine, CursorPos) abort

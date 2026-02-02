@@ -35,15 +35,6 @@ function! table#config#Setup(config) abort
     call table#table#InvalidateCache()
 endfunction
 
-function! table#config#SetStyle(style_dict) abort
-    let s:style_cache = deepcopy(a:style_dict)
-    call table#table#InvalidateCache()
-endfunction
-
-function! table#config#RestoreDefault() abort
-    call table#config#Setup(s:default_config)
-endfunction
-
 function! table#config#Config() abort
     return deepcopy(s:config)
 endfunction
@@ -56,6 +47,15 @@ function! table#config#Style() abort
         let s:style_cache = deepcopy(table#style#Get(s:config.style))
     endif
     return s:style_cache
+endfunction
+
+function! table#config#SetStyle(style_dict) abort
+    let s:style_cache = deepcopy(a:style_dict)
+    call table#table#InvalidateCache()
+endfunction
+
+function! table#config#RestoreDefault() abort
+    call table#config#Setup(s:default_config)
 endfunction
 
 function! s:ValidateConfig(config) abort
