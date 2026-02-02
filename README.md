@@ -4,116 +4,85 @@ Text table manipulation for Vim and Neovim.
 
 ## Quick Start
 
-Type tables using pipes (`|`) and dashes (`-`). The table is aligned and redrawn
-with the chosen style characters automatically when pipes are typed on tables
-with at least two rows. Perform this action manually with the `:Table Align`
-command.
+Create tables using pipes (`|`) and dashes (`-`). The table is aligned and
+redrawn with style characters automatically on pipe insertion.
 
+Use the `:Table Align` command to perform alignment manually.
 Use the `:Table Complete` command fill missing cells and borders.
+
+## Table Detection
+
+Tables must be
+- At least two lines (rows)
+- Separated by blank lines above and below (comment strings are ok)
+
+## Configuration (optional)
+
+Configure via a call to the setup function. Disable default mappings with the
+`disable_mappings` option or set the `g:table_disable_mappings` variable before
+the `VimEnter` event. See `:help table-configuration` for options.
 
 ## Navigation
 
-- `<Tab>` / `<S-Tab>` - Move to next/previous cell (wraps to next/previous row)
-- `<C-h>` / `<C-j>` / `<C-k>` / `<C-l>` - Move left/down/up/right between cells
+- `<Tab>` / `<S-Tab>` - Next/previous cell (wraps rows)
+- `<C-h>` / `<C-j>` / `<C-k>` / `<C-l>` - Navigate left/down/up/right
 - Counts work: `3<Tab>` moves three cells forward
 
 ## Text Objects
 
-Cell, row, and column text objects work in visual and operator-pending modes. By
-default the text objects select half borders, use the "around" and "inner"
-variants for full borders or no borders respectively.
+Cell, row, and column text objects are provided for visual and operator-pending
+modes. Default selects half borders; use "around" for full borders or "inner"
+for no borders.
 
-| Object     | Description                   | Example                    |
-|------------|-------------------------------|----------------------------|
-| `tx/ix/ax` | half-open/inner/around cell   | `cix` change cell content  |
-| `tr/ir/ar` | half-open/inner/around row    | `dtr` delete row           |
-| `tc/ic/ac` | half-open/inner/around column | `yac` yank bordered-column |
+| Object     | Description    | Example                   |
+|------------|----------------|---------------------------|
+| `tx/ix/ax` | cell           | `cix` change cell content |
+| `tr/ir/ar` | row            | `dtr` delete row          |
+| `tc/ic/ac` | column         | `yac` yank full column    |
 
 Counts work: `d2tc` deletes two columns.
 
 See `:help table-text-objects` for details.
 
+## Chunk Processing
+
+For performance, the align action (auto-align and `:Table Align`) only processes
+the lines near the cursor. The `:Table Complete` command processes the entire
+table and may be slow for large tables.
+
 ## Cell Editing (Neovim only)
 
-Cells may be edited in a floating window with the `:Table EditCell` command. The
-window resizes automatically as you type. Close or leave the window to save
-changes. Especially useful for multiline cells.
+`:Table EditCell` opens cells in a floating window for greater control over
+editing. Especially useful for multiline cells. Use `TableCellEditPre` and
+`TableCellEditPost` autocommands to customize behavior. See `:help
+table-events`.
 
-**Events:** `TableCellEditPre` and `TableCellEditPost` autocommands let you
-customize editing behavior. See `:help table-events`.
+## Commands
 
-## Configuration
-
-### Setup Function (Optional)
-
-Table.vim uses a default setup which can be overridden by calling the setup
-function with a configuration table. Default mappings can be disabled with the
-`disable_mappings` or by setting `g:table_disable_mappings` before the
-`VimEnter` event.
-
-- **Neovim (Lua):** `require('table_vim').setup({ ... })`
-- **Vim (VimScript):** `call table#Setup({ ... })`
-
-See `:help table-configuration` for complete setup documentation and all
-available options.
-
-### Runtime Commands
-
-Table.vim provides two main commands:
-
-#### :Table - Actions
+### :Table
 
 ```vim
-:Table EditCell        " Edit current cell in floating window (Neovim only)
-:Table Complete   " Complete table structure with borders
-:Table Align      " Align table columns
-:Table ToDefault       " Convert table to default style
+:Table EditCell     " Edit cell in floating window (Neovim)
+:Table Complete     " Fill missing cells and borders
+:Table Align        " Align table columns
+:Table ToDefault    " Convert to default style
 ```
 
-### Keybindings
+### :TableOption
 
-Table.vim provides a default mapping for auto-alignment: typing `|` in insert 
-mode automatically aligns the table.
-
-<Plug> mappings are provided for table actions (EditCell, Align,
-Complete, ToDefault) but not mapped by default. You can map them in
-your vim/nvim configuration as desired.
-
-**Example keybindings** (add to your vimrc/init.vim):
+Runtime configuration. Use without arguments to show current config.
 
 ```vim
-" Table actions
-nnoremap <leader>ta    <Plug>(table_align)
-nnoremap <leader><bar> <Plug>(table_complete)
-nnoremap <leader>td    <Plug>(table_to_default)
-
-" Cell editing (Neovim only)
-if has('nvim')
-    nnoremap <leader>te <Plug>(table_cell_edit)
-endif
+:TableOption Style [name]                 " Get/set style
+:TableOption Option [key] [value]         " Get/set option
+:TableOption StyleOption [key] [value]    " Get/set style option
+:TableOption RegisterStyle [name]         " Save current style (session only)
 ```
 
-**Default mappings:**
-- `|` in insert mode - Auto-align table
-- `<Tab>` / `<S-Tab>` - Navigate cells forward/backward
-- `<C-h>` / `<C-j>` / `<C-k>` / `<C-l>` - Navigate cells directionally
-- Text objects: `tx/ix/ax`, `tr/ir/ar`, `tc/ic/ac`
-
-#### :TableOption - Configuration
-
-```vim
-:TableOption                           " Show current configuration
-:TableOption Option [key] [value]      " Get or set an option
-:TableOption Style [name]              " Get or set style
-:TableOption StyleOption [key] [value] " Get or set style option
-:TableOption RegisterStyle [name]      " Save current style as custom style
-```
-
-**Note:** Custom style are saved only for the current session. Store them in
+**Note:** Registering a style is only for the current session. Store them in
 your vim/nvim config file to persist across sessions.
 
-
-Common options:
+**Common options:**
 
 | Option                 | Default | Description                                |
 |------------------------|---------|--------------------------------------------|
@@ -121,27 +90,32 @@ Common options:
 | `default_alignment`    | left    | Default column alignment: `l`, `c`, or `r` |
 | `preserve_indentation` | true    | Keep leading whitespace in multiline cell  |
 
-Built-in styles: `default`, `markdown`, `orgmode`, `rest`, `single`, `double`
+**Built-in styles:** `default`, `markdown`, `orgmode`, `rest`, `single`, `double`
 
-Example runtime configuration:
-```vim
-:TableOption Style markdown
-:TableOption Option multiline true
-:TableOption StyleOption omit_left_border true
-```
+Example: `:TableOption Style markdown | :TableOption Option multiline true`
 
 See `:help table-commands` and `:help table-styles` for details.
 
+## Keybindings
+
+Auto-alignment, navigational, and text object keybindings are mapped by default.
+<Plug> mappings are available. Keybindings for table actions are not provided
+but can bee added easily:
+
+```vim
+" Example mappings (add to vimrc/init.vim)
+nnoremap <leader>ta    <Plug>(table_align)
+nnoremap <leader><bar> <Plug>(table_complete)
+nnoremap <leader>td    <Plug>(table_to_default)
+nnoremap <leader>te    <Plug>(table_cell_edit)  " Neovim only
+```
+
 ## Limitations
 
-- **Border characters in cells**: The parser does not differentiate between
-border characters (e.g., `i_vertical`) inside cells versus as actual borders. By
-default, pipes (`|`) cannot be used as cell content.
-- **No merged/spanning cells**: While multiline rows are fully supported, merged
-or spanning cells across columns are not supported.
-- **Border character constraints**: `i_vertical` and `i_horizontal` must be
-different characters. Tables where all border characters are the same (e.g., all
-`#`) are not supported.
+- Border characters in cells can not be parsed (pipes `|` cannot be cell content
+        if it is also used as the `i_vertical` border character).
+- No merged/spanning cells (multiline rows are supported)
+- `i_vertical` and `i_horizontal` must be different characters
 
 ## License
 

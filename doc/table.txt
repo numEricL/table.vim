@@ -24,10 +24,20 @@ objects. For Neovim users, it also includes a floating window cell editor.
 Supported table styles: Markdown, Org-mode, reStructuredText, Unicode
 box-drawing characters, and custom styles.
 
+Table alignment processes only the lines around the cursor, as determined by the
+`chunk_size` option. This keeps operations fast, even for large tables. The
+|:Table-Complete| command processes the entire table regardless of chunk size.
+
 ==============================================================================
 REQUIREMENTS                                              *table-requirements*
 
 - Neovim required for floating window cell editor
+
+Table Detection ~
+
+Tables must meet the following requirements to be detected and processed:
+- Be at least two lines in height
+- Separated by blank lines above and below (comment strings are acceptable)
 
 ==============================================================================
 COMMANDS                                                      *table-commands*
@@ -49,6 +59,9 @@ COMMANDS                                                      *table-commands*
 <
     :Table Complete                                          *:Table-Complete*
         Complete table structure by adding borders and alignment rows.
+        
+        Note: This command processes the entire table regardless of chunk_size,
+        which may be slow for large tables.
 
         Equivalent to <Plug>(table_complete) mapping.
 
@@ -56,8 +69,8 @@ COMMANDS                                                      *table-commands*
             :Table Complete
 <
     :Table Align                                               *:Table-Align*
-        Align table at the current line. Adjusts column widths and formats
-        borders.
+        Align table lines near the cursor, as determined by chunk_size. Adjusts
+        column widths and formats borders.
 
         Equivalent to <Plug>(table_align) mapping.
 
@@ -362,9 +375,11 @@ Setup Parameters:
                              Default: 'left'
 
         chunk_size           Number of lines to process around cursor
-                             [lines_before, lines_after]. Use [0, 0] to
-                             process entire table, or [-1, 0] for special
-                             cases. Default: [-10, 10]
+                             [lines_before, lines_after]. For performance,
+                             table alignment only processes a chunk of the
+                             table near the cursor. Use [0, -1] to process
+                             entire table on every alignment.
+                             Default: [-10, 10]
 
         i_vertical           Input vertical border character.
                              Default: '|'
