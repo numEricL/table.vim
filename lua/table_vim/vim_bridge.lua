@@ -1,4 +1,4 @@
-local methods = require('vim_bridge_methods')
+local methods = require('table_vim.vim_bridge_methods')
 
 local M = {}
 

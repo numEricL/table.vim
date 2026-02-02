@@ -1,10 +1,14 @@
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        echomsg 'Available subcommands: Option, Style, StyleOption, RegisterStyle'
+        let subcommands = sort(['Option', 'StyleOption', 'Style', 'RegisterStyle'] + (has('nvim') ? ['EditCell'] : []))
+        let subcommand_msg = 'Table subcommands: ' .. join(subcommands, ', ')
+
+        echomsg subcommand_msg
         echomsg ' '
         " display current options
         call s:SetTableOption([])
-        echomsg "Table style = " .. table#config#Config().style
+        echomsg ' '
+        echomsg "Table Style = " .. table#config#Config().style
         " display current style options
         call s:SetTableStyleOption([])
         return
@@ -23,7 +27,7 @@ function! table#commands#TableCommand(...) abort
         call s:RegisterTableStyle(args)
     elseif subcommand ==# 'EditCell'
         if has('nvim')
-            lua require('edit_cell').edit_cell_under_cursor()
+            lua require('table_vim.cell_editor').edit_at_cursor()
         else
             echohl ErrorMsg
             echomsg 'Table EditCell: requires Neovim'
@@ -43,8 +47,7 @@ function! table#commands#Complete(ArgLead, CmdLine, CursorPos) abort
     " If no args yet or completing the first arg (subcommand)
     if num_args <= 1
         " Complete subcommand names
-        let subcommands = ['Option', 'StyleOption', 'Style', 'RegisterStyle']
-        let subcommands += has('nvim') ? ['EditCell'] : []
+        let subcommands = sort(['Option', 'StyleOption', 'Style', 'RegisterStyle'] + (has('nvim') ? ['EditCell'] : []))
         return filter(copy(subcommands), 'v:val =~? "^" .. a:ArgLead')
     endif
 
@@ -92,7 +95,7 @@ function! s:SetTableOption(args) abort
         return
     endif
     let value = s:ConvertValue(a:args[1])
-    call table#config#SetConfig({ 'options': { key : value } })
+    call table#config#Setup({ 'options': { key : value } })
 endfunction
 
 function! s:SetTableStyle(args) abort
@@ -102,7 +105,7 @@ function! s:SetTableStyle(args) abort
         echo 'Available styles: ' .. join(styles, ', ')
         return
     endif
-    call table#config#SetConfig({ 'style': a:args[0] })
+    call table#config#Setup({ 'style': a:args[0] })
 endfunction
 
 function! s:RegisterTableStyle(args) abort
@@ -115,14 +118,14 @@ function! s:RegisterTableStyle(args) abort
     let style_name = a:args[0]
     let current_style = deepcopy(table#config#Style())
     call table#style#Register(style_name, current_style)
-    call table#config#SetConfig({ 'style': style_name })
+    call table#config#Setup({ 'style': style_name })
     echomsg 'Registered style "' .. style_name .. '"'
 endfunction
 
 function! s:SetTableStyleOption(args) abort
     let style_opts = table#config#Style().options
     if len(a:args) == 0
-        echomsg "Table Style Options:"
+        echomsg "Table StyleOptions:"
         let maxlen = max(map(keys(style_opts), 'len(v:val)'))
         let sorted_items = sort(items(style_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
         for [key, value] in sorted_items
@@ -137,7 +140,7 @@ function! s:SetTableStyleOption(args) abort
         return
     endif
     let value = s:ConvertValue(a:args[1])
-    let style_opts[key] = value
+    call table#config#Setup({ 'style_options': { key : value } })
 endfunction
 
 function! s:CompleteTableOption(ArgLead, CmdLine, CursorPos) abort

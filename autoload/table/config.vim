@@ -1,18 +1,39 @@
-let s:table_default_config = {
+let s:default_config = {
+            \ 'disable_mappings' : v:false,
             \ 'style': 'default',
             \ 'options': {
+            \   'multiline'            : v:false,
+            \   'preserve_indentation' : v:true,
+            \   'default_alignment'    : 'left',
+            \   'chunk_size'           : [-10, 10],
             \   'i_vertical'           : '|',
             \   'i_horizontal'         : '-',
             \   'i_alignment'          : ':',
-            \   'default_alignment'    : 'left',
-            \   'chunk_size'           : [-10, 10],
-            \   'multiline'            : v:false,
-            \   'preserve_indentation' : v:true,
             \ },
+            \ 'style_options': {},
             \ }
 
-let s:config = deepcopy(s:table_default_config)
+let s:config = deepcopy(s:default_config)
 let s:style_cache = {}
+
+function! table#config#Setup(config) abort
+    call s:ValidateConfig(a:config)
+    if has_key(a:config, 'disable_mappings')
+        let g:table_disable_mappings = a:config.disable_mappings
+    endif
+    if has_key(a:config, 'options')
+        call extend(s:config.options, a:config.options)
+    endif
+    if has_key(a:config, 'style')
+        let s:config.style = a:config.style
+        let s:style_cache = {}
+    endif
+    if has_key(a:config, 'style_options')
+        let s:style_cache = table#config#Style()
+        call extend(s:style_cache.options, a:config.style_options)
+    endif
+    call table#table#InvalidateCache()
+endfunction
 
 function! table#config#Config() abort
     return deepcopy(s:config)
@@ -28,14 +49,23 @@ function! table#config#Style() abort
     return s:style_cache
 endfunction
 
+function! table#config#SetStyle(style_dict) abort
+    let s:style_cache = deepcopy(a:style_dict)
+    call table#table#InvalidateCache()
+endfunction
+
+function! table#config#RestoreDefault() abort
+    call table#config#Setup(s:default_config)
+endfunction
+
 function! s:ValidateConfig(config) abort
     for key in keys(a:config)
-        if !has_key(s:table_default_config, key)
+        if !has_key(s:default_config, key)
             throw 'Invalid configuration key: ' .. key
         endif
         if key ==# 'options'
             for opt_key in keys(a:config.options)
-                if !has_key(s:table_default_config.options, opt_key)
+                if !has_key(s:default_config.options, opt_key)
                     throw 'Invalid configuration option key: ' .. opt_key
                 endif
             endfor
@@ -45,27 +75,6 @@ function! s:ValidateConfig(config) abort
             endif
         endif
     endfor
-endfunction
-
-function! table#config#SetConfig(config) abort
-    call s:ValidateConfig(a:config)
-    if has_key(a:config, 'options')
-        call extend(s:config.options, a:config.options)
-    endif
-    if has_key(a:config, 'style')
-        let s:config.style = a:config.style
-        let s:style_cache = {}
-    endif
-    call table#table#InvalidateCache()
-endfunction
-
-function! table#config#SetStyle(style_dict) abort
-    let s:style_cache = deepcopy(a:style_dict)
-    call table#table#InvalidateCache()
-endfunction
-
-function! table#config#RestoreDefault() abort
-    call table#config#SetConfig(s:table_default_config)
 endfunction
 
 function! s:GenerateDefaultStyle() abort
