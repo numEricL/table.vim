@@ -60,8 +60,7 @@ endfunction
 
 function! s:ValidateConfig(config) abort
     for key in keys(a:config)
-        " disable_mappings key use by lua setup
-        if !has_key(s:default_config, key) && key !=# 'disable_mappings'
+        if !has_key(s:default_config, key)
             throw 'Invalid configuration key: ' .. key
         endif
         if key ==# 'options'

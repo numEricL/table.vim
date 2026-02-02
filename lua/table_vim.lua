@@ -7,7 +7,7 @@ local M = {}
 --     - multiline: boolean - Allow cells to contain newlines
 --     - preserve_indentation: boolean - Keep leading whitespace in multiline cells
 --     - default_alignment: string - Default column alignment: 'left', 'center', or 'right'
---     - chunk_size: lsit - Chunk size for parsing
+--     - chunk_size: list - Chunk size for parsing
 --     - i_vertical: string - Input vertical character
 --     - i_horizontal: string - Input horizontal character
 --     - i_alignment: string - Input alignment character

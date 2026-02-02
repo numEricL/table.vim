@@ -21,7 +21,7 @@ variants for full borders or no borders respectively.
 
 | Object     | Description                   | Example                    |
 |------------|-------------------------------|----------------------------|
-| `tx/ix/ax` | nice                          | `cix` change cell content  |
+| `tx/ix/ax` | half-open/inner/around cell   | `cix` change cell content  |
 | `tr/ir/ar` | half-open/inner/around row    | `dtr` delete row           |
 | `tc/ic/ac` | half-open/inner/around column | `yac` yank bordered-column |
 
