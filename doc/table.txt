@@ -1,0 +1,516 @@
+*table.txt*  Text table manipulation for Vim and Neovim
+
+==============================================================================
+CONTENTS                                                      *table-contents*
+
+    1. Introduction ......................... |table-introduction|
+    2. Requirements ......................... |table-requirements|
+    3. Commands ............................. |table-commands|
+    4. Mappings ............................. |table-mappings|
+    5. Text Objects ......................... |table-text-objects|
+    6. Configuration ........................ |table-configuration|
+    7. Styles ............................... |table-styles|
+    8. User Events .......................... |table-events|
+    9. Functions ............................ |table-functions|
+    10. License ............................. |table-license|
+
+==============================================================================
+INTRODUCTION                                              *table-introduction*
+
+table.vim provides text table manipulation in Vim and Neovim. It parses
+pipe-delimited tables and provides automatic alignment, navigation, text
+objects. For Neovim users, it also includes a floating window cell editor.
+
+Supported table styles: Markdown, Org-mode, reStructuredText, Unicode
+box-drawing characters, and custom styles.
+
+==============================================================================
+REQUIREMENTS                                              *table-requirements*
+
+- Neovim required for floating window cell editor
+
+==============================================================================
+COMMANDS                                                      *table-commands*
+
+                                                                       *:Table*
+:Table [subcommand] [args]
+    Main command for configuration. Without arguments, displays current
+    configuration.
+
+    Subcommands:
+
+    :Table Option [key] [value]                             *:Table-Option*
+        Get or set table options. Without arguments, lists all options.
+        With only key, shows current value. With key and value, sets option.
+
+        Options:
+        - i_vertical: Vertical border character (default: '|')
+        - i_horizontal: Horizontal border character (default: '-')
+        - i_alignment: Alignment marker character (default: ':')
+        - default_alignment: Default column alignment: 'l', 'c', or 'r'
+          (default: 'l')
+        - chunk_size: Lines to process around cursor [before, after]
+          (default: [-10, 10])
+        - multiline: Enable multiline cells (default: false)
+          When true, cells can contain newline characters.
+        - preserve_indentation: Keep leading whitespace in multiline cells
+          (default: true)
+
+        Examples: >
+            :Table Option default_alignment c
+            :Table Option multiline true
+<
+    :Table Style [name]                                      *:Table-Style*
+        Get or set the current style. Without arguments, lists available
+        styles.
+
+        Built-in styles: default, markdown, orgmode, rest, single, double
+
+        Example: >
+            :Table Style markdown
+<
+    :Table StyleOption [key] [value]                   *:Table-StyleOption*
+        Get or set style options. Without arguments, lists all style options.
+
+        Style options:
+        - omit_left_border: Hide left border (default: false)
+        - omit_right_border: Hide right border (default: false)
+        - omit_top_border: Hide top separator (default: false)
+        - omit_bottom_border: Hide bottom separator (default: false)
+        - omit_separator_rows: Hide separator rows between data rows
+          (default: false)
+
+        Example: >
+            :Table StyleOption omit_left_border true
+<
+    :Table RegisterStyle [name]                       *:Table-RegisterStyle*
+        Save current style configuration under a custom name.
+
+        Example: >
+            :Table Style markdown
+            :Table StyleOption omit_left_border true
+            :Table RegisterStyle minimal_markdown
+<
+    :Table EditCell                                      *:Table-EditCell*
+        Edit current cell in a floating window (Neovim only). Opens an
+        auto-resizing floating window for editing cell content.
+
+        Equivalent to <Leader>te mapping.
+
+        Example: >
+            :Table EditCell
+<
+
+==============================================================================
+MAPPINGS                                                      *table-mappings*
+
+<plug> mappings are provided for table operations, navigation, and text objects.
+
+Default mappings are provided, and may be disabled by setting the
+|g:table_disable_mappings| variable, or by calling the config setup function
+with the disable_mappings option before the VimEnter event.
+
+Table Operations ~
+                                                        *<Plug>(table_align)*
+<Plug>(table_align)
+    Align table at the current line. Adjusts column widths and formats borders.
+    Default: <Leader>ta (normal), | (insert, auto-aligns on typing |)
+
+                                                     *<Plug>(table_complete)*
+<Plug>(table_complete)
+    Complete table structure by adding borders and alignment rows.
+    Default: <Leader>| (normal)
+
+                                                   *<Plug>(table_to_default)*
+<Plug>(table_to_default)
+    Convert current table to default style.
+    Default: <Leader>td (normal)
+
+                                                   *<Plug>(table_cell_edit)*
+<Plug>(table_cell_edit)
+    Edit current cell in floating window (Neovim only). Useful for multiline
+    editing. Changes save on WinLeave.
+    Default: <Leader>te (normal)
+
+Navigation ~
+                                                        *<Plug>(table_next)*
+<Plug>(table_next)
+    Move to next cell, wrapping to next row at row end.
+    Default: <Tab> (normal, visual, insert)
+
+                                                        *<Plug>(table_prev)*
+<Plug>(table_prev)
+    Move to previous cell, wrapping to previous row at row start.
+    Default: <S-Tab> (normal, visual, insert)
+
+                                                   *<Plug>(table_move_left)*
+<Plug>(table_move_left)
+    Move to cell on the left.
+    Default: <C-h> (normal, visual, insert)
+
+                                                  *<Plug>(table_move_right)*
+<Plug>(table_move_right)
+    Move to cell on the right.
+    Default: <C-l> (normal, visual, insert)
+
+                                                     *<Plug>(table_move_up)*
+<Plug>(table_move_up)
+    Move to cell above.
+    Default: <C-k> (normal, visual, insert)
+
+                                                   *<Plug>(table_move_down)*
+<Plug>(table_move_down)
+    Move to cell below.
+    Default: <C-j> (normal, visual, insert)
+
+Text Objects ~
+
+                                                *<Plug>(table_cell_textobj)*
+tx          Cell text object (half borders)
+                                          *<Plug>(table_inner_cell_textobj)*
+ix          Inner cell (content only)
+                                         *<Plug>(table_around_cell_textobj)*
+ax          Around cell (includes borders)
+
+                                                 *<Plug>(table_row_textobj)*
+tr          Row text object (half borders)
+                                           *<Plug>(table_inner_row_textobj)*
+ir          Inner row (content only)
+                                          *<Plug>(table_around_row_textobj)*
+ar          Around row (includes separators)
+
+                                              *<Plug>(table_column_textobj)*
+tc          Column text object (half borders)
+                                        *<Plug>(table_inner_column_textobj)*
+ic          Inner column (content only)
+                                       *<Plug>(table_around_column_textobj)*
+ac          Around column (includes separators)
+
+Text objects work in visual and operator-pending modes.
+
+Examples: >
+    dix     Delete cell content
+    yir     Yank row
+    dac     Delete column
+    2dtc    Delete two columns
+<
+
+==============================================================================
+TEXT OBJECTS                                              *table-text-objects*
+
+Text objects for cells, rows, and columns. Defined for visual and operator
+pending modes. "around" and "inner" variants select full borders or no borders,
+while default selects half borders.
+
+Cell Text Objects ~
+
+tx          Cell, including bottom-right borders.
+ax          Around cell, including adjacent borders.
+ix          Inner cell content, excluding borders.
+
+Row Text Objects ~
+
+tr          Row, including bottom separator.
+ar          Around row, including adjacent separators.
+ir          Inner row content, excluding separator lines.
+
+Column Text Objects ~
+
+tc          Column, including right separator.
+ac          Around column, including adjacent separators.
+ic          Inner column content, excluding separators.
+
+Counts ~
+
+Text objects accept counts to select multiple adjacent items: >
+    d2tx    Delete current cell and next cell
+    v3ir    Select three rows
+    y2ic    Yank two columns
+<
+
+==============================================================================
+CONFIGURATION                                            *table-configuration*
+
+Table.vim can be configured either declaratively using a setup function, or
+at runtime using |:Table| commands.
+
+Setup Function ~
+                                                               *table#Setup()*
+                                                           *require('table')*
+
+The setup function provides a declarative way to configure table.vim. Call it
+during initialization to set options, style, and mappings. This function must
+be called before the |VimEnter| event for the disable_mappings option to take
+effect.
+
+Neovim (Lua): >
+    require('table').setup({
+        disable_mappings = false,        -- Disable default keymaps
+        style            = 'markdown',   -- Built-in style name
+        options = {
+            multiline            = false,
+            preserve_indentation = true,
+            default_alignment    = 'left',  -- 'left', 'center', or 'right'
+            chunk_size           = {-10, 10},
+            i_vertical           = '|',
+            i_horizontal         = '-',
+            i_alignment          = ':',
+        },
+        style_options = {
+            omit_left_border     = false,
+            omit_right_border    = false,
+            omit_top_border      = false,
+            omit_bottom_border   = false,
+            omit_separator_rows  = false,
+        }
+    })
+<
+Vim (VimScript): >
+    call table#Setup({
+    \   'disable_mappings' : v:false,
+    \   'style'            : 'markdown',
+    \   'options': {
+    \       'multiline'            : v:false,
+    \       'preserve_indentation' : v:true,
+    \       'default_alignment'    : 'left',
+    \       'chunk_size'           : [-10, 10],
+    \       'i_vertical'           : '|',
+    \       'i_horizontal'         : '-',
+    \       'i_alignment'          : ':',
+    \   },
+    \   'style_options': {
+    \       'omit_left_border'     : v:false,
+    \       'omit_right_border'    : v:false,
+    \       'omit_top_border'      : v:false,
+    \       'omit_bottom_border'   : v:false,
+    \       'omit_separator_rows'  : v:false,
+    \   }
+    \ })
+<
+Setup Parameters:
+
+    disable_mappings    Disable default keymaps. When true, you must define
+                        your own mappings using the <Plug> mappings described
+                        in |table-mappings|. Default: false
+
+    style               Name of built-in or custom style to use. See
+                        |table-styles| for available styles.
+                        Default: 'default'
+
+    options             Dictionary of table processing options:
+
+        multiline            Allow cells to contain newline characters.
+                             Default: false
+
+        preserve_indentation Keep leading whitespace when processing
+                             multiline cells. Default: true
+
+        default_alignment    Default column alignment: 'left', 'center',
+                             or 'right' (can also use 'l', 'c', 'r').
+                             Default: 'left'
+
+        chunk_size           Number of lines to process around cursor
+                             [lines_before, lines_after]. Use [0, 0] to
+                             process entire table, or [-1, 0] for special
+                             cases. Default: [-10, 10]
+
+        i_vertical           Input vertical border character.
+                             Default: '|'
+
+        i_horizontal         Input horizontal border character.
+                             Default: '-'
+
+        i_alignment          Input alignment marker character.
+                             Default: ':'
+
+    style_options       Dictionary of style-specific options that control
+                        border visibility:
+
+        omit_left_border     Hide left table border. Default: false
+        omit_right_border    Hide right table border. Default: false
+        omit_top_border      Hide top separator. Default: false
+        omit_bottom_border   Hide bottom separator. Default: false
+        omit_separator_rows  Hide separator rows between data rows.
+                             Default: false
+
+Note: When using the setup function, you only need to specify the options you
+want to change. Unspecified options retain their default values.
+
+                                                     *g:table_disable_mappings*
+g:table_disable_mappings
+    Set to 1 to disable default mappings. You must map <Plug> targets
+    yourself. This variable can be set before the VimEnter event, or use the
+    disable_mappings option in the setup function.
+    Default: 0
+
+Runtime Configuration Commands ~
+
+Use |:Table| commands to view or change configuration at runtime: >
+    " Configure table options
+    :Table Style markdown
+    :Table Option multiline 1
+    :Table Option default_alignment c
+    :Table StyleOption omit_left_border 1
+
+    " Disable default mappings and create custom ones
+    let g:table_disable_mappings = 1
+    nmap <Leader>tt <Plug>(table_align)
+    nmap <Leader>tc <Plug>(table_complete)
+<
+
+==============================================================================
+STYLES                                                          *table-styles*
+
+Styles control table border characters and visibility. Several built-in
+styles are provided.
+
+Built-in Styles ~
+
+default - ASCII table with all borders: >
+
+    |---------|---------|
+    | Header1 | Header2 |
+    |---------|---------|
+    | Cell1   | Cell2   |
+    |---------|---------|
+<
+markdown - Markdown tables (no top/bottom borders): >
+
+    | Header1 | Header2 |
+    |---------|---------|
+    | Cell1   | Cell2   |
+<
+orgmode - Org-mode tables (+ at intersections): >
+
+    | Header1 | Header2 |
+    |---------+---------|
+    | Cell1   | Cell2   |
+<
+rest - reStructuredText tables (= for header separator): >
+
+    +---------+---------+
+    | Header1 | Header2 |
+    +=========+=========+
+    | Cell1   | Cell2   |
+    +---------+---------+
+<
+single - Unicode single-line box-drawing: >
+
+    ┌─────────┬─────────┐
+    │ Header1 │ Header2 │
+    ├─────────┼─────────┤
+    │ Cell1   │ Cell2   │
+    └─────────┴─────────┘
+<
+double - Unicode double-line box-drawing: >
+
+    ╔═════════╦═════════╗
+    ║ Header1 ║ Header2 ║
+    ╠═════════╬═════════╣
+    ║ Cell1   ║ Cell2   ║
+    ╚═════════╩═════════╝
+<
+Custom Styles ~
+
+Create custom styles by modifying style options and registering: >
+    :Table Style markdown
+    :Table StyleOption omit_left_border true
+    :Table StyleOption omit_right_border true
+    :Table RegisterStyle minimal
+<
+Style options:
+- omit_left_border: Hide left border
+- omit_right_border: Hide right border
+- omit_top_border: Hide top separator
+- omit_bottom_border: Hide bottom separator
+- omit_separator_rows: Hide separators between data rows
+
+==============================================================================
+USER EVENTS                                                    *table-events*
+
+User autocommands fired during cell editing (Neovim only).
+
+Event Data ~
+
+Both events provide data via `args.data` in Lua autocommands:
+- bufnr: Buffer number of cell edit window
+- winid: Window ID of cell edit window
+- cell_id: Cell identifier {row_id, byte_offset, col_id}
+- tbl: Table object (internal)
+
+                                                       *User-TableCellEditPre*
+TableCellEditPre
+
+    Fired after cell edit window is created and content loaded, before
+    entering the window.
+
+    Use cases:
+    - Set buffer-local options or mappings
+    - Initialize UI or tracking
+
+    Example: >
+    vim.api.nvim_create_autocmd('User', {
+        pattern = 'TableCellEditPre',
+        callback = function(args)
+            vim.bo[args.data.bufnr].filetype = 'markdown'
+            vim.keymap.set('n', 'q', '<cmd>close<cr>',
+                          { buffer = args.data.bufnr })
+        end
+    })
+<
+                                                      *User-TableCellEditPost*
+TableCellEditPost
+
+    Fired after window is closed but before saving buffer content to the
+    table. Buffer can still be modified. Changes made here will be saved.
+
+    Use cases:
+    - Apply formatters to cell content
+    - Validate cell content and show warnings/errors
+    - Transform or normalize data
+
+<
+Note: Event data only accessible via Lua. Vimscript autocommands can trigger
+but cannot access data.
+
+
+==============================================================================
+FUNCTIONS                                                    *table-functions*
+
+                                                            *table#IsTable()*
+table#IsTable({linenr})
+    Return v:true if the line at {linenr} is part of a table, v:false
+    otherwise.
+
+                                                             *table#Align()*
+table#Align({linenr})
+    Align the table at the given line number, adjusting column widths and
+    formatting separators.
+
+                                                          *table#Complete()*
+table#Complete({linenr})
+    Complete the table structure at the given line number, adding missing
+    borders and separators.
+
+                                                         *table#ToDefault()*
+table#ToDefault({linenr})
+    Convert the table at the given line to the default style.
+
+                                                       *table#CycleCursor()*
+table#CycleCursor({dir}, {count1})
+    Move the cursor to the next/previous cell. {dir} is 'forward' or
+    'backward'. {count1} specifies how many times to move.
+
+                                                    *table#MoveCursorCell()*
+table#MoveCursorCell({dir}, {count1})
+    Move the cursor in a specific direction: 'left', 'right', 'up', or
+    'down'. {count1} specifies how many cells to move.
+
+==============================================================================
+LICENSE                                                        *table-license*
+
+This plugin is distributed under the Mozilla Public License Version 2.0.
+See LICENSE file for full details.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
