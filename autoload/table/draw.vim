@@ -1,6 +1,7 @@
 function! table#draw#CurrentlyPlaced(table) abort
     call table#format#Align(a:table)
-    let cfg_opts = table#config#Config().options
+    let bufnr = a:table.placement.bufnr
+    let cfg_opts = table#config#Config(bufnr).options
     let positions = a:table.placement.positions
     let new_id = 0
     for pos_id in range(len(positions))
@@ -25,8 +26,9 @@ function! table#draw#Table(table) abort
     call table#format#FillGaps(a:table)
     call table#format#Align(a:table)
     let pos_id = 0
-    let cfg_opts = table#config#Config().options
-    let style_opts = table#config#Style().options
+    let bufnr = a:table.placement.bufnr
+    let cfg_opts = table#config#Config(bufnr).options
+    let style_opts = table#config#Style(bufnr).options
 
     if !style_opts.omit_top_border
         let num_cols = a:table.rows[0].ColCount()
@@ -71,9 +73,10 @@ function! s:DrawLine(placement, pos_id, line) abort
     endif
     let [col_start, col_end] = [-1, -1]
 
+    let bufnr = a:placement.bufnr
     let display_col_start = a:placement.max_col_start
-    let cfg_opts = table#config#Config().options
-    let style_opts = table#config#Style().options
+    let cfg_opts = table#config#Config(bufnr).options
+    let style_opts = table#config#Style(bufnr).options
     if style_opts.omit_left_border
         let display_col_start = a:placement.min_col_start
         if a:placement.align_id == -1 && style_opts.omit_separator_rows && !cfg_opts.multiline
@@ -110,9 +113,10 @@ function! s:DrawRow(table, pos_id, row_id, ...) abort
     let fill_cell_multirows = get(a:000, 0, v:true)
     let row = a:table.rows[a:row_id]
     let pos_id = a:pos_id
-    let cfg_opts = table#config#Config().options
-    let style_opts = table#config#Style().options
-    let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars('row')
+    let bufnr = a:table.placement.bufnr
+    let cfg_opts = table#config#Config(bufnr).options
+    let style_opts = table#config#Style(bufnr).options
+    let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars(bufnr, 'row')
 
     for i in range(row.Height())
         let fill_cell = fill_cell_multirows || s:HasRightMostSeparator(a:table, a:row_id, i)
@@ -167,11 +171,12 @@ function! s:NumSubRowCols(table, row_id, row_offset) abort
 endfunction
 
 function! s:MakeSeparator(table, type, num_cols) abort
-    let [ left, right, sep, horiz ] = table#config#GetBoxDrawingChars(a:type)
+    let bufnr = a:table.placement.bufnr
+    let [ left, right, sep, horiz ] = table#config#GetBoxDrawingChars(bufnr, a:type)
     if a:num_cols == 0
         return ''
     endif
-    let cfg_opts = table#config#Config().options
+    let cfg_opts = table#config#Config(bufnr).options
     let align_char = cfg_opts.i_alignment
     let line = left
     let show_alignment = (a:type ==# 'alignment')

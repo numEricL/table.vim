@@ -44,7 +44,8 @@ function! s:PadAlignLine(line, align, width) abort
 endfunction
 
 function! s:TrimCells(table) abort
-    let cfg_opts = table#config#Config().options
+    let bufnr = a:table.placement.bufnr
+    let cfg_opts = table#config#Config(bufnr).options
     for row in a:table.rows
         for j in range(len(row.cells))
             if cfg_opts.multiline && cfg_opts.preserve_indentation

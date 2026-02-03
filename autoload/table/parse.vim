@@ -41,7 +41,7 @@ function! table#parse#ParseLine(linenr) abort
 endfunction
 
 function! s:CheckAlignmentSeparator(line) abort
-    let cfg_opts = table#config#Config().options
+    let cfg_opts = table#config#Config(bufnr('%')).options
     let pat = table#util#AnyPattern([cfg_opts.i_alignment])
     return a:line =~# '\V' .. pat
 endfunction
@@ -70,7 +70,7 @@ endfunction
 
 function! s:IsTableLine(line) abort
     let sep = s:GeneralSeparatorPattern()
-    let style_opts = table#config#Style().options
+    let style_opts = table#config#Style(bufnr('%')).options
     if style_opts.omit_left_border && style_opts.omit_right_border
         if a:line =~# '\V' .. sep
             return v:true
@@ -130,8 +130,8 @@ endfunction
 
 function! s:BoxDrawingPatterns(type) abort
     " sep = [ left, right, sep, horiz ]
-    let sep = table#config#GetBoxDrawingChars(a:type)
-    let cfg_opts = table#config#Config().options
+    let sep = table#config#GetBoxDrawingChars(bufnr('%'), a:type)
+    let cfg_opts = table#config#Config(bufnr('%')).options
     for i in range(3)
         let sep[i] = table#util#AnyPattern([sep[i], cfg_opts.i_vertical])
     endfor
@@ -140,15 +140,15 @@ function! s:BoxDrawingPatterns(type) abort
     else
         let sep[3] = table#util#AnyPattern([sep[i], cfg_opts.i_horizontal])
     endif
-    let style_opts = table#config#Style().options
+    let style_opts = table#config#Style(bufnr('%')).options
     let sep[0] = style_opts.omit_left_border  ? '' : sep[0]
     let sep[1] = style_opts.omit_right_border ? '' : sep[1]
     return sep
 endfunction
 
 function! s:GeneralSeparatorPattern() abort
-    let box = table#config#Style().box_drawing
-    let cfg_opts = table#config#Config().options
+    let box = table#config#Style(bufnr('%')).box_drawing
+    let cfg_opts = table#config#Config(bufnr('%')).options
     let separators = [
                 \ box.align_left,
                 \ box.align_right,
@@ -171,8 +171,8 @@ function! s:GeneralSeparatorPattern() abort
 endfunction
 
 function! s:GeneralHorizPattern() abort
-    let box = table#config#Style().box_drawing
-    let cfg_opts = table#config#Config().options
+    let box = table#config#Style(bufnr('%')).box_drawing
+    let cfg_opts = table#config#Config(bufnr('%')).options
     let horizs = [
                 \ box.align_horiz,
                 \ box.sep_horiz,
@@ -185,8 +185,8 @@ function! s:GeneralHorizPattern() abort
 endfunction
 
 function! s:GeneralSeparatorLinePattern() abort
-    let box = table#config#Style().box_drawing
-    let cfg_opts = table#config#Config().options
+    let box = table#config#Style(bufnr('%')).box_drawing
+    let cfg_opts = table#config#Config(bufnr('%')).options
     let sep_line_chars = [
                 \ box.align_left,
                 \ box.align_right,
@@ -263,7 +263,7 @@ function! s:SplitPos(line) abort
 endfunction
 
 function! s:HandleOmittedBorders(line, match_list, sep_pos_list) abort
-    let style_opts = table#config#Style().options
+    let style_opts = table#config#Style(bufnr('%')).options
     if !empty(a:sep_pos_list)
         if style_opts.omit_left_border
             call insert(a:match_list, strpart(a:line, 0, a:sep_pos_list[0][0]))

@@ -20,8 +20,8 @@ local function set_vim_methods(tbl)
 end
 
 -- vimscript wrappers
-function M.config__config()
-    return vim.fn['table#config#Config']()
+function M.config__config(bufnr)
+    return vim.fn['table#config#Config'](bufnr)
 end
 
 function M.cursor__get_coord(tbl, pos, opts)

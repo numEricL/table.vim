@@ -96,8 +96,8 @@ COMMANDS                                                      *table-commands*
 
                                                                  *:TableOption*
 :TableOption [subcommand] [args]
-    Main command for configuration. Without arguments, displays current
-    configuration.
+    Main command for runtime configuration of the current buffer. Without
+    arguments, displays current configuration.
 
     Subcommands:
 

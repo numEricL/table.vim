@@ -124,7 +124,8 @@ function! s:AdjustForType(table1, coord1, table2, coord2, text_obj, text_obj_typ
     let line_type = a:table2.placement.positions[pos_id]['type']
     let has_bottom_border = (line_type =~# '\v^(separator|top|alignment|bottom)$')
 
-    let style_opts = table#config#Style().options
+    let bufnr = a:table2.placement.bufnr
+    let style_opts = table#config#Style(bufnr).options
     "check placement for left border
     let col_id = a:coord1[2]
     let has_left_border = (col_id > 0) ? v:true : !style_opts.omit_left_border

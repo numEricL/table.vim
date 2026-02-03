@@ -164,7 +164,8 @@ end
 
 function M.edit_at_cursor()
     local cursor = win_get_cursor_vim_indexed(0)
-    local cfg_opts = bridge.config__config().options
+    local bufnr = vim.api.nvim_get_current_buf()
+    local cfg_opts = bridge.config__config(bufnr).options
     local tbl = bridge.table__get(cursor[1], cfg_opts.chunk_size)
     if not tbl.valid then
         return

@@ -3,11 +3,11 @@ function! table#Setup(config) abort
 endfunction
 
 function! table#SetBufferConfig(config) abort
-    call table#config#SetBufferConfig(a:config)
+    call table#config#SetBufferConfig(bufnr('%'), a:config)
 endfunction
 
 function! table#RestoreDefault() abort
-    call table#config#RestoreDefault()
+    call table#config#RestoreDefault(bufnr('%'))
 endfunction
 
 function! table#IsTable(linenr) abort
@@ -15,7 +15,7 @@ function! table#IsTable(linenr) abort
 endfunction
 
 function! table#Align(linenr) abort
-    let cfg_opts = table#config#Config().options
+    let cfg_opts = table#config#Config(bufnr('%')).options
     let table = table#table#Get(a:linenr, cfg_opts.chunk_size)
     if !table.valid
         return
@@ -49,14 +49,15 @@ function! table#ToDefault(linenr) abort
     if !table.valid
         return
     endif
-    let cfg = table#config#Config()
-    let style = table#config#Style()
+    let bufnr = table.placement.bufnr
+    let cfg = table#config#Config(bufnr)
+    let style = table#config#Style(bufnr)
 
-    call table#config#SetBufferConfig({ 'style': 'default' })
+    call table#config#SetBufferConfig(bufnr, { 'style': 'default' })
     call table#draw#Table(table)
 
-    call table#config#SetBufferConfig(cfg)
-    call table#config#SetStyle(style)
+    call table#config#SetBufferConfig(bufnr, cfg)
+    call table#config#SetStyle(bufnr, style)
 endfunction
 
 function! table#ToStyle(linenr, style_name) abort
@@ -64,8 +65,9 @@ function! table#ToStyle(linenr, style_name) abort
     if !table.valid
         return
     endif
+    let bufnr = table.placement.bufnr
 
-    call table#config#SetBufferConfig({ 'style': a:style_name })
+    call table#config#SetBufferConfig(bufnr, { 'style': a:style_name })
     call table#draw#Table(table)
 endfunction
 
