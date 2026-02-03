@@ -59,6 +59,16 @@ function! table#ToDefault(linenr) abort
     call table#config#SetStyle(style)
 endfunction
 
+function! table#ToStyle(linenr, style_name) abort
+    let table = s:GetFullTable(a:linenr)
+    if !table.valid
+        return
+    endif
+
+    call table#config#SetBufferConfig({ 'style': a:style_name })
+    call table#draw#Table(table)
+endfunction
+
 function! table#CycleCursor(dir, count1) abort
     let curpos = getpos('.')[1:2]
     let table = table#table#Get(curpos[0], [0,0])

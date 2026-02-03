@@ -89,10 +89,11 @@ table-events`.
 ### :Table
 
 ```vim
-:Table EditCell     " Edit cell in floating window (Neovim)
-:Table Complete     " Fill missing cells and borders
-:Table Align        " Align table columns
-:Table ToDefault    " Convert to default style
+:Table EditCell         " Edit cell in floating window (Neovim)
+:Table Complete         " Fill missing cells and borders
+:Table Align            " Align table columns
+:Table ToDefault        " Convert to default style
+:Table ToStyle {style}  " Convert to specified style (updates the table option)
 ```
 
 ### :TableOption

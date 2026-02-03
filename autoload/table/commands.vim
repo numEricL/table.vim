@@ -1,7 +1,7 @@
 " :Table command - for actions
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault']
+        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault', 'ToStyle']
         echomsg 'Table actions: ' .. join(actions, ', ')
         return
     endif
@@ -23,6 +23,14 @@ function! table#commands#TableCommand(...) abort
         call table#Align(line('.'))
     elseif action ==# 'ToDefault'
         call table#ToDefault(line('.'))
+    elseif action ==# 'ToStyle'
+        if len(args) == 0
+            echohl ErrorMsg
+            echomsg 'ToStyle: style name required'
+            echohl None
+            return
+        endif
+        call table#ToStyle(line('.'), args[0])
     else
         echohl ErrorMsg
         echomsg "Table: unknown action '" .. action .. "'"
@@ -36,8 +44,14 @@ function! table#commands#TableComplete(ArgLead, CmdLine, CursorPos) abort
 
     " Complete action names
     if num_args <= 1
-        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault']
+        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault', 'ToStyle']
         return filter(copy(actions), 'v:val =~? "^" .. a:ArgLead')
+    endif
+
+    " Complete style names for ToStyle
+    if num_args == 2 && len(parts) > 1 && parts[1] ==# 'ToStyle'
+        let styles = ['default'] + table#style#GetNames()
+        return filter(copy(styles), 'v:val =~? "^" .. a:ArgLead')
     endif
 
     return []
