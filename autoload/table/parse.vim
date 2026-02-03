@@ -225,7 +225,7 @@ function! s:CommentAwareTrim(line) abort
         return [a:line, '', '']
     endif
     let line = a:line
-    
+
     let cs_pattern = '\V\^' .. table#util#CommentStringPattern(bufnr('%'))[0]
     let prefix = matchstrpos(line, cs_pattern)
     if prefix[1] != -1
@@ -237,7 +237,7 @@ function! s:CommentAwareTrim(line) abort
     if suffix[1] != -1
         let line = strpart(line, 0, suffix[1])
     endif
-    
+
     return [line, prefix, suffix]
 endfunction
 

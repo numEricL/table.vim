@@ -59,7 +59,7 @@ COMMANDS                                                      *table-commands*
 <
     :Table Complete                                          *:Table-Complete*
         Complete table structure by adding borders and alignment rows.
-        
+
         Note: This command processes the entire table regardless of chunk_size,
         which may be slow for large tables.
 
@@ -302,8 +302,8 @@ be set via setup functions or modified at runtime.
 Three Configuration Levels ~
 
 1. Plugin defaults - Built-in defaults, never modified
-2. User defaults - Set via |table#config#Setup()|, applied to new buffers
-3. Buffer-local - Set via |table#config#SetBufferConfig()| or |:TableOption|
+2. User defaults - Set via |table#Setup()|, applied to new buffers
+3. Buffer-local - Set via |table#SetBufferConfig()| or |:TableOption|
 
 Configuration Functions ~
                                                                *table#Setup()*
@@ -405,7 +405,7 @@ Per-Filetype Configuration ~
 
 The plugin provides default ftplugin files for common formats:
 - ftplugin/markdown.vim - Markdown tables
-- ftplugin/org.vim - Org-mode tables  
+- ftplugin/org.vim - Org-mode tables
 - ftplugin/rst.vim - reStructuredText tables
 
 Use the 'disable_ftplugins' option to disable.

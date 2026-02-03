@@ -74,7 +74,7 @@ function! table#textobj#Column(count1, type) abort
 
     let table1 = table#table#Get(table.placement.full_bounds[0], chunk_size)
     let coord1 = [ 0, 0, col1 ]
-    
+
     let table2 = table#table#Get(table.placement.full_bounds[1], chunk_size)
     let coord2 = [ table2.RowCount() - 1, 0, col2 ]
 
