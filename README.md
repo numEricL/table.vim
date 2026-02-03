@@ -25,9 +25,29 @@ Tables must be
 
 ## Configuration (optional)
 
-Configure via a call to the setup function. Disable default mappings with the
-`disable_mappings` option or set the `g:table_disable_mappings` variable before
-the `VimEnter` event. See `:help table-configuration` for options.
+Configuration is **buffer-local**. Set defaults in your vimrc, customize
+per-filetype in ftplugin files, or change at runtime with `:TableOption`.
+
+```vim
+" vimrc - set defaults for all buffers
+call table#Setup({
+    \ 'style': 'default',
+    \ 'options': {'multiline': v:true}
+    \ })
+```
+
+The plugin provides default configurations for markdown, org, and rst filetypes.
+To override these, create your own ftplugin files in `after/ftplugin/`.
+
+**Disable features:**
+```vim
+call table#Setup({
+    \ 'disable_mappings': v:true,
+    \ 'disable_ftplugins': v:true
+    \ })
+```
+
+See `:help table-configuration` for details.
 
 ## Navigation
 
@@ -77,7 +97,8 @@ table-events`.
 
 ### :TableOption
 
-Runtime configuration. Use without arguments to show current config.
+Runtime configuration for the current buffer, changes do not persist across vim
+sessions. Use without arguments to show current config.
 
 ```vim
 :TableOption Style [name]                 " Get/set style
@@ -97,7 +118,7 @@ your vim/nvim config file to persist across sessions.
 | `default_alignment`    | left    | Default column alignment: `l`, `c`, or `r` |
 | `preserve_indentation` | true    | Keep leading whitespace in multiline cell  |
 
-**Built-in styles:** `default`, `markdown`, `orgmode`, `rest`, `single`, `double`
+**Built-in styles:** `default`, `markdown`, `org`, `rest`, `single`, `double`
 
 Example: `:TableOption Style markdown | :TableOption Option multiline true`
 

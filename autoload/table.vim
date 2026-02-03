@@ -2,6 +2,14 @@ function! table#Setup(config) abort
     call table#config#Setup(a:config)
 endfunction
 
+function! table#SetBufferConfig(config) abort
+    call table#config#SetBufferConfig(a:config)
+endfunction
+
+function! table#RestoreDefault() abort
+    call table#config#RestoreDefault()
+endfunction
+
 function! table#IsTable(linenr) abort
     return table#parse#IsTable(a:linenr)
 endfunction

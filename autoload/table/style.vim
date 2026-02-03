@@ -50,7 +50,7 @@ let s:styles.markdown = {
             \   }
             \ }
 
-let s:styles.orgmode = {
+let s:styles.org = {
             \ 'options' : {
             \   'omit_left_border'     : v:false,
             \   'omit_right_border'    : v:false,

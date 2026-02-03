@@ -1,5 +1,6 @@
 let s:default_config = {
-            \ 'disable_mappings' : v:false,
+            \ 'disable_mappings'  : v:false,
+            \ 'disable_ftplugins' : v:false,
             \ 'style': 'default',
             \ 'options': {
             \   'multiline'            : v:false,
@@ -13,49 +14,83 @@ let s:default_config = {
             \ 'style_options': {},
             \ }
 
-let s:config = deepcopy(s:default_config)
-let s:style_cache = {}
+let s:user_defaults = deepcopy(s:default_config)
+
+function! s:InitBufferConfig() abort
+    if !exists('b:table_config')
+        let b:table_config = deepcopy(s:user_defaults)
+    endif
+    if !exists('b:table_style')
+        let b:table_style = {}
+    endif
+endfunction
 
 function! table#config#Setup(config) abort
     call s:ValidateConfig(a:config)
     if has_key(a:config, 'disable_mappings')
         let g:table_disable_mappings = a:config.disable_mappings
     endif
+    if has_key(a:config, 'disable_ftplugins')
+        let g:table_disable_ftplugins = a:config.disable_ftplugins
+    endif
     if has_key(a:config, 'options')
-        call extend(s:config.options, a:config.options)
+        call extend(s:user_defaults.options, a:config.options)
     endif
     if has_key(a:config, 'style')
-        let s:config.style = a:config.style
-        let s:style_cache = {}
+        let s:user_defaults.style = a:config.style
     endif
     if has_key(a:config, 'style_options')
-        let s:style_cache = table#config#Style()
-        call extend(s:style_cache.options, a:config.style_options)
+        call extend(s:user_defaults.style_options, a:config.style_options)
+    endif
+endfunction
+
+function! table#config#SetBufferConfig(config) abort
+    call s:InitBufferConfig()
+    call s:ValidateConfig(a:config)
+    if has_key(a:config, 'options')
+        call extend(b:table_config.options, a:config.options)
+    endif
+    if has_key(a:config, 'style')
+        let b:table_config.style = a:config.style
+        let b:table_config.style_options = {}
+        let b:table_style = {}
+    endif
+    if has_key(a:config, 'style_options')
+        let b:table_style = table#config#Style()
+        call extend(b:table_style.options, a:config.style_options)
     endif
     call table#table#InvalidateCache()
 endfunction
 
 function! table#config#Config() abort
-    return deepcopy(s:config)
+    call s:InitBufferConfig()
+    return deepcopy(b:table_config)
 endfunction
 
 function! table#config#Style() abort
-    if empty(s:style_cache)
-        if s:config.style ==# 'default' && !table#style#Exists('default')
+    call s:InitBufferConfig()
+    if empty(b:table_style)
+        if b:table_config.style ==# 'default' && !table#style#Exists('default')
             call table#style#Register('default', s:GenerateDefaultStyle())
         endif
-        let s:style_cache = deepcopy(table#style#Get(s:config.style))
+        let b:table_style = deepcopy(table#style#Get(b:table_config.style))
+        if !empty(b:table_config.style_options)
+            call extend(b:table_style.options, b:table_config.style_options)
+        endif
     endif
-    return s:style_cache
+    return b:table_style
 endfunction
 
 function! table#config#SetStyle(style_dict) abort
-    let s:style_cache = deepcopy(a:style_dict)
+    call s:InitBufferConfig()
+    let b:table_style = deepcopy(a:style_dict)
     call table#table#InvalidateCache()
 endfunction
 
 function! table#config#RestoreDefault() abort
-    call table#config#Setup(s:default_config)
+    let b:table_config = deepcopy(s:default_config)
+    let b:table_style = {}
+    call table#table#InvalidateCache()
 endfunction
 
 function! s:ValidateConfig(config) abort
@@ -78,6 +113,7 @@ function! s:ValidateConfig(config) abort
 endfunction
 
 function! s:GenerateDefaultStyle() abort
+    call s:InitBufferConfig()
     let vert  = table#config#Config().options.i_vertical
     let horiz = table#config#Config().options.i_horizontal
     let style = {

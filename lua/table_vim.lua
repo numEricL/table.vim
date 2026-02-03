@@ -2,7 +2,7 @@ local M = {}
 
 -- @param opts table: Configuration options
 --   - disable_mappings: boolean - Disable default mappings (default: false)
---   - style: string - Table style name (e.g., 'markdown', 'orgmode', 'single', 'double')
+--   - style: string - Table style name (e.g., 'markdown', 'org', 'single', 'double')
 --   - options: table - Table options
 --     - multiline: boolean - Allow cells to contain newlines
 --     - preserve_indentation: boolean - Keep leading whitespace in multiline cells
