@@ -97,7 +97,7 @@ function! s:MinTrimIndent(lines, side) abort
             let [_, indent, _] = matchstrpos(a:lines[i], '\S')
         elseif a:side ==# 'right'
             let [_, _, end] = matchstrpos(a:lines[i], '\S\ze\s*$')
-            let indent = strlen(a:lines[i]) - end
+            let indent = (end != -1) ? (strlen(a:lines[i]) - end) : -1
         endif
         if indent >= 0
             let min_indent = (min_indent == -1) ? indent : min([min_indent, indent])
