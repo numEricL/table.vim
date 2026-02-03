@@ -123,7 +123,7 @@ function! s:SetOption(args) abort
         return
     endif
     let value = s:ConvertValue(a:args[1])
-    call table#config#Setup({ 'options': { key : value } })
+    call table#config#SetBufferConfig({ 'options': { key : value } })
 endfunction
 
 function! s:ShowOption(args) abort
@@ -144,7 +144,7 @@ function! s:SetStyle(args) abort
         echo 'Available styles: ' .. join(styles, ', ')
         return
     endif
-    call table#config#Setup({ 'style': a:args[0] })
+    call table#config#SetBufferConfig({ 'style': a:args[0] })
 endfunction
 
 function! s:RegisterStyle(args) abort
@@ -157,7 +157,7 @@ function! s:RegisterStyle(args) abort
     let style_name = a:args[0]
     let current_style = deepcopy(table#config#Style())
     call table#style#Register(style_name, current_style)
-    call table#config#Setup({ 'style': style_name })
+    call table#config#SetBufferConfig({ 'style': style_name })
     echomsg 'Registered style "' .. style_name .. '"'
 endfunction
 
@@ -173,7 +173,7 @@ function! s:SetStyleOption(args) abort
         return
     endif
     let value = s:ConvertValue(a:args[1])
-    call table#config#Setup({ 'style_options': { key : value } })
+    call table#config#SetBufferConfig({ 'style_options': { key : value } })
 endfunction
 
 function! s:ShowStyleOption(args) abort

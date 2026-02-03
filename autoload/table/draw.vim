@@ -113,7 +113,7 @@ function! s:DrawRow(table, pos_id, row_id, ...) abort
     let cfg_opts = table#config#Config().options
     let style_opts = table#config#Style().options
     let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars('row')
-    
+
     for i in range(row.Height())
         let fill_cell = fill_cell_multirows || s:HasRightMostSeparator(a:table, a:row_id, i)
         let rowline = ''

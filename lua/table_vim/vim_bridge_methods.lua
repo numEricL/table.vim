@@ -22,7 +22,7 @@ end
 -- function M.table_col_count(tbl)
 --     return tbl.max_col_count
 -- end
--- 
+--
 -- function M.table_col_align(tbl, col)
 --     local cfg_opts = require('table_vim.vim_bridge').config__config().options
 --     local default_align = cfg_opts.default_alignment[1]

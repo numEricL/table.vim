@@ -59,7 +59,7 @@ COMMANDS                                                      *table-commands*
 <
     :Table Complete                                          *:Table-Complete*
         Complete table structure by adding borders and alignment rows.
-        
+
         Note: This command processes the entire table regardless of chunk_size,
         which may be slow for large tables.
 
@@ -118,7 +118,7 @@ COMMANDS                                                      *table-commands*
         Get or set the current style. Without arguments, lists available
         styles.
 
-        Built-in styles: default, markdown, orgmode, rest, single, double
+        Built-in styles: default, markdown, org, rest, single, double
 
         Example: >
             :TableOption Style markdown
@@ -296,143 +296,167 @@ Text objects accept counts to select multiple adjacent items: >
 ==============================================================================
 CONFIGURATION                                            *table-configuration*
 
-Table.vim can be configured either declaratively using a setup function, or
-at runtime using |:Table| commands.
+Configuration is buffer-local. Each buffer has independent settings that can
+be set via setup functions or modified at runtime.
 
-Setup Function ~
+Three Configuration Levels ~
+
+1. Plugin defaults - Built-in defaults, never modified
+2. User defaults - Set via |table#Setup()|, applied to new buffers
+3. Buffer-local - Set via |table#SetBufferConfig()| or |:TableOption|
+
+Configuration Functions ~
                                                                *table#Setup()*
-                                                           *require('table_vim')*
+table#Setup({config})
+    Sets user defaults applied to all new buffers. Disable options only
+    applicable before VimEnter event.
 
-The setup function provides a declarative way to configure table.vim. Call it
-during initialization to set options, style, and mappings. This function must
-be called before the |VimEnter| event for the disable_mappings option to take
-effect.
+    Note: These settings are overridden by buffer-local settings.
 
-Neovim (Lua): >
-    require('table_vim').setup({
-        disable_mappings = false,        -- Disable default keymaps
-        style            = 'markdown',   -- Built-in style name
-        options = {
-            multiline            = false,
-            preserve_indentation = true,
-            default_alignment    = 'left',  -- 'left', 'center', or 'right'
-            chunk_size           = {-10, 10},
-            i_vertical           = '|',
-            i_horizontal         = '-',
-            i_alignment          = ':',
-        },
-        style_options = {
-            omit_left_border     = false,
-            omit_right_border    = false,
-            omit_top_border      = false,
-            omit_bottom_border   = false,
-            omit_separator_rows  = false,
+    Parameters: >
+        {
+            'disable_mappings': v:false,
+            'disable_ftplugins': v:false,
+            'style': 'default',
+            'options': {
+                'multiline': v:false,
+                'preserve_indentation': v:true,
+                'default_alignment': 'left',
+                'chunk_size': [-10, 10],
+                'i_vertical': '|',
+                'i_horizontal': '-',
+                'i_alignment': ':'
+            },
+            'style_options': {
+                'omit_left_border': v:false,
+                'omit_right_border': v:false,
+                'omit_top_border': v:false,
+                'omit_bottom_border': v:false,
+                'omit_separator_rows': v:false
+            }
         }
-    })
 <
-Vim (VimScript): >
-    call table#Setup({
-    \   'disable_mappings' : v:false,
-    \   'style'            : 'markdown',
-    \   'options': {
-    \       'multiline'            : v:false,
-    \       'preserve_indentation' : v:true,
-    \       'default_alignment'    : 'left',
-    \       'chunk_size'           : [-10, 10],
-    \       'i_vertical'           : '|',
-    \       'i_horizontal'         : '-',
-    \       'i_alignment'          : ':',
-    \   },
-    \   'style_options': {
-    \       'omit_left_border'     : v:false,
-    \       'omit_right_border'    : v:false,
-    \       'omit_top_border'      : v:false,
-    \       'omit_bottom_border'   : v:false,
-    \       'omit_separator_rows'  : v:false,
-    \   }
-    \ })
+    Example: >
+        call table#Setup({
+            \ 'style': 'markdown',
+            \ 'options': {'default_alignment': 'center'}
+            \ })
 <
-Setup Parameters:
+                                                      *table#SetBufferConfig()*
+table#SetBufferConfig({config})
+    Configure current buffer only. Use in ftplugin files or at runtime.
+    Accepts same parameters as Setup().
 
-    disable_mappings    Disable default keymaps. When true, you must define
-                        your own mappings using the <Plug> mappings described
-                        in |table-mappings|. Default: false
+    Example: >
+        " In ftplugin/markdown.vim
+        if exists('g:table_disable_ftplugins') && g:table_disable_ftplugins
+            finish
+        endif
+        call table#SetBufferConfig({'style': 'markdown'})
+<
+                                                     *table#RestoreDefault()*
+table#RestoreDefault()
+    Reset current buffer to plugin defaults (ignores user defaults).
 
-    style               Name of built-in or custom style to use. See
-                        |table-styles| for available styles.
+Configuration Options ~
+
+disable_mappings        Boolean. Disable default keymaps. Must be set before
+                        VimEnter or via Setup(). Use |g:table_disable_mappings|
+                        variable as alternative. Default: v:false
+
+disable_ftplugins       Boolean. Disable ftplugin configuration files. Use when
+                        you want uniform config across filetypes. Use
+                        |g:table_disable_ftplugins| variable as alternative.
+                        Default: v:false
+
+style                   String. Style name to use. See |table-styles|.
                         Default: 'default'
 
-    options             Dictionary of table processing options:
+options                 Dictionary of table processing options:
 
-        multiline            Allow cells to contain newline characters.
-                             Default: false
+    multiline               Boolean. Allow cells with newlines.
+                            Default: v:false
 
-        preserve_indentation Keep leading whitespace when processing
-                             multiline cells. Default: true
+    preserve_indentation    Boolean. Keep leading whitespace.
+                            Default: v:true
 
-        default_alignment    Default column alignment: 'left', 'center',
-                             or 'right' (can also use 'l', 'c', 'r').
-                             Default: 'left'
+    default_alignment       String. Column alignment: 'left', 'center', 'right'
+                            (or 'l', 'c', 'r'). Default: 'left'
 
-        chunk_size           Number of lines to process around cursor
-                             [lines_before, lines_after]. For performance,
-                             table alignment only processes a chunk of the
-                             table near the cursor. Use [0, -1] to process
-                             entire table on every alignment.
-                             Default: [-10, 10]
+    chunk_size              List [before, after]. Lines around cursor to
+                            process. Use [0, -1] for entire table.
+                            Default: [-10, 10]
 
-        i_vertical           Input vertical border character.
-                             Default: '|'
+    i_vertical              String. Vertical border character. Default: '|'
 
-        i_horizontal         Input horizontal border character.
-                             Default: '-'
+    i_horizontal            String. Horizontal border character. Default: '-'
 
-        i_alignment          Input alignment marker character.
-                             Default: ':'
+    i_alignment             String. Alignment marker character. Default: ':'
 
-    style_options       Dictionary of style-specific options that control
-                        border visibility:
+style_options           Dictionary of border visibility options:
 
-        omit_left_border     Hide left table border. Default: false
-        omit_right_border    Hide right table border. Default: false
-        omit_top_border      Hide top separator. Default: false
-        omit_bottom_border   Hide bottom separator. Default: false
-        omit_separator_rows  Hide separator rows between data rows.
-                             Default: false
+    omit_left_border        Boolean. Hide left border. Default: v:false
+    omit_right_border       Boolean. Hide right border. Default: v:false
+    omit_top_border         Boolean. Hide top border. Default: v:false
+    omit_bottom_border      Boolean. Hide bottom border. Default: v:false
+    omit_separator_rows     Boolean. Hide separator rows. Default: v:false
 
-Note: When using the setup function, you only need to specify the options you
-want to change. Unspecified options retain their default values.
+Per-Filetype Configuration ~
 
+The plugin provides default ftplugin files for common formats:
+- ftplugin/markdown.vim - Markdown tables
+- ftplugin/org.vim - Org-mode tables
+- ftplugin/rst.vim - reStructuredText tables
+
+Use the 'disable_ftplugins' option to disable.
+
+To override or add custom ftplugin configurations, create your own
+ftplugin files: >
+    " ~/.vim/after/ftplugin/markdown.vim
+    if exists('g:table_disable_ftplugins') && g:table_disable_ftplugins
+        finish
+    endif
+    call table#SetBufferConfig({
+        \ 'options': {'default_alignment': 'center'}
+        \ })
+<
+Neovim Lua Configuration ~
+
+In init.lua: >
+    vim.fn['table#Setup']({
+      style = 'markdown',
+      options = {
+        default_alignment = 'center'
+      }
+    })
+<
+In after/ftplugin/markdown.lua: >
+    if vim.g.table_disable_ftplugins then return end
+    vim.fn['table#SetBufferConfig']({
+      style = 'markdown'
+    })
+<
+Runtime Configuration ~
+
+Use |:TableOption| to view or modify current buffer at runtime: >
+    :TableOption                              " Show current config
+    :TableOption Option default_alignment center   " Set option
+    :TableOption Style markdown               " Set style
+    :TableOption StyleOption omit_left_border v:true
+<
+Changes via :TableOption affect current buffer only and don't persist.
+
+Global Variables ~
                                                      *g:table_disable_mappings*
 g:table_disable_mappings
-    Set to 1 to disable default mappings. You must map <Plug> targets
-    yourself. This variable can be set before the VimEnter event, or use the
-    disable_mappings option in the setup function.
-    Default: 0
+    Set to v:true to disable default mappings. Must be set before VimEnter.
+    Default: v:false
 
-Runtime Configuration Commands ~
+                                                    *g:table_disable_ftplugins*
+g:table_disable_ftplugins
+    Set to v:true to disable ftplugin configuration files.
+    Default: v:false
 
-Use |:TableOption| commands to view or change configuration at runtime: >
-    " Configure table options
-    :TableOption Style markdown
-    :TableOption Option multiline 1
-    :TableOption Option default_alignment c
-    :TableOption StyleOption omit_left_border 1
-
-    " Use :Table for actions
-    :Table Align
-    :Table Complete
-    :Table EditCell
-
-    " Disable default mappings and create custom ones
-    let g:table_disable_mappings = 1
-    nmap <Leader>tt <Plug>(table_align)
-    nmap <Leader>tc <Plug>(table_complete)
-    
-    " Or set custom mappings for table actions
-    nmap <Leader>ta <Plug>(table_align)
-    nmap <Leader>| <Plug>(table_complete)
-<
 
 ==============================================================================
 STYLES                                                          *table-styles*
@@ -456,7 +480,7 @@ markdown - Markdown tables (no top/bottom borders): >
     |---------|---------|
     | Cell1   | Cell2   |
 <
-orgmode - Org-mode tables (+ at intersections): >
+org - Org-mode tables (+ at intersections): >
 
     | Header1 | Header2 |
     |---------+---------|

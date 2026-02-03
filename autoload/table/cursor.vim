@@ -14,7 +14,7 @@ function! table#cursor#GetCoord(table, pos, ...) abort
     if placement_id < 0 || placement_id >= len(a:table.placement.positions)
         return {'type': 'invalid', 'coord': []}
     endif
-    
+
     let row_id     = a:table.placement.positions[placement_id]['row_id']
     let row_offset = a:table.placement.positions[placement_id]['row_offset']
     let sep_pos    = a:table.placement.positions[placement_id]['separator_pos']
@@ -130,7 +130,7 @@ function! s:FindMultiCellSepCol(table, cell_id) abort
     let [row_id, _, col_id] = a:cell_id
 
     let pos_id_start = a:table.rows[row_id].placement_id
-    let pos_id_end = pos_id_start + a:table.rows[row_id].Height() 
+    let pos_id_end = pos_id_start + a:table.rows[row_id].Height()
 
     for pos_id in range(pos_id_start, pos_id_end)
         let sep_pos = a:table.placement.positions[pos_id]['separator_pos']

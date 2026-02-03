@@ -54,7 +54,7 @@ function! s:ExpandEmptyChunk(start_line, end_line, full_bounds) abort
                 endif
             endwhile
         endif
-    endif       
+    endif
     return [a:start_line, a:end_line]
 endfunction
 
@@ -285,7 +285,7 @@ function! table#table#RestoreMethods(tbl) abort
     let a:tbl.ColAlign = function('s:TableColAlign')
     let a:tbl.Cell = function('s:TableGetCell')
     let a:tbl.SetCell = function('s:TableSetCell')
-    
+
     " Restore row-level methods
     for row in a:tbl.rows
         let row.Height = function('s:CellRowHeight')
