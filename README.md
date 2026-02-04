@@ -17,6 +17,10 @@ Use the `:Table Complete` command fill missing cells and borders.
 - **Chunk processing** - Align only nearby lines for fast operation with large tables
 - **Multiple table styles** - Use a built-in style or define your own
 
+## Demo
+
+https://github.com/user-attachments/assets/352e23b0-33ba-4f9d-9fa0-e2aee5fd16cc
+
 ## Table Detection
 
 Tables must be
