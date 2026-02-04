@@ -63,7 +63,9 @@ local function cached_buf()
 end
 
 local function init_buffer(lines)
+    local current_bufnr = vim.api.nvim_get_current_buf()
     local bufnr = cached_buf()
+    vim.bo[bufnr].filetype = vim.bo[current_bufnr].filetype
     local old_undolevels = vim.bo[bufnr].undolevels
     vim.bo[bufnr].undolevels = -1
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
