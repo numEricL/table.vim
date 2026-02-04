@@ -44,7 +44,8 @@ function! s:PadAlignLine(line, align, width) abort
 endfunction
 
 function! s:TrimCells(table) abort
-    let cfg_opts = table#config#Config().options
+    let bufnr = a:table.placement.bufnr
+    let cfg_opts = table#config#Config(bufnr).options
     for row in a:table.rows
         for j in range(len(row.cells))
             if cfg_opts.multiline && cfg_opts.preserve_indentation
@@ -97,7 +98,7 @@ function! s:MinTrimIndent(lines, side) abort
             let [_, indent, _] = matchstrpos(a:lines[i], '\S')
         elseif a:side ==# 'right'
             let [_, _, end] = matchstrpos(a:lines[i], '\S\ze\s*$')
-            let indent = strlen(a:lines[i]) - end
+            let indent = (end != -1) ? (strlen(a:lines[i]) - end) : -1
         endif
         if indent >= 0
             let min_indent = (min_indent == -1) ? indent : min([min_indent, indent])

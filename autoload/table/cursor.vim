@@ -110,7 +110,7 @@ function! s:SetCursorCell(table, cell_id) abort
     elseif col_id == len(row_cells)
         let col = sep_pos[-1][1] + 1
     else
-        let cfg_opts = table#config#Config().options
+        let cfg_opts = table#config#Config(bufnr('%')).options
         if cfg_opts.multiline && col_id >= len(sep_pos)
             let col = s:FindMultiCellSepCol(a:table, a:cell_id)
         else

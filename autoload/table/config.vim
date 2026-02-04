@@ -16,12 +16,12 @@ let s:default_config = {
 
 let s:user_defaults = deepcopy(s:default_config)
 
-function! s:InitBufferConfig() abort
-    if !exists('b:table_config')
-        let b:table_config = deepcopy(s:user_defaults)
+function! s:InitBufferConfig(bufnr) abort
+    if getbufvar(a:bufnr, 'table_config', v:null) is v:null
+        call setbufvar(a:bufnr, 'table_config', deepcopy(s:user_defaults))
     endif
-    if !exists('b:table_style')
-        let b:table_style = {}
+    if getbufvar(a:bufnr, 'table_style', v:null) is v:null
+        call setbufvar(a:bufnr, 'table_style', {})
     endif
 endfunction
 
@@ -44,52 +44,60 @@ function! table#config#Setup(config) abort
     endif
 endfunction
 
-function! table#config#SetBufferConfig(config) abort
-    call s:InitBufferConfig()
+function! table#config#SetBufferConfig(bufnr, config) abort
+    call s:InitBufferConfig(a:bufnr)
     call s:ValidateConfig(a:config)
     if has_key(a:config, 'options')
-        call extend(b:table_config.options, a:config.options)
+        let cfg = getbufvar(a:bufnr, 'table_config')
+        call extend(cfg.options, a:config.options)
+        call setbufvar(a:bufnr, 'table_config', cfg)
     endif
     if has_key(a:config, 'style')
-        let b:table_config.style = a:config.style
-        let b:table_config.style_options = {}
-        let b:table_style = {}
+        let cfg = getbufvar(a:bufnr, 'table_config')
+        let cfg.style = a:config.style
+        let cfg.style_options = {}
+        call setbufvar(a:bufnr, 'table_config', cfg)
+        call setbufvar(a:bufnr, 'table_style', {})
     endif
     if has_key(a:config, 'style_options')
-        let b:table_style = table#config#Style()
-        call extend(b:table_style.options, a:config.style_options)
+        let style = table#config#Style(a:bufnr)
+        call extend(style.options, a:config.style_options)
+        call setbufvar(a:bufnr, 'table_style', style)
     endif
     call table#table#InvalidateCache()
 endfunction
 
-function! table#config#Config() abort
-    call s:InitBufferConfig()
-    return deepcopy(b:table_config)
+function! table#config#Config(bufnr) abort
+    call s:InitBufferConfig(a:bufnr)
+    return deepcopy(getbufvar(a:bufnr, 'table_config'))
 endfunction
 
-function! table#config#Style() abort
-    call s:InitBufferConfig()
-    if empty(b:table_style)
-        if b:table_config.style ==# 'default' && !table#style#Exists('default')
-            call table#style#Register('default', s:GenerateDefaultStyle())
+function! table#config#Style(bufnr) abort
+    call s:InitBufferConfig(a:bufnr)
+    let style = getbufvar(a:bufnr, 'table_style')
+    if empty(style)
+        let cfg = getbufvar(a:bufnr, 'table_config')
+        if cfg.style ==# 'default' && !table#style#Exists('default')
+            call table#style#Register('default', s:GenerateDefaultStyle(a:bufnr))
         endif
-        let b:table_style = deepcopy(table#style#Get(b:table_config.style))
-        if !empty(b:table_config.style_options)
-            call extend(b:table_style.options, b:table_config.style_options)
+        let style = deepcopy(table#style#Get(cfg.style))
+        if !empty(cfg.style_options)
+            call extend(style.options, cfg.style_options)
         endif
+        call setbufvar(a:bufnr, 'table_style', style)
     endif
-    return b:table_style
+    return style
 endfunction
 
-function! table#config#SetStyle(style_dict) abort
-    call s:InitBufferConfig()
-    let b:table_style = deepcopy(a:style_dict)
+function! table#config#SetStyle(bufnr, style_dict) abort
+    call s:InitBufferConfig(a:bufnr)
+    call setbufvar(a:bufnr, 'table_style', deepcopy(a:style_dict))
     call table#table#InvalidateCache()
 endfunction
 
-function! table#config#RestoreDefault() abort
-    let b:table_config = deepcopy(s:default_config)
-    let b:table_style = {}
+function! table#config#RestoreDefault(bufnr) abort
+    call setbufvar(a:bufnr, 'table_config', deepcopy(s:default_config))
+    call setbufvar(a:bufnr, 'table_style', {})
     call table#table#InvalidateCache()
 endfunction
 
@@ -112,10 +120,11 @@ function! s:ValidateConfig(config) abort
     endfor
 endfunction
 
-function! s:GenerateDefaultStyle() abort
-    call s:InitBufferConfig()
-    let vert  = table#config#Config().options.i_vertical
-    let horiz = table#config#Config().options.i_horizontal
+function! s:GenerateDefaultStyle(bufnr) abort
+    call s:InitBufferConfig(a:bufnr)
+    let cfg = table#config#Config(a:bufnr)
+    let vert  = cfg.options.i_vertical
+    let horiz = cfg.options.i_horizontal
     let style = {
                 \ 'options' : {
                 \   'omit_left_border'     : v:false,
@@ -149,8 +158,8 @@ function! s:GenerateDefaultStyle() abort
     return style
 endfunction
 
-function! table#config#GetBoxDrawingChars(type) abort
-    let box_drawing = table#config#Style().box_drawing
+function! table#config#GetBoxDrawingChars(bufnr, type) abort
+    let box_drawing = table#config#Style(a:bufnr).box_drawing
     if a:type == 'top'
         let left  = box_drawing.top_left
         let right = box_drawing.top_right
@@ -179,7 +188,8 @@ function! table#config#GetBoxDrawingChars(type) abort
     else
         throw 'unknown separator type: ' .. a:type
     endif
-    let left = table#config#Style().options.omit_left_border ? '' : left
-    let right = table#config#Style().options.omit_right_border ? '' : right
+    let style = table#config#Style(a:bufnr)
+    let left = style.options.omit_left_border ? '' : left
+    let right = style.options.omit_right_border ? '' : right
     return [left, right, sep, horiz]
 endfunction

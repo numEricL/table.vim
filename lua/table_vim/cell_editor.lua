@@ -63,7 +63,9 @@ local function cached_buf()
 end
 
 local function init_buffer(lines)
+    local current_bufnr = vim.api.nvim_get_current_buf()
     local bufnr = cached_buf()
+    vim.bo[bufnr].filetype = vim.bo[current_bufnr].filetype
     local old_undolevels = vim.bo[bufnr].undolevels
     vim.bo[bufnr].undolevels = -1
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
@@ -164,7 +166,8 @@ end
 
 function M.edit_at_cursor()
     local cursor = win_get_cursor_vim_indexed(0)
-    local cfg_opts = bridge.config__config().options
+    local bufnr = vim.api.nvim_get_current_buf()
+    local cfg_opts = bridge.config__config(bufnr).options
     local tbl = bridge.table__get(cursor[1], cfg_opts.chunk_size)
     if not tbl.valid then
         return

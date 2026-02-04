@@ -60,7 +60,7 @@ endfunction
 
 function! s:ExpandToCompleteRow(linenr, boundary, direction) abort
     let current = a:linenr
-    let cfg_opts = table#config#Config().options
+    let cfg_opts = table#config#Config(bufnr('%')).options
     if !cfg_opts.multiline
         let [_, _, _, type] = table#parse#ParseLine(current)
         if type =~# '\v^row|incomplete$' && current != a:boundary
@@ -167,7 +167,7 @@ function! s:TableColCount() dict abort
 endfunction
 
 function! s:TableColAlign(col) dict abort
-    let cfg_opts = table#config#Config().options
+    let cfg_opts = table#config#Config(bufnr('%')).options
     let default_align = cfg_opts.default_alignment[0]
     let align = get(self.col_align, a:col, default_align)
     return empty(align)? default_align : align
@@ -199,7 +199,7 @@ function! s:CellRowHeight() dict abort
 endfunction
 
 function! s:TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
-    let cfg_opts = table#config#Config().options
+    let cfg_opts = table#config#Config(bufnr('%')).options
     if !cfg_opts.multiline ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
         let cells = empty(a:line_cells)? [['']] : map(copy(a:line_cells), '[v:val]')
         let row = {

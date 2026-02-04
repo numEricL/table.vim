@@ -85,11 +85,19 @@ COMMANDS                                                      *table-commands*
         Example: >
             :Table ToDefault
 <
+    :Table ToStyle {style}                                     *:Table-ToStyle*
+        Convert table to specified style and updates the buffer style to that
+        style.
+
+        Example: >
+            :Table ToStyle markdown
+            :Table ToStyle rest
+<
 
                                                                  *:TableOption*
 :TableOption [subcommand] [args]
-    Main command for configuration. Without arguments, displays current
-    configuration.
+    Main command for runtime configuration of the current buffer. Without
+    arguments, displays current configuration.
 
     Subcommands:
 
@@ -598,6 +606,15 @@ table#Complete({linenr})
                                                          *table#ToDefault()*
 table#ToDefault({linenr})
     Convert the table at the given line to the default style.
+
+                                                          *table#ToStyle()*
+table#ToStyle({linenr}, {style_name})
+    Convert the table at the given line to the specified style and set the
+    buffer's style to that style.
+
+    Parameters: ~
+        {linenr}      The line number of the table
+        {style_name}  The name of the style to apply (e.g., 'markdown')
 
                                                        *table#CycleCursor()*
 table#CycleCursor({dir}, {count1})

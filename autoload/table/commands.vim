@@ -1,7 +1,7 @@
 " :Table command - for actions
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault']
+        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault', 'ToStyle']
         echomsg 'Table actions: ' .. join(actions, ', ')
         return
     endif
@@ -23,6 +23,14 @@ function! table#commands#TableCommand(...) abort
         call table#Align(line('.'))
     elseif action ==# 'ToDefault'
         call table#ToDefault(line('.'))
+    elseif action ==# 'ToStyle'
+        if len(args) == 0
+            echohl ErrorMsg
+            echomsg 'ToStyle: style name required'
+            echohl None
+            return
+        endif
+        call table#ToStyle(line('.'), args[0])
     else
         echohl ErrorMsg
         echomsg "Table: unknown action '" .. action .. "'"
@@ -36,8 +44,14 @@ function! table#commands#TableComplete(ArgLead, CmdLine, CursorPos) abort
 
     " Complete action names
     if num_args <= 1
-        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault']
+        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault', 'ToStyle']
         return filter(copy(actions), 'v:val =~? "^" .. a:ArgLead')
+    endif
+
+    " Complete style names for ToStyle
+    if num_args == 2 && len(parts) > 1 && parts[1] ==# 'ToStyle'
+        let styles = ['default'] + table#style#GetNames()
+        return filter(copy(styles), 'v:val =~? "^" .. a:ArgLead')
     endif
 
     return []
@@ -49,7 +63,7 @@ function! table#commands#TableOptionCommand(...) abort
         let subcommands = ['Option', 'StyleOption', 'Style', 'RegisterStyle']
         echomsg 'TableOption subcommands: ' .. join(subcommands, ', ')
         echomsg ' '
-        echomsg "Current Style = " .. table#config#Config().style
+        echomsg "Current Style = " .. table#config#Config(bufnr('%')).style
         echomsg ' '
         call s:ShowOption([])
         echomsg ' '
@@ -112,7 +126,8 @@ function! s:ConvertValue(value) abort
 endfunction
 
 function! s:SetOption(args) abort
-    let cfg_opts = table#config#Config().options
+    let bufnr = bufnr('%')
+    let cfg_opts = table#config#Config(bufnr).options
     if len(a:args) == 0
         call s:ShowOption(a:args)
         return
@@ -123,11 +138,11 @@ function! s:SetOption(args) abort
         return
     endif
     let value = s:ConvertValue(a:args[1])
-    call table#config#SetBufferConfig({ 'options': { key : value } })
+    call table#config#SetBufferConfig(bufnr, { 'options': { key : value } })
 endfunction
 
 function! s:ShowOption(args) abort
-    let cfg_opts = table#config#Config().options
+    let cfg_opts = table#config#Config(bufnr('%')).options
     echomsg "Table Options:"
     let maxlen = max(map(keys(cfg_opts), 'len(v:val)'))
     let sorted_items = sort(items(cfg_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
@@ -138,16 +153,18 @@ function! s:ShowOption(args) abort
 endfunction
 
 function! s:SetStyle(args) abort
+    let bufnr = bufnr('%')
     if len(a:args) == 0
-        echo 'Current style: ' .. table#config#Config().style
+        echo 'Current style: ' .. table#config#Config(bufnr).style
         let styles = ['default'] + table#style#GetNames()
         echo 'Available styles: ' .. join(styles, ', ')
         return
     endif
-    call table#config#SetBufferConfig({ 'style': a:args[0] })
+    call table#config#SetBufferConfig(bufnr, { 'style': a:args[0] })
 endfunction
 
 function! s:RegisterStyle(args) abort
+    let bufnr = bufnr('%')
     if len(a:args) == 0
         echohl ErrorMsg
         echomsg 'RegisterStyle: style name required'
@@ -155,14 +172,15 @@ function! s:RegisterStyle(args) abort
         return
     endif
     let style_name = a:args[0]
-    let current_style = deepcopy(table#config#Style())
+    let current_style = deepcopy(table#config#Style(bufnr))
     call table#style#Register(style_name, current_style)
-    call table#config#SetBufferConfig({ 'style': style_name })
+    call table#config#SetBufferConfig(bufnr, { 'style': style_name })
     echomsg 'Registered style "' .. style_name .. '"'
 endfunction
 
 function! s:SetStyleOption(args) abort
-    let style_opts = table#config#Style().options
+    let bufnr = bufnr('%')
+    let style_opts = table#config#Style(bufnr).options
     if len(a:args) == 0
         call s:ShowStyleOption(a:args)
         return
@@ -173,11 +191,11 @@ function! s:SetStyleOption(args) abort
         return
     endif
     let value = s:ConvertValue(a:args[1])
-    call table#config#SetBufferConfig({ 'style_options': { key : value } })
+    call table#config#SetBufferConfig(bufnr, { 'style_options': { key : value } })
 endfunction
 
 function! s:ShowStyleOption(args) abort
-    let style_opts = table#config#Style().options
+    let style_opts = table#config#Style(bufnr('%')).options
     echomsg "Table StyleOptions:"
     let maxlen = max(map(keys(style_opts), 'len(v:val)'))
     let sorted_items = sort(items(style_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
@@ -188,7 +206,7 @@ function! s:ShowStyleOption(args) abort
 endfunction
 
 function! s:CompleteOption(ArgLead, CmdLine, CursorPos) abort
-    let options = keys(table#config#Config().options)
+    let options = keys(table#config#Config(bufnr('%')).options)
     let parts = split(a:CmdLine, '\s\+')
     let num_args = len(parts) - 1
 
@@ -211,7 +229,7 @@ function! s:CompleteStyle(ArgLead, CmdLine, CursorPos) abort
 endfunction
 
 function! s:CompleteStyleOption(ArgLead, CmdLine, CursorPos) abort
-    let style = table#config#Style()
+    let style = table#config#Style(bufnr('%'))
     let parts = split(a:CmdLine, '\s\+')
     let num_args = len(parts) - 1
 
