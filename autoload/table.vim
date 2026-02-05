@@ -90,6 +90,14 @@ function! table#CycleCursor(dir, count1) abort
     call table#cursor#SetCoord(table, coord)
 endfunction
 
+function! table#CellEditor() abort
+    if has('nvim')
+        lua require('table_vim.cell_editor').edit_at_cursor()
+    else
+        call table#cell_editor#EditAtCursor()
+    endif
+endfunction
+
 function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
     let new_table = a:table
     let new_coord = a:coord
