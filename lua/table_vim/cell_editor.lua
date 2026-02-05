@@ -74,23 +74,24 @@ local function init_buffer(lines)
 end
 
 local function init_window(bufnr, textobj)
-    local current_winid = vim.api.nvim_get_current_win()
-    local screenpos = vim.fn.screenpos(current_winid, textobj['start'][1], textobj['start'][2])
-    local cfg = {
-        relative = 'editor',
-        row = screenpos.row - 2,
-        col = screenpos.col - 2,
-        height = textobj['end'][1] - textobj['start'][1] + 1,
-        width  = textobj['end'][2] - textobj['start'][2] + 1,
-    }
     local winid = find_window(bufnr)
     if not winid then
+        local current_winid = vim.api.nvim_get_current_win()
+        local screenpos = vim.fn.screenpos(current_winid, textobj['start'][1], textobj['start'][2])
+        local cfg = {
+            relative = 'editor',
+            row = screenpos.row - 2,
+            col = screenpos.col - 2,
+            height = textobj['end'][1] - textobj['start'][1] + 1,
+            width  = textobj['end'][2] - textobj['start'][2] + 1,
+        }
         winid = vim.api.nvim_open_win(bufnr, false, cfg)
         vim.wo[winid].number = false
         vim.wo[winid].scrolloff = 0
         vim.wo[winid].sidescrolloff = 0
         vim.wo[winid].winfixbuf = true
     end
+    vim.api.nvim_set_current_win(winid)
     return winid
 end
 
@@ -115,6 +116,7 @@ local function set_window_autocmds(tbl, cell_id, winid, bufnr)
     -- close window on winleave
     vim.api.nvim_create_autocmd("WinLeave", {
         group = group,
+        buffer = bufnr,
         nested = true,
         callback = function()
             if vim.api.nvim_get_current_win() == winid then
@@ -126,6 +128,7 @@ local function set_window_autocmds(tbl, cell_id, winid, bufnr)
     -- update cell and delete augroup on window close
     vim.api.nvim_create_autocmd("WinClosed", {
         group = group,
+        buffer = bufnr,
         callback = function()
             local closed_winid = tonumber(vim.fn.expand("<amatch>"))
             if closed_winid == winid then
@@ -148,14 +151,13 @@ local function edit_cell(tbl, cell_id)
     local bufnr = init_buffer(cell)
 
     local textobj = bridge.textobj__cell(1, 'inner')
-    local winid = init_window(bufnr, textobj)
-    set_window_autocmds(tbl, cell_id, winid, bufnr)
-
     local pos = win_get_cursor_vim_indexed(0)
     pos = {pos[1] - textobj['start'][1] + 1, pos[2] - textobj['start'][2] + 1}
     pos = {math.max(pos[1], 1), math.max(pos[2], 1)}
-    vim.api.nvim_set_current_win(winid)
+
+    local winid = init_window(bufnr, textobj)
     win_set_cursor_vim_indexed(winid, pos)
+    set_window_autocmds(tbl, cell_id, winid, bufnr)
 
     -- Fire user event for cell edit window open
     vim.api.nvim_exec_autocmds('User', {

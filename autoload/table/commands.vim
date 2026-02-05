@@ -1,7 +1,7 @@
 " :Table command - for actions
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault', 'ToStyle']
+        let actions = ['Align', 'Complete', 'EditCell', 'ToDefault', 'ToStyle']
         echomsg 'Table actions: ' .. join(actions, ', ')
         return
     endif
@@ -13,9 +13,7 @@ function! table#commands#TableCommand(...) abort
         if has('nvim')
             lua require('table_vim.cell_editor').edit_at_cursor()
         else
-            echohl ErrorMsg
-            echomsg 'Table EditCell: requires Neovim'
-            echohl None
+            call table#cell_editor#EditAtCursor()
         endif
     elseif action ==# 'Complete'
         call table#Complete(line('.'))
