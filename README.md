@@ -13,7 +13,7 @@ Use the `:Table Complete` command fill missing cells and borders.
 ## Features
 
 - **Multiline rows** - Support for cells containing newlines (must be enabled)
-- **Cell editing window** - Edit in a floating window, hooks provided (Neovim only)
+- **Cell editing window** - Edit in a floating window, hooks provided (split window in Vim)
 - **Chunk processing** - Align only nearby lines for fast operation with large tables
 - **Multiple table styles** - Use a built-in style or define your own
 
@@ -81,19 +81,19 @@ For performance, the align action (auto-align and `:Table Align`) only processes
 the lines near the cursor. The `:Table Complete` command processes the entire
 table and may be slow for large tables.
 
-## Cell Editing (Neovim only)
+## Cell Editing
 
-`:Table EditCell` opens cells in a floating window for greater control over
-editing. Especially useful for multiline cells. Use `TableCellEditPre` and
-`TableCellEditPost` autocommands to customize behavior. See `:help
-table-events`.
+`:Table EditCell` opens cells in a split window (Vim) or floating window (Neovim)
+for greater control over editing. Especially useful for multiline cells. Use
+`TableCellEditPre` and `TableCellEditPost` autocommands to customize behavior.
+See `:help table-events`.
 
 ## Commands
 
 ### :Table
 
 ```vim
-:Table EditCell         " Edit cell in floating window (Neovim)
+:Table EditCell         " Edit cell in split/floating window
 :Table Complete         " Fill missing cells and borders
 :Table Align            " Align table columns
 :Table ToDefault        " Convert to default style
@@ -140,7 +140,7 @@ but can be added easily:
 nnoremap <leader>ta    <Plug>(table_align)
 nnoremap <leader><bar> <Plug>(table_complete)
 nnoremap <leader>td    <Plug>(table_to_default)
-nnoremap <leader>te    <Plug>(table_cell_edit)  " Neovim only
+nnoremap <leader>te    <Plug>(table_cell_edit)
 ```
 
 ## Limitations

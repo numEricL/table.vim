@@ -19,7 +19,7 @@ INTRODUCTION                                              *table-introduction*
 
 table.vim provides text table manipulation in Vim and Neovim. It parses
 pipe-delimited tables and provides automatic alignment, navigation, text
-objects. For Neovim users, it also includes a floating window cell editor.
+objects, and a split/floating window cell editor.
 
 Supported table styles: Markdown, Org-mode, reStructuredText, Unicode
 box-drawing characters, and custom styles.
@@ -30,8 +30,6 @@ Table alignment processes only the lines around the cursor, as determined by the
 
 ==============================================================================
 REQUIREMENTS                                              *table-requirements*
-
-- Neovim required for floating window cell editor
 
 Table Detection ~
 
@@ -49,8 +47,8 @@ COMMANDS                                                      *table-commands*
     Actions:
 
     :Table EditCell                                         *:Table-EditCell*
-        Edit current cell in a floating window (Neovim only). Opens an
-        auto-resizing floating window for editing cell content.
+        Edit current cell in a split window (Vim) or floating window (Neovim).
+        Opens an auto-resizing window for editing cell content.
 
         Equivalent to <Plug>(table_cell_edit) mapping.
 
@@ -175,11 +173,7 @@ Suggested keybindings for table actions: >
     nnoremap <leader>ta    <Plug>(table_align)
     nnoremap <leader><bar> <Plug>(table_complete)
     nnoremap <leader>td    <Plug>(table_to_default)
-
-    " Cell editing (Neovim only)
-    if has('nvim')
-        nnoremap <leader>te <Plug>(table_cell_edit)
-    endif
+    nnoremap <leader>te    <Plug>(table_cell_edit)
 <
 
 Table Operations ~
@@ -201,8 +195,8 @@ Table Operations ~
 
                                                    *<Plug>(table_cell_edit)*
 <Plug>(table_cell_edit)
-    Edit current cell in floating window (Neovim only). Useful for multiline
-    editing. Changes save on WinLeave.
+    Edit current cell in split window (Vim) or floating window (Neovim).
+    Useful for multiline editing. Changes save on WinLeave.
     No default mapping
 
 Navigation ~
@@ -536,7 +530,7 @@ Style options:
 ==============================================================================
 USER EVENTS                                                    *table-events*
 
-User autocommands fired during cell editing (Neovim only).
+User autocommands fired during cell editing.
 
 Event Data ~
 
