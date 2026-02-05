@@ -69,8 +69,8 @@ function! s:SetWindowAutocmds(tbl, cell_id, winnr, bufnr) abort
                 \ }
 
     augroup table.vim
-        execute 'autocmd WinLeave call s:OnWinLeave(' .. s:tbl_id .. ')'
-        execute 'autocmd WinClosed call s:OnWinClosed(' .. s:tbl_id .. ')'
+        execute 'autocmd WinLeave * call s:OnWinLeave(' .. s:tbl_id .. ')'
+        execute 'autocmd WinClosed * call s:OnWinClosed(' .. s:tbl_id .. ')'
     augroup END
 endfunction
 
@@ -80,7 +80,6 @@ function! s:OnWinLeave(tbl_id) abort
     let winnr = s:tbls[a:tbl_id].winnr
     let bufnr = s:tbls[a:tbl_id].bufnr
 
-    " Close the window
     if winnr() == winnr
         close
     endif
@@ -122,7 +121,6 @@ function! s:EditCell(tbl, cell_id) abort
     call cursor(pos[0], pos[1])
     call s:SetWindowAutocmds(a:tbl, a:cell_id, winnr, bufnr)
 
-    " Fire user event for cell edit window open
     let g:TableCellEditData = {'bufnr': bufnr, 'winid': win_getid(winnr), 'table': a:tbl, 'cell_id': a:cell_id}
     if exists('#User#TableCellEditPre')
         doautocmd User TableCellEditPre
