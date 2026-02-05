@@ -1,3 +1,5 @@
+" port from lua/table_vim/cell_editor.lua
+
 let s:cell_bufnr = -1
 let s:tbls = {}
 let s:tbl_id = -1
@@ -29,6 +31,7 @@ function! s:InitBuffer(lines) abort
     let old_undolevels = getbufvar(bufnr, '&undolevels')
     call setbufvar(bufnr, '&undolevels', -1)
     call bufload(bufnr)
+    silent call deletebufline(bufnr, 1, '$')
     call setbufline(bufnr, 1, a:lines)
     call setbufvar(bufnr, '&undolevels', old_undolevels)
 
@@ -38,14 +41,13 @@ endfunction
 function! s:InitWindow(bufnr, textobj) abort
     let winnr = s:FindWindow(a:bufnr)
     if winnr == -1
-        let screenpos = screenpos(win_getid(), a:textobj.start[0], a:textobj.start[1])
         split
         let winnr = winnr()
         call setwinvar(winnr, '&number', 0)
         call setwinvar(winnr, '&relativenumber', 0)
         call setwinvar(winnr, '&scrolloff', 0)
         call setwinvar(winnr, '&sidescrolloff', 0)
-        execute 'buffer ' .. a:bufnr
+        execute 'silent buffer ' .. a:bufnr
     else
         execute winnr .. 'wincmd w'
     endif
@@ -67,8 +69,8 @@ function! s:SetWindowAutocmds(tbl, cell_id, winnr, bufnr) abort
                 \ }
 
     augroup table.vim
-        execute 'autocmd WinLeave <buffer=' .. a:bufnr .. '> call s:OnWinLeave(' .. s:tbl_id .. ')'
-        execute 'autocmd WinClosed <buffer=' .. a:bufnr .. '> call s:OnWinClosed(' .. s:tbl_id .. ')'
+        execute 'autocmd WinLeave call s:OnWinLeave(' .. s:tbl_id .. ')'
+        execute 'autocmd WinClosed call s:OnWinClosed(' .. s:tbl_id .. ')'
     augroup END
 endfunction
 

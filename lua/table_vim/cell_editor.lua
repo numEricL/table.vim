@@ -116,7 +116,6 @@ local function set_window_autocmds(tbl, cell_id, winid, bufnr)
     -- close window on winleave
     vim.api.nvim_create_autocmd("WinLeave", {
         group = group,
-        buffer = bufnr,
         nested = true,
         callback = function()
             if vim.api.nvim_get_current_win() == winid then
@@ -128,7 +127,6 @@ local function set_window_autocmds(tbl, cell_id, winid, bufnr)
     -- update cell and delete augroup on window close
     vim.api.nvim_create_autocmd("WinClosed", {
         group = group,
-        buffer = bufnr,
         callback = function()
             local closed_winid = tonumber(vim.fn.expand("<amatch>"))
             if closed_winid == winid then
