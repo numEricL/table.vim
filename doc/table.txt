@@ -338,11 +338,17 @@ table#Setup({config})
             }
         }
 <
-    Example: >
+    Example (VimScript): >
         call table#Setup({
             \ 'style': 'markdown',
             \ 'options': {'default_alignment': 'center'}
             \ })
+<
+    Example (Lua): >
+        require('table_vim').setup({
+            style = 'default',
+            options = { multiline = true }
+        })
 <
                                                       *table#SetBufferConfig()*
 table#SetBufferConfig({config})

@@ -33,11 +33,19 @@ Configuration is **buffer-local**. Set defaults in your vimrc, customize
 per-filetype in ftplugin files, or change at runtime with `:TableOption`.
 
 ```vim
-" vimrc - set defaults for all buffers
+" vimrc - set defaults for all buffers (overidden by ftplugins)
 call table#Setup({
     \ 'style': 'default',
     \ 'options': {'multiline': v:true}
     \ })
+```
+
+```lua
+-- init.lua - set defaults for all buffers (overidden by ftplugins)
+require('table_vim').setup({
+    style = 'default',
+    options = { multiline = true }
+})
 ```
 
 The plugin provides default configurations for markdown, org, and rst filetypes.

@@ -45,7 +45,7 @@ function! table#commands#TableComplete(ArgLead, CmdLine, CursorPos) abort
 
     " Complete action names
     if num_args <= 1
-        let actions = ['Align', 'Complete'] + (has('nvim') ? ['EditCell'] : []) + ['ToDefault', 'ToStyle']
+        let actions = ['Align', 'Complete', 'EditCell', 'ToDefault', 'ToStyle']
         return filter(copy(actions), 'v:val =~? "^" .. a:ArgLead')
     endif
 
