@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 let s:styles = {}
 
 function! table#style#Get(style) abort
@@ -173,3 +176,6 @@ let s:styles.double = {
             \   'row_sep'      : '║',
             \   }
             \ }
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

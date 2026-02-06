@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " :Table command - for actions
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
@@ -242,3 +245,6 @@ function! s:CompleteStyleOption(ArgLead, CmdLine, CursorPos) abort
     endif
     return []
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

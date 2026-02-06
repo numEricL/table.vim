@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! table#Setup(config) abort
     call table#config#Setup(a:config)
 endfunction
@@ -209,3 +212,6 @@ function! s:UpdateOnOutOfBounds(table, dir, coord) abort
     endif
     return [ new_table, a:coord ]
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

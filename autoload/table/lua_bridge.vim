@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! table#lua_bridge#Draw_CurrentlyPlaced() abort
     if exists('g:table_vim_lua_bridge')
         call table#draw#CurrentlyPlaced(g:table_vim_lua_bridge)
@@ -20,3 +23,6 @@ function! table#lua_bridge#Cursor_GetCoord(pos, ...) abort
     endif
     return {}
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

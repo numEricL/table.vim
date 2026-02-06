@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! table#parse#IsTable(linenr) abort
     let line = getline(a:linenr)
     let prev = getline(a:linenr-1)
@@ -291,3 +294,6 @@ function! table#parse#SeparatorAlignment(cell) abort
         return ''
     endif
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

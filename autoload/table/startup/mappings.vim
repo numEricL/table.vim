@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 let s:plugmaps_defined = 0
 
 function! table#startup#mappings#Setup() abort
@@ -114,3 +117,6 @@ function! s:DefinePlugMaps() abort
     xnoremap <silent> <plug>(table_around_column_textobj) <cmd>call table#textobj#Select(function('table#textobj#Column'), v:count1, 'around')<cr>
     onoremap <silent> <plug>(table_around_column_textobj) <cmd>call table#textobj#Select(function('table#textobj#Column'), v:count1, 'around')<cr>
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 let s:cache_table = v:false
 let s:debug_table = v:false
 
@@ -292,3 +295,6 @@ function! table#table#RestoreMethods(tbl) abort
         let row.ColCount = function('s:CellColCount')
     endfor
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

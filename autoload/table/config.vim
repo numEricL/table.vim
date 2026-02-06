@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 let s:default_config = {
             \ 'disable_mappings'  : v:false,
             \ 'disable_ftplugins' : v:false,
@@ -193,3 +196,6 @@ function! table#config#GetBoxDrawingChars(bufnr, type) abort
     let right = style.options.omit_right_border ? '' : right
     return [left, right, sep, horiz]
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

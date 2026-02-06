@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! table#format#FillGaps(table) abort
     for row in a:table.rows
         let row.types = repeat(['row'], row.Height())
@@ -106,3 +109,6 @@ function! s:MinTrimIndent(lines, side) abort
     endfor
     return min_indent
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo
