@@ -69,14 +69,14 @@ function! s:IsTableLine(linenr) abort
     let prev = getline(a:linenr-1)
     let next = getline(a:linenr+1)
 
-    if s:IsTableLine(line)
-        if s:IsTableLine(prev) || s:IsIncompleteTableLine(prev)
+    if s:IsTableFormat(line)
+        if s:IsTableFormat(prev) || s:IsIncompleteTableLine(prev)
             return v:true
-        elseif s:IsTableLine(next) || s:IsIncompleteTableLine(next)
+        elseif s:IsTableFormat(next) || s:IsIncompleteTableLine(next)
             return v:true
         endif
     elseif s:IsIncompleteTableLine(line)
-        if s:IsTableLine(prev) || s:IsTableLine(next)
+        if s:IsTableFormat(prev) || s:IsTableFormat(next)
             return v:true
         endif
     endif
@@ -89,7 +89,7 @@ function! s:CheckAlignmentSeparator(line) abort
     return a:line =~# '\V' .. pat
 endfunction
 
-function! s:IsTableLine(line) abort
+function! s:IsTableFormat(line) abort
     let sep = s:GeneralSeparatorPattern()
     let style_opts = table#config#Style(bufnr('%')).options
     if style_opts.omit_left_border && style_opts.omit_right_border
