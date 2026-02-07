@@ -103,9 +103,9 @@ function! s:CellStrDisplayWidth(cell) abort
 endfunction
 
 function! table#util#Pad(string, length) abort
-    let l:pad_len = a:length - strdisplaywidth(a:string)
-    let l:pad = (l:pad_len > 0)? repeat(' ', l:pad_len) : ''
-    return a:string .. l:pad
+    let pad_len = a:length - strdisplaywidth(a:string)
+    let pad = (pad_len > 0)? repeat(' ', pad_len) : ''
+    return a:string .. pad
 endfunction
 
 let &cpo = s:save_cpo
