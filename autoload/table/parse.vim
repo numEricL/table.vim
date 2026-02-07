@@ -1,23 +1,29 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! table#parse#IsTable(linenr) abort
-    let line = getline(a:linenr)
-    let prev = getline(a:linenr-1)
-    let next = getline(a:linenr+1)
-
-    if s:IsTableLine(line)
-        if s:IsTableLine(prev) || s:IsIncompleteTableLine(prev)
-            return v:true
-        elseif s:IsTableLine(next) || s:IsIncompleteTableLine(next)
-            return v:true
-        endif
-    elseif s:IsIncompleteTableLine(line)
-        if s:IsTableLine(prev) || s:IsTableLine(next)
-            return v:true
-        endif
+function! table#parse#FindTableRange(linenr) abort
+    if !s:IsTableLine(a:linenr)
+        return [-1, -1]
     endif
-    return v:false
+    let view = {}
+    let move_cursor = ( line('.') != a:linenr )
+    if move_cursor
+        let view = winsaveview()
+        call cursor(a:linenr, 1)
+    endif
+    let cs = table#util#CommentStringPattern(bufnr('%'))
+    let empty_line = '\V\^' .. cs[0] .. cs[1] .. '\$'
+    let top = search(empty_line, 'bnW')
+    let top = (top == 0) ? 1 : top + 1
+    let bottom = search(empty_line, 'nW')
+    let bottom = (bottom == 0) ? line('$') : bottom - 1
+    if move_cursor
+        call winrestview(view)
+    endif
+    if !s:IsTableLine(top) || !s:IsTableLine(bottom)
+        return [-1, -1]
+    endif
+    return [top, bottom]
 endfunction
 
 " type may be: 'row', 'separator', 'alignment', 'incomplete'
@@ -43,32 +49,44 @@ function! table#parse#ParseLine(linenr) abort
     return [ cells, col_start, sep_pos, type ]
 endfunction
 
+function! table#parse#SeparatorAlignment(cell) abort
+    let cell = trim(a:cell)
+    let left = cell[0] ==# ':'
+    let right = cell[-1:] ==# ':'
+    if left && right
+        return 'c'
+    elseif left
+        return 'l'
+    elseif right
+        return 'r'
+    else
+        return ''
+    endif
+endfunction
+
+function! s:IsTableLine(linenr) abort
+    let line = getline(a:linenr)
+    let prev = getline(a:linenr-1)
+    let next = getline(a:linenr+1)
+
+    if s:IsTableLine(line)
+        if s:IsTableLine(prev) || s:IsIncompleteTableLine(prev)
+            return v:true
+        elseif s:IsTableLine(next) || s:IsIncompleteTableLine(next)
+            return v:true
+        endif
+    elseif s:IsIncompleteTableLine(line)
+        if s:IsTableLine(prev) || s:IsTableLine(next)
+            return v:true
+        endif
+    endif
+    return v:false
+endfunction
+
 function! s:CheckAlignmentSeparator(line) abort
     let cfg_opts = table#config#Config(bufnr('%')).options
     let pat = table#util#AnyPattern([cfg_opts.i_alignment])
     return a:line =~# '\V' .. pat
-endfunction
-
-function! table#parse#FindTableRange(linenr) abort
-    if !table#parse#IsTable(a:linenr)
-        return [-1, -1]
-    endif
-    let view = {}
-    let move_cursor = ( line('.') != a:linenr )
-    if move_cursor
-        let view = winsaveview()
-        call cursor(a:linenr, 1)
-    endif
-    let cs = table#util#CommentStringPattern(bufnr('%'))
-    let empty_line = '\V\^' .. cs[0] .. cs[1] .. '\$'
-    let top = search(empty_line, 'bnW')
-    let top = (top == 0) ? 1 : top + 1
-    let bottom = search(empty_line, 'nW')
-    let bottom = (bottom == 0) ? line('$') : bottom - 1
-    if move_cursor
-        call winrestview(view)
-    endif
-    return [top, bottom]
 endfunction
 
 function! s:IsTableLine(line) abort
@@ -278,21 +296,6 @@ function! s:HandleOmittedBorders(line, match_list, sep_pos_list) abort
         endif
     endif
     return [a:match_list, a:sep_pos_list]
-endfunction
-
-function! table#parse#SeparatorAlignment(cell) abort
-    let cell = trim(a:cell)
-    let left = cell[0] ==# ':'
-    let right = cell[-1:] ==# ':'
-    if left && right
-        return 'c'
-    elseif left
-        return 'l'
-    elseif right
-        return 'r'
-    else
-        return ''
-    endif
 endfunction
 
 let &cpo = s:save_cpo

@@ -14,7 +14,8 @@ function! table#RestoreDefault() abort
 endfunction
 
 function! table#IsTable(linenr) abort
-    return table#parse#IsTable(a:linenr)
+    let range = table#parse#FindTableRange(a:linenr)
+    return range !=# [-1, -1]
 endfunction
 
 function! table#Align(linenr) abort

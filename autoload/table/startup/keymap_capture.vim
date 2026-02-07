@@ -22,8 +22,9 @@ endfunction
 function! s:CaptureNoremap(map) abort
     if !has_key(s:noremap_dict, a:map)
         let plugmap  = '<plug>(' .. s:namespace .. 'noremap_' .. s:noremap_id .. ')'
-        execute 'noremap <silent> ' .. plugmap .. ' ' .. a:map
-        let s:noremap_dict[a:map] = substitute(plugmap, '<plug>', "\<plug>", 'g')
+        execute 'noremap  <silent> ' .. plugmap .. ' ' .. a:map
+        execute 'noremap! <silent> ' .. plugmap .. ' ' .. a:map
+        let s:noremap_dict[a:map] = plugmap
         call add(s:noremap_by_id, a:map)
         let s:noremap_id += 1
     endif
@@ -38,7 +39,7 @@ function! s:CaptureMap(mode, map) abort
     if empty(rhs_mapinfo)
         throw 'keymap_capture: No mapping found for ' .. a:map
     endif
-    if get(rhs_mapinfo, 'rhs', '') =~# substitute(plugmap, '<plug>', "\<plug>", 'g')
+    if get(rhs_mapinfo, 'rhs', '') =~# plugmap
         throw 'keymap_capture: Recursive mapping for ' .. a:map .. ' detected.'
     endif
 
@@ -56,7 +57,7 @@ function! s:CaptureMap(mode, map) abort
     catch /^Vim\%((\a\+)\)\=:E119:/
         call mapset(a:mode, 0, rhs_mapinfo)
     endtry
-    return substitute(plugmap, '<plug>', "\<plug>", 'g')
+    return plugmap
 endfunction
 
 " [[untested]] Compatibility function for Vim versions without mapset()
