@@ -4,59 +4,43 @@ set cpo&vim
 let s:plugmaps_defined = 0
 
 function! table#startup#mappings#Setup() abort
+    call s:DefinePlugMaps()
     if !exists('g:table_disable_mappings') || !g:table_disable_mappings
         call s:SetDefault()
-    else
-        call s:DefinePlugMaps()
     endif
 endfunction
 
-function! s:SetDefault() abort
-    call s:DefinePlugMaps()
+function s:SetContextAwareMap(modes, lhs, rhs) abort
+    for mode in a:modes
+        let usermap = table#startup#keymap_capture#Capture(mode, a:lhs)
+        execute mode .. 'map <expr> ' .. a:lhs .. ' table#IsTable(line(".")) ? "' .. a:rhs .. '" : "' .. usermap .. '"'
+    endfor
+endfunction
 
+function! s:SetDefault() abort
     " Auto-align on pipe
-    inoremap <bar> <bar><c-o><plug>(table_align)
+    call s:SetContextAwareMap(['i'], '<bar>', "<bar><c-o><plug>(table_align)")
 
     " Navigation with context-aware mappings
-    nmap <expr> <tab> table#IsTable(line('.')) ? "\<plug>(table_next)" : "\<tab>"
-    xmap <expr> <tab> table#IsTable(line('.')) ? "\<plug>(table_next)" : "\<tab>"
-    imap <expr> <tab> table#IsTable(line('.')) ? "\<plug>(table_next)" : "\<tab>"
-
-    nmap <expr> <s-tab> table#IsTable(line('.')) ? "\<plug>(table_prev)" : "\<s-tab>"
-    xmap <expr> <s-tab> table#IsTable(line('.')) ? "\<plug>(table_prev)" : "\<s-tab>"
-    imap <expr> <s-tab> table#IsTable(line('.')) ? "\<plug>(table_prev)" : "\<s-tab>"
-
-    nmap <expr> <c-h> table#IsTable(line('.')) ? "\<plug>(table_move_left)"  : "\<c-h>"
-    nmap <expr> <c-l> table#IsTable(line('.')) ? "\<plug>(table_move_right)" : "\<c-l>"
-    nmap <expr> <c-k> table#IsTable(line('.')) ? "\<plug>(table_move_up)"    : "\<c-k>"
-    nmap <expr> <c-j> table#IsTable(line('.')) ? "\<plug>(table_move_down)"  : "\<c-j>"
-
-    xmap <expr> <c-h> table#IsTable(line('.')) ? "\<plug>(table_move_left)"  : "\<c-h>"
-    xmap <expr> <c-l> table#IsTable(line('.')) ? "\<plug>(table_move_right)" : "\<c-l>"
-    xmap <expr> <c-k> table#IsTable(line('.')) ? "\<plug>(table_move_up)"    : "\<c-k>"
-    xmap <expr> <c-j> table#IsTable(line('.')) ? "\<plug>(table_move_down)"  : "\<c-j>"
+    call s:SetContextAwareMap(['n', 'x'], '<tab>',   '<plug>(table_next)')
+    call s:SetContextAwareMap(['n', 'x'], '<s-tab>', '<plug>(table_prev)')
+    call s:SetContextAwareMap(['n', 'x'], '<c-h>',   '<plug>(table_move_left)')
+    call s:SetContextAwareMap(['n', 'x'], '<c-l>',   '<plug>(table_move_right)')
+    call s:SetContextAwareMap(['n', 'x'], '<c-k>',   '<plug>(table_move_up)')
+    call s:SetContextAwareMap(['n', 'x'], '<c-j>',   '<plug>(table_move_down)')
 
     " Text objects
-    xnoremap tx <plug>(table_cell_textobj)
-    onoremap tx <plug>(table_cell_textobj)
-    xnoremap tr <plug>(table_row_textobj)
-    onoremap tr <plug>(table_row_textobj)
-    xnoremap tc <plug>(table_column_textobj)
-    onoremap tc <plug>(table_column_textobj)
+    call s:SetContextAwareMap(['x', 'o'], 'tx', '<plug>(table_cell_textobj)')
+    call s:SetContextAwareMap(['x', 'o'], 'ix', '<plug>(table_inner_cell_textobj)')
+    call s:SetContextAwareMap(['x', 'o'], 'ax', '<plug>(table_around_cell_textobj)')
 
-    xnoremap ix <plug>(table_inner_cell_textobj)
-    onoremap ix <plug>(table_inner_cell_textobj)
-    xnoremap ir <plug>(table_inner_row_textobj)
-    onoremap ir <plug>(table_inner_row_textobj)
-    xnoremap ic <plug>(table_inner_column_textobj)
-    onoremap ic <plug>(table_inner_column_textobj)
+    call s:SetContextAwareMap(['x', 'o'], 'tr', '<plug>(table_row_textobj)')
+    call s:SetContextAwareMap(['x', 'o'], 'ir', '<plug>(table_inner_row_textobj)')
+    call s:SetContextAwareMap(['x', 'o'], 'ar', '<plug>(table_around_row_textobj)')
 
-    xnoremap ax <plug>(table_around_cell_textobj)
-    onoremap ax <plug>(table_around_cell_textobj)
-    xnoremap ar <plug>(table_around_row_textobj)
-    onoremap ar <plug>(table_around_row_textobj)
-    xnoremap ac <plug>(table_around_column_textobj)
-    onoremap ac <plug>(table_around_column_textobj)
+    call s:SetContextAwareMap(['x', 'o'], 'ic', '<plug>(table_inner_column_textobj)')
+    call s:SetContextAwareMap(['x', 'o'], 'tc', '<plug>(table_column_textobj)')
+    call s:SetContextAwareMap(['x', 'o'], 'ac', '<plug>(table_around_column_textobj)')
 endfunction
 
 function! s:DefinePlugMaps() abort
