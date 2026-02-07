@@ -33,7 +33,7 @@ Configuration is **buffer-local**. Set defaults in your vimrc, customize
 per-filetype in ftplugin files, or change at runtime with `:TableOption`.
 
 ```vim
-" vimrc - set defaults for all buffers (overidden by ftplugins)
+" vimrc - set defaults for all buffers (overridden by ftplugins)
 call table#Setup({
     \ 'style': 'default',
     \ 'options': {'multiline': v:true}
@@ -41,7 +41,7 @@ call table#Setup({
 ```
 
 ```lua
--- init.lua - set defaults for all buffers (overidden by ftplugins)
+-- init.lua - set defaults for all buffers (overridden by ftplugins)
 require('table_vim').setup({
     style = 'default',
     options = { multiline = true }
