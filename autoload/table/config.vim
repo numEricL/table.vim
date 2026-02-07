@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 let s:default_config = {
             \ 'disable_mappings'  : v:false,
             \ 'disable_ftplugins' : v:false,
@@ -26,6 +29,9 @@ function! s:InitBufferConfig(bufnr) abort
 endfunction
 
 function! table#config#Setup(config) abort
+    if empty(a:config)
+        return
+    endif
     call s:ValidateConfig(a:config)
     if has_key(a:config, 'disable_mappings')
         let g:table_disable_mappings = a:config.disable_mappings
@@ -193,3 +199,6 @@ function! table#config#GetBoxDrawingChars(bufnr, type) abort
     let right = style.options.omit_right_border ? '' : right
     return [left, right, sep, horiz]
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

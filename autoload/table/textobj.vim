@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! table#textobj#Select(GetTextObj, ...) abort
     let args = a:000
     " Determine the current mode and set visual selection accordingly
@@ -182,3 +185,6 @@ function! s:SetVisualSelection(v_mode, text_obj) abort
         call cursor(a:text_obj['end'])
     endif
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

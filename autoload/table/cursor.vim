@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " coord: { 'type': 'cell'|'alignment'|'separator'|'invalid', 'coord': [...] }
 "   type cell: coord: [ row_id, row_offset, col_id ]
 "   type alignment: coord: [ col_id ]
@@ -179,3 +182,6 @@ function! s:SetCursorSeparator(table, sep_id) abort
     endif
     call cursor(linenr, col)
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

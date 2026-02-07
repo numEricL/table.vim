@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " port from lua/table_vim/cell_editor.lua
 
 let s:cell_bufnr = -1
@@ -146,3 +149,6 @@ function! table#cell_editor#EditAtCursor() abort
 
     call s:EditCell(tbl, cell_id)
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

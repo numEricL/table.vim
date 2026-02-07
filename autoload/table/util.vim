@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! table#util#AnyPattern(list) abort
     let unique = uniq(sort(a:list))
     call filter(unique, '!empty(v:val)')
@@ -104,3 +107,6 @@ function! table#util#Pad(string, length) abort
     let l:pad = (l:pad_len > 0)? repeat(' ', l:pad_len) : ''
     return a:string .. l:pad
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

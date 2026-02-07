@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! table#draw#CurrentlyPlaced(table) abort
     call table#format#Align(a:table)
     let bufnr = a:table.placement.bufnr
@@ -225,3 +228,6 @@ function! s:ClearRemaining(placement, pos_id) abort
         endif
     endfor
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo
