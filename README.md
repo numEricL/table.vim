@@ -139,9 +139,14 @@ See `:help table-commands` and `:help table-styles` for details.
 
 ## Keybindings
 
-Auto-alignment, navigational, and text object keybindings are mapped by default.
-<Plug> mappings are available. Keybindings for table actions are not provided
-but can be added easily:
+Auto-alignment, navigational, and text object keybindings are mapped by default
+in a context-aware manner. They only activate when the cursor is on a table
+line, otherwise, your existing key maps work normally.
+
+To disable all default mappings, use the `disable_mappings` configuration
+option. Maps can be customized with the available `<Plug>` mappings.
+
+Keybindings for table actions are not provided but can be added easily:
 
 ```vim
 " Example mappings (add to vimrc/init.vim)

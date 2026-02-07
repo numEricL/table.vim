@@ -166,6 +166,14 @@ config setup function with the disable_mappings option before the VimEnter event
 For table actions (EditCell, Align, Complete, ToDefault), <Plug>
 mappings are provided but not mapped by default.
 
+Context-Aware Mappings ~
+
+All default mappings are mapped in a context-aware manner: they only activate
+when the cursor is on a table line. When not on a table, your existing key
+mappings are preserved and work normally. This means keys like <Tab>, <C-h>,
+<C-j>, <C-k>, <C-l>, and text objects (tx, tr, tc, etc.) behave normally outside
+of tables.
+
 Suggested Keybindings ~
 
 Suggested keybindings for table actions: >
@@ -203,32 +211,32 @@ Navigation ~
                                                         *<Plug>(table_next)*
 <Plug>(table_next)
     Move to next cell, wrapping to next row at row end.
-    Default: <Tab> (normal, visual, insert)
+    Default: <Tab> (normal, visual)
 
                                                         *<Plug>(table_prev)*
 <Plug>(table_prev)
     Move to previous cell, wrapping to previous row at row start.
-    Default: <S-Tab> (normal, visual, insert)
+    Default: <S-Tab> (normal, visual)
 
                                                    *<Plug>(table_move_left)*
 <Plug>(table_move_left)
     Move to cell on the left.
-    Default: <C-h> (normal, visual, insert)
+    Default: <C-h> (normal, visual)
 
                                                   *<Plug>(table_move_right)*
 <Plug>(table_move_right)
     Move to cell on the right.
-    Default: <C-l> (normal, visual, insert)
+    Default: <C-l> (normal, visual)
 
                                                      *<Plug>(table_move_up)*
 <Plug>(table_move_up)
     Move to cell above.
-    Default: <C-k> (normal, visual, insert)
+    Default: <C-k> (normal, visual)
 
                                                    *<Plug>(table_move_down)*
 <Plug>(table_move_down)
     Move to cell below.
-    Default: <C-j> (normal, visual, insert)
+    Default: <C-j> (normal, visual)
 
 Text Objects ~
 
