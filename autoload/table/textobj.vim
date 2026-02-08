@@ -22,10 +22,11 @@ function! table#textobj#Select(GetTextObj, ...) abort
             return
         endif
         call s:SetVisualSelection(v_mode, text_obj)
-    elseif mode ==# 'n'
+    elseif v:version < 900 && mode ==# 'n'
         " compatibility for vim8 without <cmd> mappings
-        let v_mode = visualmode()
-        let v_block = [ getpos("'<")[1:2], getpos("'>")[1:2] ]
+        normal! gv
+        let v_mode = mode(1)
+        let v_block = [ getpos('v')[1:2], getpos('.')[1:2] ]
         let text_obj = call(a:GetTextObj, args)
         if !text_obj.valid
             return
