@@ -87,6 +87,11 @@ function! s:DefinePlugMaps() abort
     call s:SetNoremap(['x', 'o'], '<plug>(table_inner_cell_textobj)',   '<cmd>call table#textobj#Select(function("table#textobj#Cell"),   v:count1, "inner")<cr>')
     call s:SetNoremap(['x', 'o'], '<plug>(table_inner_row_textobj)',    '<cmd>call table#textobj#Select(function("table#textobj#Row"),    v:count1, "inner")<cr>')
     call s:SetNoremap(['x', 'o'], '<plug>(table_inner_column_textobj)', '<cmd>call table#textobj#Select(function("table#textobj#Column"), v:count1, "inner")<cr>')
+
+    " around text table objects
+    call s:SetNoremap(['x', 'o'], '<plug>(table_around_cell_textobj)',   '<cmd>call table#textobj#Select(function("table#textobj#Cell"),   v:count1, "around")<cr>')
+    call s:SetNoremap(['x', 'o'], '<plug>(table_around_row_textobj)',    '<cmd>call table#textobj#Select(function("table#textobj#Row"),    v:count1, "around")<cr>')
+    call s:SetNoremap(['x', 'o'], '<plug>(table_around_column_textobj)', '<cmd>call table#textobj#Select(function("table#textobj#Column"), v:count1, "around")<cr>')
 endfunction
 
 let &cpo = s:save_cpo

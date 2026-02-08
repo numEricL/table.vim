@@ -3,9 +3,10 @@ set cpo&vim
 
 function! table#textobj#Select(GetTextObj, ...) abort
     let args = a:000
+    let mode = mode(1)
     " Determine the current mode and set visual selection accordingly
-    if mode() =~# '\v^[vV]$'
-        let v_mode = mode()
+    if mode =~# '\v^[vV]$'
+        let v_mode = mode
         let v_block = [ getpos('v')[1:2], getpos('.')[1:2] ]
         let text_obj = call(a:GetTextObj, args)
         if !text_obj.valid
@@ -13,16 +14,26 @@ function! table#textobj#Select(GetTextObj, ...) abort
         endif
         let [text_obj.start, text_obj.end] = s:ConvexUnion(v_block, [text_obj.start, text_obj.end])
         call s:SetVisualSelection(v_mode, text_obj)
-    elseif mode(1)[0:1] ==# 'no'
-        let v_mode = mode(1)[-1:]
+    elseif mode[0:1] ==# 'no'
+        let v_mode = mode[-1:]
         let v_mode = (v_mode =~# '\v^[vV]$')? v_mode : 'v'
         let text_obj = call(a:GetTextObj, args)
         if !text_obj.valid
             return
         endif
         call s:SetVisualSelection(v_mode, text_obj)
+    elseif mode ==# 'n'
+        " compatibility for vim8 without <cmd> mappings
+        let v_mode = visualmode()
+        let v_block = [ getpos("'<")[1:2], getpos("'>")[1:2] ]
+        let text_obj = call(a:GetTextObj, args)
+        if !text_obj.valid
+            return
+        endif
+        let [text_obj.start, text_obj.end] = s:ConvexUnion(v_block, [text_obj.start, text_obj.end])
+        call s:SetVisualSelection(v_mode, text_obj)
     else
-        throw 'Unsupported mode for TextObj'
+        throw 'Unsupported mode for TextObj: "' .. mode(1) .. '"'
     endif
 endfunction
 

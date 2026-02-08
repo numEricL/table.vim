@@ -101,7 +101,7 @@ function! s:DrawLine(placement, pos_id, line) abort
     endif
 
     let linenr = a:placement.bounds[0] + a:pos_id
-    let current_line = getbufoneline(a:placement.bufnr, linenr)
+    let current_line = table#compat#getbufoneline(a:placement.bufnr, linenr)
     let newline = strpart(current_line, 0, col_start)
     let newline ..= repeat(' ', display_col_start - strdisplaywidth(newline))
     let newline ..= a:line
@@ -203,7 +203,7 @@ function! s:AppendConditionalCommentLine(placement, linenr) abort
     let cs = table#util#CommentString(a:placement.bufnr)
     let found = v:false
     if !empty(cs[0])
-        let line = getbufoneline(a:placement.bufnr, a:linenr)
+        let line = table#compat#getbufoneline(a:placement.bufnr, a:linenr)
         let cs_pattern = table#util#AnyPattern([cs[0]])
         let match = matchstrpos(line, '\V\^' .. cs_pattern)
         let found = !empty(match[0])
@@ -216,7 +216,7 @@ function! s:ClearRemaining(placement, pos_id) abort
     let [cs_left, cs_right] = table#util#CommentStringPattern(a:placement.bufnr)
     for id in reverse(range(a:pos_id, len(a:placement.positions)-1))
         let linenr = a:placement.bounds[0] + id
-        let line = getbufoneline(a:placement.bufnr, linenr)
+        let line = table#compat#getbufoneline(a:placement.bufnr, linenr)
         let col_start = a:placement.positions[id]['separator_pos'][0][0]
         let col_end   = a:placement.positions[id]['separator_pos'][-1][1]
         let newline = strpart(line, 0, col_start)

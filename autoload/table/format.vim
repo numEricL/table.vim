@@ -72,9 +72,9 @@ function! s:TrimBlock(lines, alignment) abort
     else
         for i in range(len(a:lines))
             if a:alignment ==# 'l'
-                let a:lines[i] = trim(a:lines[i], '', 2)
+                let a:lines[i] = table#compat#trim(a:lines[i], '', 2)
             elseif a:alignment ==# 'r'
-                let a:lines[i] = trim(a:lines[i], '', 1)
+                let a:lines[i] = table#compat#trim(a:lines[i], '', 1)
             endif
         endfor
     endif

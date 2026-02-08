@@ -52,34 +52,44 @@ function! s:CaptureMap(mode, map) abort
             silent! call remove(rhs_mapinfo, key)
         endif
     endfor
-    try
-        call mapset(rhs_mapinfo)
-    catch /^Vim\%((\a\+)\)\=:E119:/
-        call mapset(a:mode, 0, rhs_mapinfo)
-    endtry
+    call s:Compat_mapset(rhs_mapinfo)
     return plugmap
 endfunction
 
-" [[untested]] Compatibility function for Vim versions without mapset()
-" function! s:MapSet_COMPAT(dict) abort
-"   let mode    = get(a:dict, 'mode', '')
-"   let lhs     = get(a:dict, 'lhs', '')
-"   let rhs     = get(a:dict, 'rhs', '')
-"   let noremap = get(a:dict, 'noremap', v:false)
-"   let silent  = get(a:dict, 'silent', v:false)
-"   let expr    = get(a:dict, 'expr', v:false)
-"   let unique  = get(a:dict, 'unique', v:false)
-"   let buffer  = get(a:dict, 'buffer', v:false)
-"
-"   let cmd = mode
-"   let cmd ..= noremap ? 'noremap'  : 'map'
-"   let cmd ..= silent  ? '<silent>' : ''
-"   let cmd ..= expr    ? '<expr>'   : ''
-"   let cmd ..= unique  ? '<unique>' : ''
-"   let cmd ..= buffer  ? '<buffer>' : ''
-"   let cmd ..= ' ' .. lhs .. ' ' .. rhs
-"   execute cmd
-" endfunction
+function! s:Compat_mapset(dict)
+    if exists('*mapset')
+        try
+            call mapset(a:dict)
+        catch /^Vim\%((\a\+)\)\=:E119:/
+            call mapset(a:dict['mode'], 0, a:dict)
+        endtry
+    else
+        call s:Mapset_vim8(a:dict)
+    endif
+endfunction
+
+" Compatibility function for Vim8
+function! s:Mapset_vim8(dict) abort
+  let mode    = get(a:dict, 'mode', '')
+  let lhs     = get(a:dict, 'lhs', '')
+  let rhs     = get(a:dict, 'rhs', '')
+  let noremap = get(a:dict, 'noremap', v:false)
+  let silent  = get(a:dict, 'silent', v:false)
+  let expr    = get(a:dict, 'expr', v:false)
+  let unique  = get(a:dict, 'unique', v:false)
+  let buffer  = get(a:dict, 'buffer', v:false)
+
+  let lhs = substitute(lhs, '|', '<bar>', 'g')
+
+  let cmd = mode
+  let cmd ..= noremap ? 'noremap'  : 'map'
+  let cmd ..= silent  ? '<silent>' : ''
+  let cmd ..= expr    ? '<expr>'   : ''
+  let cmd ..= unique  ? '<unique>' : ''
+  let cmd ..= buffer  ? '<buffer>' : ''
+  let cmd ..= ' ' .. lhs .. ' ' .. rhs
+  execute cmd
+endfunction
 
 " " for logging/debugging
 " function! s:NoremapInvertLookup(nr) abort
