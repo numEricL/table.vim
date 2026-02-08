@@ -9,9 +9,10 @@ function! table#compat#getbufoneline(bufnr, lnum) abort
 endfunction
 
 function! table#compat#trim(text, mask, dir) abort
-    try
+    " NVIM v0.7.2 has a bug where trim with dir is defined but doesn't work
+    if v:version >= 900
         return trim(a:text, a:mask, a:dir)
-    catch /^Vim\%((\a\+)\)\=:E118:/
+    else
         if a:dir == 0
             return trim(a:text, a:mask)
         elseif a:dir == 1
