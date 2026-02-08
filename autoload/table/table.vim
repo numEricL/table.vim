@@ -2,7 +2,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let s:cache_table = v:false
-let s:debug_table = v:true
+let s:debug_table = v:false
 
 function! table#table#Get(linenr, chunk_size, ...) abort
     let cache_table = a:0 ? a:1 : s:cache_table
