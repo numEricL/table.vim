@@ -5,7 +5,7 @@ function! table#compat#getbufoneline(bufnr, lnum) abort
         return getbufoneline(a:bufnr, a:lnum)
     else
         return getbufline(a:bufnr, a:lnum)[0]
-    endi
+    endif
 endfunction
 
 function! table#compat#trim(text, mask, dir) abort
