@@ -163,8 +163,6 @@ nnoremap <leader>te    <Plug>(table_cell_edit)
 
 ## Limitations
 
-- Border characters in cells can not be parsed (pipes `|` cannot be cell content
-        if it is also used as the `i_vertical` border character).
 - No merged/spanning cells (multiline rows are supported)
 - `i_vertical` and `i_horizontal` must be different characters
 
