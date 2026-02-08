@@ -31,6 +31,9 @@ Table alignment processes only the lines around the cursor, as determined by the
 ==============================================================================
 REQUIREMENTS                                              *table-requirements*
 
+- Vim 8.1 or later
+- Neovim 0.7.2 or later
+
 Table Detection ~
 
 Tables must meet the following requirements to be detected and processed:
