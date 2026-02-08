@@ -13,7 +13,7 @@ Use the `:Table Complete` command fill missing cells and borders.
 ## Requirements
 
 - Vim 8.1 or later
-- Neovim 0.7.2 or later
+- Neovim 0.11.5 or later
 
 ## Features
 

@@ -71,9 +71,10 @@ function! s:SetWindowAutocmds(tbl, cell_id, winnr, bufnr) abort
                 \ 'bufnr': a:bufnr,
                 \ }
 
+    let WinClosed = exists('##WinClosed')? 'WinClosed' : 'BufHidden'
     augroup table.vim
         execute 'autocmd WinLeave * call s:OnWinLeave(' .. s:tbl_id .. ')'
-        execute 'autocmd WinClosed * call s:OnWinClosed(' .. s:tbl_id .. ')'
+        execute 'autocmd ' .. WinClosed .. ' * call s:OnWinClosed(' .. s:tbl_id .. ')'
     augroup END
 endfunction
 
@@ -94,8 +95,7 @@ function! s:OnWinClosed(tbl_id) abort
     let winnr = s:tbls[a:tbl_id].winnr
     let bufnr = s:tbls[a:tbl_id].bufnr
 
-    let closed_winid = str2nr(expand('<amatch>'))
-    if closed_winid != win_getid(winnr)
+    if winnr() != winnr
         return
     endif
 
