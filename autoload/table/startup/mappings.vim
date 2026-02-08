@@ -43,6 +43,13 @@ function! s:SetDefault() abort
     call s:SetContextAwareMap(['x', 'o'], 'ac', '<plug>(table_around_column_textobj)')
 endfunction
 
+function s:SetNoremap(modes, lhs, rhs) abort
+    let rhs = (v:version < 900)? substitute(a:rhs, '<cmd>', ':', '') : a:rhs
+    for mode in a:modes
+        execute mode .. 'noremap <silent> ' .. a:lhs .. ' ' ..  rhs
+    endfor
+endfunction
+
 function! s:DefinePlugMaps() abort
     if s:plugmaps_defined
         return
@@ -50,56 +57,41 @@ function! s:DefinePlugMaps() abort
     let s:plugmaps_defined = 1
 
     " table drawing
-    nnoremap <silent> <plug>(table_complete)   <cmd>call table#Complete(line('.'))<cr>
-    nnoremap <silent> <plug>(table_align)      <cmd>call table#Align(line('.'))<cr>
-    nnoremap <silent> <plug>(table_to_default) <cmd>call table#ToDefault(line('.'))<cr>
-    nnoremap <silent> <plug>(table_cell_edit)  <cmd>call table#CellEditor()<cr>
+    call s:SetNoremap(['n'], '<plug>(table_complete)',   '<cmd>call table#Complete(line("."))<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_align)',      '<cmd>call table#Align(line("."))<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_to_default)', '<cmd>call table#ToDefault(line("."))<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_cell_edit)',  '<cmd>call table#CellEditor()<cr>')
 
     " table navigation cycle
-    inoremap <silent> <plug>(table_next) <c-o><cmd>call table#CycleCursor('forward', v:count1)<cr>
-    inoremap <silent> <plug>(table_prev) <c-o><cmd>call table#CycleCursor('backward', v:count1)<cr>
-    nnoremap <silent> <plug>(table_next) <cmd>call table#CycleCursor('forward', v:count1)<cr>
-    nnoremap <silent> <plug>(table_prev) <cmd>call table#CycleCursor('backward', v:count1)<cr>
-    xnoremap <silent> <plug>(table_next) <cmd>call table#CycleCursor('forward', v:count1)<cr>
-    xnoremap <silent> <plug>(table_prev) <cmd>call table#CycleCursor('backward', v:count1)<cr>
+    call s:SetNoremap(['i'], '<plug>(table_next)', '<c-o><cmd>call table#CycleCursor("forward",  v:count1)<cr>')
+    call s:SetNoremap(['i'], '<plug>(table_prev)', '<c-o><cmd>call table#CycleCursor("backward", v:count1)<cr>')
+    call s:SetNoremap(['n', 'x'], '<plug>(table_next)', '<cmd>call table#CycleCursor("forward",  v:count1)<cr>')
+    call s:SetNoremap(['n', 'x'], '<plug>(table_prev)', '<cmd>call table#CycleCursor("backward", v:count1)<cr>')
 
     " table navigation directional
-    inoremap <silent> <plug>(table_move_left)  <c-o><cmd>call table#MoveCursorCell('left', v:count1)<cr>
-    inoremap <silent> <plug>(table_move_right) <c-o><cmd>call table#MoveCursorCell('right', v:count1)<cr>
-    inoremap <silent> <plug>(table_move_up)    <c-o><cmd>call table#MoveCursorCell('up', v:count1)<cr>
-    inoremap <silent> <plug>(table_move_down)  <c-o><cmd>call table#MoveCursorCell('down', v:count1)<cr>
-    nnoremap <silent> <plug>(table_move_left)  <cmd>call table#MoveCursorCell('left', v:count1)<cr>
-    nnoremap <silent> <plug>(table_move_right) <cmd>call table#MoveCursorCell('right', v:count1)<cr>
-    nnoremap <silent> <plug>(table_move_up)    <cmd>call table#MoveCursorCell('up', v:count1)<cr>
-    nnoremap <silent> <plug>(table_move_down)  <cmd>call table#MoveCursorCell('down', v:count1)<cr>
-    xnoremap <silent> <plug>(table_move_left)  <cmd>call table#MoveCursorCell('left', v:count1)<cr>
-    xnoremap <silent> <plug>(table_move_right) <cmd>call table#MoveCursorCell('right', v:count1)<cr>
-    xnoremap <silent> <plug>(table_move_up)    <cmd>call table#MoveCursorCell('up', v:count1)<cr>
-    xnoremap <silent> <plug>(table_move_down)  <cmd>call table#MoveCursorCell('down', v:count1)<cr>
+    call s:SetNoremap(['i'],      '<plug>(table_move_left)',  '<c-o><cmd>call table#MoveCursorCell("left",  v:count1)<cr>')
+    call s:SetNoremap(['i'],      '<plug>(table_move_right)', '<c-o><cmd>call table#MoveCursorCell("right", v:count1)<cr>')
+    call s:SetNoremap(['i'],      '<plug>(table_move_up)',    '<c-o><cmd>call table#MoveCursorCell("up",    v:count1)<cr>')
+    call s:SetNoremap(['i'],      '<plug>(table_move_down)',  '<c-o><cmd>call table#MoveCursorCell("down",  v:count1)<cr>')
+    call s:SetNoremap(['n', 'x'], '<plug>(table_move_left)',       '<cmd>call table#MoveCursorCell("left",  v:count1)<cr>')
+    call s:SetNoremap(['n', 'x'], '<plug>(table_move_right)',      '<cmd>call table#MoveCursorCell("right", v:count1)<cr>')
+    call s:SetNoremap(['n', 'x'], '<plug>(table_move_up)',         '<cmd>call table#MoveCursorCell("up",    v:count1)<cr>')
+    call s:SetNoremap(['n', 'x'], '<plug>(table_move_down)',       '<cmd>call table#MoveCursorCell("down",  v:count1)<cr>')
 
-    " table text objects
-    xnoremap <silent> <plug>(table_cell_textobj)   <cmd>call table#textobj#Select(function('table#textobj#Cell'),   v:count1, 'default')<cr>
-    onoremap <silent> <plug>(table_cell_textobj)   <cmd>call table#textobj#Select(function('table#textobj#Cell'),   v:count1, 'default')<cr>
-    xnoremap <silent> <plug>(table_row_textobj)    <cmd>call table#textobj#Select(function('table#textobj#Row'),    v:count1, 'default')<cr>
-    onoremap <silent> <plug>(table_row_textobj)    <cmd>call table#textobj#Select(function('table#textobj#Row'),    v:count1, 'default')<cr>
-    xnoremap <silent> <plug>(table_column_textobj) <cmd>call table#textobj#Select(function('table#textobj#Column'), v:count1, 'default')<cr>
-    onoremap <silent> <plug>(table_column_textobj) <cmd>call table#textobj#Select(function('table#textobj#Column'), v:count1, 'default')<cr>
+    " text table objects
+    call s:SetNoremap(['x', 'o'], '<plug>(table_cell_textobj)',   '<cmd>call table#textobj#Select(function("table#textobj#Cell"),   v:count1, "default")<cr>')
+    call s:SetNoremap(['x', 'o'], '<plug>(table_row_textobj)',    '<cmd>call table#textobj#Select(function("table#textobj#Row"),    v:count1, "default")<cr>')
+    call s:SetNoremap(['x', 'o'], '<plug>(table_column_textobj)', '<cmd>call table#textobj#Select(function("table#textobj#Column"), v:count1, "default")<cr>')
 
-    " table inner text objects
-    xnoremap <silent> <plug>(table_inner_cell_textobj)   <cmd>call table#textobj#Select(function('table#textobj#Cell'),   v:count1, 'inner')<cr>
-    onoremap <silent> <plug>(table_inner_cell_textobj)   <cmd>call table#textobj#Select(function('table#textobj#Cell'),   v:count1, 'inner')<cr>
-    xnoremap <silent> <plug>(table_inner_row_textobj)    <cmd>call table#textobj#Select(function('table#textobj#Row'),    v:count1, 'inner')<cr>
-    onoremap <silent> <plug>(table_inner_row_textobj)    <cmd>call table#textobj#Select(function('table#textobj#Row'),    v:count1, 'inner')<cr>
-    xnoremap <silent> <plug>(table_inner_column_textobj) <cmd>call table#textobj#Select(function('table#textobj#Column'), v:count1, 'inner')<cr>
-    onoremap <silent> <plug>(table_inner_column_textobj) <cmd>call table#textobj#Select(function('table#textobj#Column'), v:count1, 'inner')<cr>
+    " inner text table objects
+    call s:SetNoremap(['x', 'o'], '<plug>(table_inner_cell_textobj)',   '<cmd>call table#textobj#Select(function("table#textobj#Cell"),   v:count1, "inner")<cr>')
+    call s:SetNoremap(['x', 'o'], '<plug>(table_inner_row_textobj)',    '<cmd>call table#textobj#Select(function("table#textobj#Row"),    v:count1, "inner")<cr>')
+    call s:SetNoremap(['x', 'o'], '<plug>(table_inner_column_textobj)', '<cmd>call table#textobj#Select(function("table#textobj#Column"), v:count1, "inner")<cr>')
 
-    " table around text objects
-    xnoremap <silent> <plug>(table_around_cell_textobj)   <cmd>call table#textobj#Select(function('table#textobj#Cell'),   v:count1, 'around')<cr>
-    onoremap <silent> <plug>(table_around_cell_textobj)   <cmd>call table#textobj#Select(function('table#textobj#Cell'),   v:count1, 'around')<cr>
-    xnoremap <silent> <plug>(table_around_row_textobj)    <cmd>call table#textobj#Select(function('table#textobj#Row'),    v:count1, 'around')<cr>
-    onoremap <silent> <plug>(table_around_row_textobj)    <cmd>call table#textobj#Select(function('table#textobj#Row'),    v:count1, 'around')<cr>
-    xnoremap <silent> <plug>(table_around_column_textobj) <cmd>call table#textobj#Select(function('table#textobj#Column'), v:count1, 'around')<cr>
-    onoremap <silent> <plug>(table_around_column_textobj) <cmd>call table#textobj#Select(function('table#textobj#Column'), v:count1, 'around')<cr>
+    " around text table objects
+    call s:SetNoremap(['x', 'o'], '<plug>(table_around_cell_textobj)',   '<cmd>call table#textobj#Select(function("table#textobj#Cell"),   v:count1, "around")<cr>')
+    call s:SetNoremap(['x', 'o'], '<plug>(table_around_row_textobj)',    '<cmd>call table#textobj#Select(function("table#textobj#Row"),    v:count1, "around")<cr>')
+    call s:SetNoremap(['x', 'o'], '<plug>(table_around_column_textobj)', '<cmd>call table#textobj#Select(function("table#textobj#Column"), v:count1, "around")<cr>')
 endfunction
 
 let &cpo = s:save_cpo

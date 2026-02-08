@@ -3,26 +3,37 @@ set cpo&vim
 
 function! table#textobj#Select(GetTextObj, ...) abort
     let args = a:000
+    let mode = mode(1)
     " Determine the current mode and set visual selection accordingly
-    if mode() =~# '\v^[vV]$'
-        let v_mode = mode()
+    if mode =~# '\v^[vV]$'
         let v_block = [ getpos('v')[1:2], getpos('.')[1:2] ]
         let text_obj = call(a:GetTextObj, args)
         if !text_obj.valid
             return
         endif
         let [text_obj.start, text_obj.end] = s:ConvexUnion(v_block, [text_obj.start, text_obj.end])
-        call s:SetVisualSelection(v_mode, text_obj)
-    elseif mode(1)[0:1] ==# 'no'
-        let v_mode = mode(1)[-1:]
-        let v_mode = (v_mode =~# '\v^[vV]$')? v_mode : 'v'
+        call s:SetVisualSelection(text_obj)
+    elseif mode[0:1] ==# 'no'
+        let v_mode = mode[-1:]
+        let v_mode = (v_mode =~# '\v^[vV]$')? v_mode : ''
         let text_obj = call(a:GetTextObj, args)
         if !text_obj.valid
             return
         endif
-        call s:SetVisualSelection(v_mode, text_obj)
+        call s:SetVisualSelection(text_obj, v_mode)
+    elseif v:version < 900 && mode ==# 'n'
+        " compatibility for vim8 without <cmd> mappings
+        normal! gv
+        let v_mode = mode(1)
+        let v_block = [ getpos('v')[1:2], getpos('.')[1:2] ]
+        let text_obj = call(a:GetTextObj, args)
+        if !text_obj.valid
+            return
+        endif
+        let [text_obj.start, text_obj.end] = s:ConvexUnion(v_block, [text_obj.start, text_obj.end])
+        call s:SetVisualSelection(text_obj)
     else
-        throw 'Unsupported mode for TextObj'
+        throw 'Unsupported mode for TextObj: "' .. mode(1) .. '"'
     endif
 endfunction
 
@@ -59,6 +70,7 @@ function! table#textobj#Row(count1, type) abort
     let coord2 = [ row2, 0, col2 ]
     let text_obj = s:TextObjBlock(table, coord1, table, coord2)
     let text_obj = s:AdjustForType(table, coord1, table, coord2, text_obj, 'row', a:type)
+    let text_obj.preferred_v_mode = 'V'
     return text_obj
 endfunction
 
@@ -107,7 +119,7 @@ function! s:TextObjBlock(table1, coord1, table2, coord2) abort
                 \ 'valid': v:true,
                 \ 'start': topleft,
                 \ 'end': bottomright,
-                \ 'v_mode_override': '',
+                \ 'preferred_v_mode': '',
                 \ }
     return text_obj
 endfunction
@@ -177,9 +189,10 @@ function! s:OrderBlock(block) abort
     endif
 endfunction
 
-function! s:SetVisualSelection(v_mode, text_obj) abort
+function! s:SetVisualSelection(text_obj, ...) abort
     if a:text_obj['valid']
-        let v_mode = get(a:text_obj, 'v_mode_override', a:v_mode)
+        let v_mode = a:0? a:1 : ''
+        let v_mode = empty(v_mode)? get(a:text_obj, 'preferred_v_mode', 'v') : v_mode
         call cursor(a:text_obj['start'])
         execute "normal! \<esc>" .. v_mode
         call cursor(a:text_obj['end'])

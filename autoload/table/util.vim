@@ -86,7 +86,7 @@ function! table#util#ComputeWidths(table) abort
     for col in range(a:table.ColCount())
         let max_width = 0
         for row in a:table.rows
-            let cell = get(row.cells, col, '')
+            let cell = get(row.cells, col, [''])
             let max_width = max([max_width, s:CellStrDisplayWidth(cell)])
         endfor
         call add(widths, max_width)

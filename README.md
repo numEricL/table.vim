@@ -10,6 +10,11 @@ redrawn with style characters automatically on pipe insertion.
 Use the `:Table Align` command to perform alignment manually.
 Use the `:Table Complete` command fill missing cells and borders.
 
+## Requirements
+
+- Vim 8.1 or later
+- Neovim 0.7.2 or later
+
 ## Features
 
 - **Multiline rows** - Support for cells containing newlines (must be enabled)
