@@ -46,7 +46,7 @@ endfunction
 function s:SetNoremap(modes, lhs, rhs) abort
     let rhs = (v:version < 900)? substitute(a:rhs, '<cmd>', ':', '') : a:rhs
     for mode in a:modes
-        execute mode .. 'noremap <silent>' .. a:lhs .. ' ' ..  rhs
+        execute mode .. 'noremap <silent> ' .. a:lhs .. ' ' ..  rhs
     endfor
 endfunction
 

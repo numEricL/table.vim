@@ -1,7 +1,7 @@
 " compatibility for vim8 shipped with ubuntu 20.04
 
 function! table#compat#getbufoneline(bufnr, lnum) abort
-    if has('*getbufoneline')
+    if exists('*getbufoneline')
         return getbufoneline(a:bufnr, a:lnum)
     else
         return getbufline(a:bufnr, a:lnum)[0]
@@ -20,5 +20,5 @@ function! table#compat#trim(text, mask, dir) abort
         elseif a:dir == 2
             return substitute(a:text, '\_s*$', '', '')
         endif
-    endtry
+    endif
 endfunction

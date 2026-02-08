@@ -31,7 +31,7 @@ function! table#textobj#Select(GetTextObj, ...) abort
             return
         endif
         let [text_obj.start, text_obj.end] = s:ConvexUnion(v_block, [text_obj.start, text_obj.end])
-        call s:SetVisualSelection(text_obj, v_mode)
+        call s:SetVisualSelection(text_obj)
     else
         throw 'Unsupported mode for TextObj: "' .. mode(1) .. '"'
     endif
@@ -70,6 +70,7 @@ function! table#textobj#Row(count1, type) abort
     let coord2 = [ row2, 0, col2 ]
     let text_obj = s:TextObjBlock(table, coord1, table, coord2)
     let text_obj = s:AdjustForType(table, coord1, table, coord2, text_obj, 'row', a:type)
+    let text_obj.preferred_v_mode = 'V'
     return text_obj
 endfunction
 
@@ -118,7 +119,7 @@ function! s:TextObjBlock(table1, coord1, table2, coord2) abort
                 \ 'valid': v:true,
                 \ 'start': topleft,
                 \ 'end': bottomright,
-                \ 'v_mode_preferred': '',
+                \ 'preferred_v_mode': '',
                 \ }
     return text_obj
 endfunction
@@ -191,7 +192,7 @@ endfunction
 function! s:SetVisualSelection(text_obj, ...) abort
     if a:text_obj['valid']
         let v_mode = a:0? a:1 : ''
-        let v_mode = empty(v_mode)? get(a:text_obj, 'v_mode_preferred', 'v') : v_mode
+        let v_mode = empty(v_mode)? get(a:text_obj, 'preferred_v_mode', 'v') : v_mode
         call cursor(a:text_obj['start'])
         execute "normal! \<esc>" .. v_mode
         call cursor(a:text_obj['end'])
