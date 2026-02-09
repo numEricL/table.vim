@@ -13,7 +13,7 @@ endfunction
 function s:SetContextAwareMap(modes, lhs, rhs) abort
     for mode in a:modes
         let usermap = table#startup#keymap_capture#Capture(mode, a:lhs)
-        execute mode .. 'map <expr> ' .. a:lhs .. ' table#IsTable(line(".")) ? "' .. a:rhs .. '" : "' .. usermap .. '"'
+        execute mode .. 'noremap <expr> ' .. a:lhs .. ' table#IsTable(line(".")) ? "' .. a:rhs .. '" : "' .. usermap .. '"'
     endfor
 endfunction
 
