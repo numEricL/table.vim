@@ -296,5 +296,31 @@ function! table#table#RestoreMethods(tbl) abort
     endfor
 endfunction
 
+if s:debug_table
+    command! -nargs=? GetTable call <sid>GetTable(<q-args>)
+    command! PrintPositions call <sid>PrintPositions()
+    command! PrintCells call <sid>PrintCells()
+    abbreviate GT GetTable
+    abbreviate PP PrintPositions
+    abbreviate PC PrintCells
+
+    function! s:GetTable(args)
+        let args = (a:args == '')? [0,-1] : eval(a:args)
+        call table#table#Get(line('.'), args)
+    endfunction
+
+    function! s:PrintPositions()
+        for pos in g:t.placement.positions
+            echomsg string(pos)
+        endfor
+    endfunction
+
+    function! s:PrintCells()
+        for row in g:t.rows
+            echomsg string(row.cells)
+        endfor
+    endfunction
+endif
+
 let &cpo = s:save_cpo
 unlet s:save_cpo
