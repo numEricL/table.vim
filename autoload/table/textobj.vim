@@ -63,6 +63,9 @@ function! table#textobj#Row(count1, type) abort
     endif
     let table2 = table1
     for i in range(a:count1 - 1)
+        if table2.placement.bounds[1] == table2.placement.full_bounds[1]
+            break
+        endif
         let next_row_linenr = table2.placement.bounds[0] + len(table2.placement.positions)
         let table2 = table#table#Get(next_row_linenr, [0,0])
     endfor
