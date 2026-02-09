@@ -304,18 +304,18 @@ if s:debug_table
     abbreviate PP PrintPositions
     abbreviate PC PrintCells
 
-    function! s:GetTable(args)
+    function! s:GetTable(args) abort
         let args = (a:args == '')? [0,-1] : eval(a:args)
         call table#table#Get(line('.'), args)
     endfunction
 
-    function! s:PrintPositions()
+    function! s:PrintPositions() abort
         for pos in g:t.placement.positions
             echomsg string(pos)
         endfor
     endfunction
 
-    function! s:PrintCells()
+    function! s:PrintCells() abort
         for row in g:t.rows
             echomsg string(row.cells)
         endfor
