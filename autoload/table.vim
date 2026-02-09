@@ -18,6 +18,15 @@ function! table#IsTable(linenr) abort
     return range !=# [-1, -1]
 endfunction
 
+function! table#AlignIfNotEscaped() abort
+    let char_before_cursor = getline('.')[col('.')-2]
+    if char_before_cursor ==# '\'
+        return
+    else
+        call table#Align(line('.'))
+    endif
+endfunction
+
 function! table#Align(linenr) abort
     let cfg_opts = table#config#Config(bufnr('%')).options
     let table = table#table#Get(a:linenr, cfg_opts.chunk_size)

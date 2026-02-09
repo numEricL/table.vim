@@ -267,20 +267,48 @@ function! s:SplitPos(line) abort
     let match_list = []
     let sep_list = []
     let sep_pos_list = []
-    let match1 = matchstrpos(a:line, pattern)
+    let match1 = s:FindNextUnescapedSeparator(a:line, pattern, 0)
     if match1[1] != -1
         call add(sep_list, match1[0])
         call add(sep_pos_list, [match1[1], match1[2]])
-        let match2 = matchstrpos(a:line, pattern, match1[2])
+        let match2 = s:FindNextUnescapedSeparator(a:line, pattern, match1[2])
         while match2[1] != -1
             call add(sep_list, match2[0])
             call add(sep_pos_list, [match2[1], match2[2]])
             call add(match_list, strpart(a:line, match1[2], (match2[1] - match1[2])))
             let match1 = match2
-            let match2 = matchstrpos(a:line, pattern, match1[2])
+            let match2 = s:FindNextUnescapedSeparator(a:line, pattern, match1[2])
         endwhile
     endif
     return [ match_list, sep_pos_list, sep_list ]
+endfunction
+
+function! s:FindNextUnescapedSeparator(line, pattern, start_pos) abort
+    let pos = a:start_pos
+    while pos < len(a:line)
+        let match = matchstrpos(a:line, a:pattern, pos)
+        if match[1] == -1
+            return match
+        endif
+        if !s:IsEscaped(a:line, match[1])
+            return match
+        endif
+        let pos = match[2]
+    endwhile
+    return ['', -1, -1]
+endfunction
+
+function! s:IsEscaped(line, pos) abort
+    if a:pos == 0
+        return v:false
+    endif
+    let backslash_count = 0
+    let check_pos = a:pos - 1
+    while check_pos >= 0 && a:line[check_pos] ==# '\'
+        let backslash_count += 1
+        let check_pos -= 1
+    endwhile
+    return backslash_count % 2 == 1
 endfunction
 
 function! s:HandleOmittedBorders(line, match_list, sep_pos_list) abort
