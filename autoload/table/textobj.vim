@@ -57,19 +57,20 @@ endfunction
 
 function! table#textobj#Row(count1, type) abort
     let pos = getpos('.')[1:2]
-    let table = table#table#Get(pos[0], [0,0])
-    if !table.valid
+    let table1 = table#table#Get(pos[0], [0,0])
+    if !table1.valid
         return { 'valid': v:false }
     endif
-    let coord = table#cursor#GetCoord(table, pos, {'type_override': 'cell'})
-    let row1 = coord.coord[0]
-    let row2 = row1 + a:count1 - 1
-    let row2 = min([row2, table.RowCount() - 1])
-    let col2 = table.rows[row2].ColCount() - 1
-    let coord1 = [ row1, 0, 0 ]
-    let coord2 = [ row2, 0, col2 ]
-    let text_obj = s:TextObjBlock(table, coord1, table, coord2)
-    let text_obj = s:AdjustForType(table, coord1, table, coord2, text_obj, 'row', a:type)
+    let table2 = table1
+    for i in range(a:count1 - 1)
+        let next_row_linenr = table2.placement.bounds[0] + len(table2.placement.positions)
+        let table2 = table#table#Get(next_row_linenr, [0,0])
+    endfor
+    let col2 = table2.rows[0].ColCount() - 1
+    let coord1 = [ 0, 0, 0 ]
+    let coord2 = [ 0, 0, col2 ]
+    let text_obj = s:TextObjBlock(table1, coord1, table2, coord2)
+    let text_obj = s:AdjustForType(table1, coord1, table2, coord2, text_obj, 'row', a:type)
     let text_obj.preferred_v_mode = 'V'
     return text_obj
 endfunction
