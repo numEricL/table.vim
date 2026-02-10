@@ -19,7 +19,7 @@ endfunction
 
 function! s:SetDefault() abort
     " Auto-align on pipe
-    call s:SetContextAwareMap(['i'], '<bar>', "<bar><c-o><plug>(table_align_if_not_escaped)")
+    call s:SetContextAwareMap(['i'], '<bar>', '<bar><plug>(table_align_if_not_escaped)')
 
     " Navigation with context-aware mappings
     call s:SetContextAwareMap(['n', 'x'], '<tab>',   '<plug>(table_next)')
@@ -44,8 +44,17 @@ function! s:SetDefault() abort
 endfunction
 
 function s:SetNoremap(modes, lhs, rhs) abort
-    let rhs = (v:version < 900)? substitute(a:rhs, '<cmd>', ':', '') : a:rhs
     for mode in a:modes
+        let rhs = a:rhs
+        if !has('nvim') && v:version < 900
+            if mode ==# 'i'
+                let rhs = substitute(a:rhs, '<cmd>', '<c-o>:', '')
+            elseif mode ==# 'x'
+                let rhs = substitute(a:rhs, '<cmd>', '<c-u>:', '')
+            else
+                let rhs = substitute(a:rhs, '<cmd>', ':', '')
+            endif
+        endif
         execute mode .. 'noremap <silent> ' .. a:lhs .. ' ' ..  rhs
     endfor
 endfunction
@@ -56,28 +65,24 @@ function! s:DefinePlugMaps() abort
     endif
     let s:plugmaps_defined = 1
 
+    " auto-align on pipe
+    call s:SetNoremap(['i'], '<plug>(table_align_if_not_escaped)', '<cmd>call table#AlignIfNotEscaped()<cr>')
+
     " table drawing
-    call s:SetNoremap(['n'], '<plug>(table_complete)',             '<cmd>call table#Complete(line("."))<cr>')
-    call s:SetNoremap(['n'], '<plug>(table_align)',                '<cmd>call table#Align(line("."))<cr>')
-    call s:SetNoremap(['n'], '<plug>(table_align_if_not_escaped)', '<cmd>call table#AlignIfNotEscaped()<cr>')
-    call s:SetNoremap(['n'], '<plug>(table_to_default)',           '<cmd>call table#ToDefault(line("."))<cr>')
-    call s:SetNoremap(['n'], '<plug>(table_cell_edit)',            '<cmd>call table#CellEditor()<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_complete)',   '<cmd>call table#Complete(line("."))<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_align)',      '<cmd>call table#Align(line("."))<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_to_default)', '<cmd>call table#ToDefault(line("."))<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_cell_edit)',  '<cmd>call table#CellEditor()<cr>')
 
     " table navigation cycle
-    call s:SetNoremap(['i'],      '<plug>(table_next)', '<c-o><cmd>call table#CycleCursor("forward",  v:count1)<cr>')
-    call s:SetNoremap(['i'],      '<plug>(table_prev)', '<c-o><cmd>call table#CycleCursor("backward", v:count1)<cr>')
-    call s:SetNoremap(['n', 'x'], '<plug>(table_next)',      '<cmd>call table#CycleCursor("forward",  v:count1)<cr>')
-    call s:SetNoremap(['n', 'x'], '<plug>(table_prev)',      '<cmd>call table#CycleCursor("backward", v:count1)<cr>')
+    call s:SetNoremap(['n', 'x', 'i'], '<plug>(table_next)', '<cmd>call table#CycleCursor("forward",  v:count1)<cr>')
+    call s:SetNoremap(['n', 'x', 'i'], '<plug>(table_prev)', '<cmd>call table#CycleCursor("backward", v:count1)<cr>')
 
     " table navigation directional
-    call s:SetNoremap(['i'],      '<plug>(table_move_left)',  '<c-o><cmd>call table#MoveCursorCell("left",  v:count1)<cr>')
-    call s:SetNoremap(['i'],      '<plug>(table_move_right)', '<c-o><cmd>call table#MoveCursorCell("right", v:count1)<cr>')
-    call s:SetNoremap(['i'],      '<plug>(table_move_up)',    '<c-o><cmd>call table#MoveCursorCell("up",    v:count1)<cr>')
-    call s:SetNoremap(['i'],      '<plug>(table_move_down)',  '<c-o><cmd>call table#MoveCursorCell("down",  v:count1)<cr>')
-    call s:SetNoremap(['n', 'x'], '<plug>(table_move_left)',       '<cmd>call table#MoveCursorCell("left",  v:count1)<cr>')
-    call s:SetNoremap(['n', 'x'], '<plug>(table_move_right)',      '<cmd>call table#MoveCursorCell("right", v:count1)<cr>')
-    call s:SetNoremap(['n', 'x'], '<plug>(table_move_up)',         '<cmd>call table#MoveCursorCell("up",    v:count1)<cr>')
-    call s:SetNoremap(['n', 'x'], '<plug>(table_move_down)',       '<cmd>call table#MoveCursorCell("down",  v:count1)<cr>')
+    call s:SetNoremap(['n', 'x', 'i'], '<plug>(table_move_left)',  '<cmd>call table#MoveCursorCell("left",  v:count1)<cr>')
+    call s:SetNoremap(['n', 'x', 'i'], '<plug>(table_move_right)', '<cmd>call table#MoveCursorCell("right", v:count1)<cr>')
+    call s:SetNoremap(['n', 'x', 'i'], '<plug>(table_move_up)',    '<cmd>call table#MoveCursorCell("up",    v:count1)<cr>')
+    call s:SetNoremap(['n', 'x', 'i'], '<plug>(table_move_down)',  '<cmd>call table#MoveCursorCell("down",  v:count1)<cr>')
 
     " text table objects
     call s:SetNoremap(['x', 'o'], '<plug>(table_cell_textobj)',   '<cmd>call table#textobj#Select(function("table#textobj#Cell"),   v:count1, "default")<cr>')
