@@ -19,7 +19,9 @@ function! table#IsTable(linenr) abort
 endfunction
 
 function! table#AlignIfNotEscaped() abort
-    let char_before_cursor = getline('.')[col('.')-2]
+    " in vim versions without <cmd> we leave insert mode in <plug>(table_align_if_not_escaped)
+    let offset = (!has('nvim') && v:version < 900)? 2 : 3
+    let char_before_cursor = getline('.')[col('.') - offset]
     if char_before_cursor ==# '\'
         return
     else

@@ -19,7 +19,7 @@ endfunction
 
 function! s:SetDefault() abort
     " Auto-align on pipe
-    call s:SetContextAwareMap(['i'], '<bar>', "<bar><plug>(table_align)")
+    call s:SetContextAwareMap(['i'], '<bar>', '<bar><plug>(table_align_if_not_escaped)')
 
     " Navigation with context-aware mappings
     call s:SetContextAwareMap(['n', 'x'], '<tab>',   '<plug>(table_next)')
@@ -65,11 +65,14 @@ function! s:DefinePlugMaps() abort
     endif
     let s:plugmaps_defined = 1
 
+    " auto-align on pipe
+    call s:SetNoremap(['i'], '<plug>(table_align_if_not_escaped)', '<cmd>call table#AlignIfNotEscaped()<cr>')
+
     " table drawing
-    call s:SetNoremap(['n'],      '<plug>(table_complete)',   '<cmd>call table#Complete(line("."))<cr>')
-    call s:SetNoremap(['n', 'i'], '<plug>(table_align)',      '<cmd>call table#Align(line("."))<cr>')
-    call s:SetNoremap(['n'],      '<plug>(table_to_default)', '<cmd>call table#ToDefault(line("."))<cr>')
-    call s:SetNoremap(['n'],      '<plug>(table_cell_edit)',  '<cmd>call table#CellEditor()<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_complete)',   '<cmd>call table#Complete(line("."))<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_align)',      '<cmd>call table#Align(line("."))<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_to_default)', '<cmd>call table#ToDefault(line("."))<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_cell_edit)',  '<cmd>call table#CellEditor()<cr>')
 
     " table navigation cycle
     call s:SetNoremap(['n', 'x', 'i'], '<plug>(table_next)', '<cmd>call table#CycleCursor("forward",  v:count1)<cr>')
