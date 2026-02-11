@@ -4,11 +4,21 @@ Text table manipulation for Vim and Neovim.
 
 ## Quick Start
 
-Create tables using pipes (`|`) and dashes (`-`). The table is aligned and
-redrawn with style characters automatically on pipe insertion.
+Create tables using pipes `|` and dashes `-`. The table is aligned and redrawn
+automatically on pipe insertion. Table style is configurable.
 
-Use the `:Table Align` command to perform alignment manually.
-Use the `:Table Complete` command fill missing cells and borders.
+```
+| Header 1 | Header 2 | Header 3 |
+|---|---|---|
+| Cell 1 | Cell 2 | Cell 3 |
+```
+
+- Use `:Table Align` to manually align tables
+- Use `:Table Complete` to fill missing cells and borders
+- Use `<Tab>` / `<S-Tab>` to navigate between cells
+- Use `:TableOption` to configure table or style options
+
+See [`:help table.txt`](doc/table.txt) for complete documentation.
 
 ## Requirements
 
@@ -17,28 +27,23 @@ Use the `:Table Complete` command fill missing cells and borders.
 
 ## Features
 
-- **Multiline rows** - Support for cells containing newlines (must be enabled)
-- **Cell editing window** - Edit in a floating window, hooks provided (split window in Vim)
-- **Chunk processing** - Align only nearby lines for fast operation with large tables
-- **Multiple table styles** - Use a built-in style or define your own
+- **Multiline rows**        - must be enabled in your configuration
+- **Cell editing window**   - edit in a floating window, hooks provided (split window in Vim)
+- **Text objects**          - cell, row, and column
+- **Multiple table styles** - markdown, org, rst, and box-drawing styles included, or define your own
+- **Chunk processing**      - align only nearby lines for fast operation with large tables
 
 ## Demo
 
 https://github.com/user-attachments/assets/352e23b0-33ba-4f9d-9fa0-e2aee5fd16cc
 
-## Table Detection
-
-Tables must be
-- At least two lines (rows)
-- Separated by blank lines above and below (comment strings are ok)
-
 ## Configuration (optional)
 
 Configuration is **buffer-local**. Set defaults in your vimrc, customize
-per-filetype in ftplugin files, or change at runtime with `:TableOption`.
+per-filetype in after/ftplugin files, or change at runtime with `:TableOption`.
 
 ```vim
-" vimrc - set defaults for all buffers (overridden by ftplugins)
+" .vimrc - set defaults for all buffers (overridden by ftplugins)
 call table#Setup({
     \ 'style': 'default',
     \ 'options': {'multiline': v:true}
@@ -53,30 +58,39 @@ require('table_vim').setup({
 })
 ```
 
-The plugin provides default configurations for markdown, org, and rst filetypes.
-To override these, create your own ftplugin files in `after/ftplugin/`.
-
-**Disable features:**
-```vim
-call table#Setup({
-    \ 'disable_mappings': v:true,
-    \ 'disable_ftplugins': v:true
-    \ })
-```
-
 See `:help table-configuration` for details.
 
-## Navigation
+## Cell Editing
+
+`:Table EditCell` opens cells in a split (Vim) or floating (Neovim) window for
+greater control over editing. Especially useful for multiline cells.
+
+The window closes automatically when you leave it (`:q` or `<C-w>c`), and
+changes are saved back to the table.
+
+Use `TableCellEditPre` and `TableCellEditPost` autocommands to customize
+behavior.
+
+See `:help table-events`.
+
+
+## Keybindings
+
+Auto-alignment, navigational, and text object keybindings are mapped by default.
+All default keybindings are **context-aware**, they only activate when the
+cursor is on a line containing a table. Outside of tables, your existing
+keybindings work normally.
+
+### Navigation
 
 - `<Tab>` / `<S-Tab>` - Next/previous cell (wraps rows)
 - `<C-h>` / `<C-j>` / `<C-k>` / `<C-l>` - Navigate left/down/up/right
-- Counts work: `3<Tab>` moves three cells forward
 
-## Text Objects
+### Text Objects
 
 Cell, row, and column text objects are provided for visual and operator-pending
 modes. Default selects half borders; use "around" for full borders or "inner"
-for no borders.
+for no borders. Half borders are useful for reordering table components.
 
 | Object     | Description    | Example                   |
 |------------|----------------|---------------------------|
@@ -84,82 +98,66 @@ for no borders.
 | `tr/ir/ar` | row            | `dtr` delete row          |
 | `tc/ic/ac` | column         | `yac` yank full column    |
 
-Counts work: `d2tc` deletes two columns.
+### Available `<Plug>` Mappings
 
-See `:help table-text-objects` for details.
-
-## Chunk Processing
-
-For performance, the align action (auto-align and `:Table Align`) only processes
-the lines near the cursor. The `:Table Complete` command processes the entire
-table and may be slow for large tables.
-
-## Cell Editing
-
-`:Table EditCell` opens cells in a split window (Vim) or floating window (Neovim)
-for greater control over editing. Especially useful for multiline cells. Use
-`TableCellEditPre` and `TableCellEditPost` autocommands to customize behavior.
-See `:help table-events`.
-
-## Commands
-
-### :Table
+Table actions have no default keybindings, but may be mapped with the provided
+`<Plug>` mappings.
 
 ```vim
-:Table EditCell         " Edit cell in split/floating window
-:Table Complete         " Fill missing cells and borders
-:Table Align            " Align table columns
-:Table ToDefault        " Convert to default style
-:Table ToStyle {style}  " Convert to specified style (updates the table option)
-```
-
-### :TableOption
-
-Runtime configuration for the current buffer, changes do not persist across vim
-sessions. Use without arguments to show current config.
-
-```vim
-:TableOption Style [name]                 " Get/set style
-:TableOption Option [key] [value]         " Get/set option
-:TableOption StyleOption [key] [value]    " Get/set style option
-:TableOption RegisterStyle [name]         " Save current style (session only)
-```
-
-**Note:** Registering a style is only for the current session. Store them in
-your vim/nvim config file to persist across sessions.
-
-**Common options:**
-
-| Option                 | Default | Description                                |
-|------------------------|---------|--------------------------------------------|
-| `multiline`            | false   | Allow cells to contain newlines            |
-| `default_alignment`    | left    | Default column alignment: `l`, `c`, or `r` |
-| `preserve_indentation` | true    | Keep leading whitespace in multiline cell  |
-
-**Built-in styles:** `default`, `markdown`, `org`, `rest`, `single`, `double`
-
-Example: `:TableOption Style markdown | :TableOption Option multiline true`
-
-See `:help table-commands` and `:help table-styles` for details.
-
-## Keybindings
-
-Auto-alignment, navigational, and text object keybindings are mapped by default
-in a context-aware manner. They only activate when the cursor is on a table
-line, otherwise, your existing key maps work normally.
-
-To disable all default mappings, use the `disable_mappings` configuration
-option. Maps can be customized with the available `<Plug>` mappings.
-
-Keybindings for table actions are not provided but can be added easily:
-
-```vim
-" Example mappings (add to vimrc/init.vim)
+" Example custom mappings (add to vimrc/init.vim)
 nnoremap <leader>ta    <Plug>(table_align)
 nnoremap <leader><bar> <Plug>(table_complete)
 nnoremap <leader>td    <Plug>(table_to_default)
 nnoremap <leader>te    <Plug>(table_cell_edit)
 ```
+
+See `:help table-text-objects` for details.
+
+## Commands
+
+Two top level commands are defined, `:Table` and `:TableOption`. Tab-completion
+is available for all subcommands and arguments.
+
+### `:Table` - Table Actions
+
+```vim
+:Table EditCell         " Edit cell in split (Vim) or floating (Neovim) window
+:Table Complete         " Fill missing cells and borders (processes entire table)
+:Table Align            " Align table columns (processes chunk near cursor)
+:Table ToDefault        " Convert to default style (using i_vertical/i_horizontal)
+:Table ToStyle {style}  " Convert to specified style and update buffer style
+```
+
+### `:TableOption` - Runtime Configuration
+
+Runtime configuration for the current buffer. Use without arguments to show
+current configuration.
+
+```vim
+:TableOption                              " Show all current settings
+:TableOption Style [name]                 " Get/set style
+:TableOption Option [key] [value]         " Get/set option
+:TableOption StyleOption [key] [value]    " Get/set style option
+:TableOption RegisterStyle [name]         " Register current style (session only)
+```
+
+**Note:** Style registration is only for the current session. Add the
+registration to your vimrc/init.lua for persistence.
+
+See `:help table-commands` for complete details.
+
+## Chunk Processing
+
+For performance, the align action (auto-align and `:Table Align`) only processes
+the lines near the cursor according to the `chunk_size` option. The `:Table
+Complete` command processes the entire table and may be slow for large tables.
+
+
+## Table Detection
+
+Tables must be
+- At least two lines (rows)
+- Separated by blank lines above and below (comment strings are ok)
 
 ## Limitations
 
