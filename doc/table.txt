@@ -135,8 +135,8 @@ COMMANDS                                                      *table-commands*
         - i_vertical: Vertical border character (default: '|')
         - i_horizontal: Horizontal border character (default: '-')
         - i_alignment: Alignment marker character (default: ':')
-        - default_alignment: Default column alignment: 'l', 'c', or 'r'
-          (default: 'l')
+        - default_alignment: Default column alignment: 'left', 'center', or
+          'right' (or 'l', 'c', 'r') (default: 'left')
         - chunk_size: Lines to process around cursor [before, after]
           (default: [-10, 10])
         - multiline: Enable multiline cells (default: false)
@@ -145,7 +145,7 @@ COMMANDS                                                      *table-commands*
           (default: true)
 
         Examples: >
-            :TableOption Option default_alignment c
+            :TableOption Option default_alignment center
             :TableOption Option multiline true
 <
     :TableOption Style [name]                            *:TableOption-Style*
@@ -225,9 +225,9 @@ Table Operations ~
     unless the pipe character is escaped.
     Available in insert mode only.
     Default: | in insert mode (auto-aligns on typing)
-
+    
     Note: This is an implementation detail. This map should be immediately
-    precedded by a | insertion in order to work properly. It is not recommended
+    preceded by a | insertion in order to work properly. It is not recommended
     to use this mapping directly.
 
                                                      *<Plug>(table_complete)*
@@ -627,7 +627,6 @@ Global setup in init.lua: >
     })
 <
 Per-filetype configuration in after/ftplugin/markdown.lua: >
-    if vim.g.table_disable_ftplugins then return end
     vim.fn['table#SetBufferConfig']({
       style = 'markdown',
       options = { multiline = true }
@@ -907,7 +906,7 @@ Known limitations of table.vim:
 LICENSE                                                        *table-license*
 
 This plugin is distributed under the Mozilla Public License Version 2.0.
-See [LICENSE](../LICENSE) for details.
+See the LICENSE file for details.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:
