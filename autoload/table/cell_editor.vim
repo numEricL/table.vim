@@ -19,6 +19,7 @@ endfunction
 function! s:CachedBuf() abort
     if s:cell_bufnr == -1 || !bufexists(s:cell_bufnr)
         let s:cell_bufnr = bufadd('')
+        call bufload(s:cell_bufnr)
         call setbufvar(s:cell_bufnr, '&buftype', 'nofile')
         call setbufvar(s:cell_bufnr, '&bufhidden', 'hide')
         call setbufvar(s:cell_bufnr, '&swapfile', 0)
@@ -33,7 +34,6 @@ function! s:InitBuffer(lines) abort
 
     let old_undolevels = getbufvar(bufnr, '&undolevels')
     call setbufvar(bufnr, '&undolevels', -1)
-    call bufload(bufnr)
     silent call deletebufline(bufnr, 1, '$')
     call setbufline(bufnr, 1, a:lines)
     call setbufvar(bufnr, '&undolevels', old_undolevels)

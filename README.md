@@ -111,8 +111,6 @@ nnoremap <leader>td    <Plug>(table_to_default)
 nnoremap <leader>te    <Plug>(table_cell_edit)
 ```
 
-See `:help table-text-objects` for details.
-
 ## Commands
 
 Two top level commands are defined, `:Table` and `:TableOption`. Tab-completion

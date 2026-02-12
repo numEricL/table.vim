@@ -22,20 +22,20 @@ function! table#commands#TableCommand(...) abort
         call table#Complete(line('.'))
     elseif action ==# 'Align'
         call table#Align(line('.'))
+    elseif action =~# 'SortCols!\?'
+        call s:SortAction('cols', action[-1:] ==# '!', args)
+    elseif action =~# 'SortRows!\?'
+        call s:SortAction('rows', action[-1:] ==# '!', args)
     elseif action ==# 'ToDefault'
         call table#ToDefault(line('.'))
     elseif action ==# 'ToStyle'
         if len(args) == 0
-            echohl ErrorMsg
-            echomsg 'ToStyle: style name required'
-            echohl None
+            echohl ErrorMsg | echomsg 'ToStyle: style name required' | echohl None
             return
         endif
         call table#ToStyle(line('.'), args[0])
     else
-        echohl ErrorMsg
-        echomsg "Table: unknown action '" .. action .. "'"
-        echohl None
+        echohl ErrorMsg | echomsg "Table: unknown action '" .. action .. "'" | echohl None
     endif
 endfunction
 
@@ -45,7 +45,7 @@ function! table#commands#TableComplete(ArgLead, CmdLine, CursorPos) abort
 
     " Complete action names
     if num_args <= 1
-        let actions = ['Align', 'Complete', 'EditCell', 'ToDefault', 'ToStyle']
+        let actions = ['Align', 'Complete', 'EditCell', 'SortCols', 'SortRows', 'ToDefault', 'ToStyle']
         return filter(copy(actions), 'v:val =~? "^" .. a:ArgLead')
     endif
 
@@ -114,19 +114,21 @@ function! table#commands#TableOptionComplete(ArgLead, CmdLine, CursorPos) abort
     return []
 endfunction
 
-function! s:ConvertValue(value) abort
-    if a:value ==? 'v:true' || a:value ==? 'true' || a:value ==# '1'
+function! s:ConvertValue(args) abort
+    let value = join(a:args[1:], ' ')
+    if value ==? 'v:true' || value ==? 'true' || value ==# '1'
         return v:true
-    elseif a:value ==? 'v:false' || a:value ==? 'false' || a:value ==# '0'
+    elseif value ==? 'v:false' || value ==? 'false' || value ==# '0'
         return v:false
-    elseif a:value =~# '^\d\+$'
-        return str2nr(a:value)
+    elseif value =~# '^\d\+$'
+        return str2nr(value)
     else
-        return a:value
+        return value
     endif
 endfunction
 
 function! s:SetOption(args) abort
+    echom 'SetOption called with args: ' .. string(a:args)
     let bufnr = bufnr('%')
     let cfg_opts = table#config#Config(bufnr).options
     if len(a:args) == 0
@@ -138,7 +140,7 @@ function! s:SetOption(args) abort
         echo key .. ' = ' .. string(cfg_opts[key])
         return
     endif
-    let value = s:ConvertValue(a:args[1])
+    let value = s:ConvertValue(a:args)
     call table#config#SetBufferConfig(bufnr, { 'options': { key : value } })
 endfunction
 
@@ -191,7 +193,7 @@ function! s:SetStyleOption(args) abort
         echo key .. ' = ' .. string(style_opts[key])
         return
     endif
-    let value = s:ConvertValue(a:args[1])
+    let value = s:ConvertValue(a:args)
     call table#config#SetBufferConfig(bufnr, { 'style_options': { key : value } })
 endfunction
 
@@ -244,6 +246,56 @@ function! s:CompleteStyleOption(ArgLead, CmdLine, CursorPos) abort
         endif
     endif
     return []
+endfunction
+
+function! s:SortAction(type, bang, args) abort
+    let sort_args = s:ParseSortArgs(a:type, a:bang, a:args)
+    if sort_args.error
+        return
+    endif
+    call table#Sort(line('.'), a:type, sort_args.id, sort_args.flags)
+endfunction
+
+function! s:ParseSortArgs(type, bang, args) abort
+    let allowed_flags = ['i', 'n', 'f', 'c']
+    let func_name = (a:type ==# 'rows')? 'SortRows' : 'SortCols'
+    let id_name   = (a:type ==# 'rows')? 'row' : 'col'
+
+    if len(a:args) == 0
+        " print calling convention if no args provided
+        echomsg 'Usage: :Table ' .. func_name .. '[!] <' .. id_name .. '_id> ' .. '[' .. join(allowed_flags, '|') .. ']'
+        return { 'error': v:true }
+    endif
+
+    let sort_args = { 'id': v:false, 'flags': [], 'error': v:false }
+    for arg_id in range(len(a:args))
+        if a:args[arg_id] =~# '^\d\+$'
+            if type(sort_args.id) != v:t_bool
+                echohl ErrorMsg | echomsg func_name .. ': only one ' .. id_name .. '_id allowed' | echohl None
+                let sort_args.error = v:true
+            endif
+            let sort_args.id = str2nr(a:args[arg_id]) - 1
+        else
+            call extend(sort_args.flags, split(a:args[arg_id], '\zs'))
+        endif
+    endfor
+    if a:bang
+        call extend(sort_args.flags, ['!'])
+    endif
+
+    if type(sort_args.id) == v:t_bool
+        echohl ErrorMsg | echomsg func_name .. ': ' .. id_name .. '_id required' | echohl None
+        let sort_args.error = v:true
+        return sort_args
+    endif
+
+    for flag in sort_args.flags
+        if index(allowed_flags, flag) == -1 && flag !=# '!'
+            echohl ErrorMsg | echomsg func_name .. ': invalid flag "' .. flag .. '"' | echohl None
+            let sort_args.error = v:true
+        endif
+    endfor
+    return sort_args
 endfunction
 
 let &cpo = s:save_cpo

@@ -113,6 +113,15 @@ function! table#CellEditor() abort
     endif
 endfunction
 
+function! table#Sort(linenr, dim_kind, id, flags) abort
+    let table = s:GetFullTable(a:linenr)
+    if !table.valid
+        return
+    endif
+    call table#sort#Sort(table, a:dim_kind, a:id, a:flags)
+    call table#draw#CurrentlyPlaced(table)
+endfunction
+
 function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
     let new_table = a:table
     let new_coord = a:coord

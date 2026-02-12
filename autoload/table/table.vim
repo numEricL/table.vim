@@ -2,7 +2,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let s:cache_table = v:false
-let s:debug_table = v:false
+let s:debug_table = v:true
 
 function! table#table#Get(linenr, chunk_size, ...) abort
     let cache_table = a:0 ? a:1 : s:cache_table
@@ -286,12 +286,12 @@ function! table#table#RestoreMethods(tbl) abort
     let a:tbl.RowCount = function('s:TableRowCount')
     let a:tbl.ColCount = function('s:TableColCount')
     let a:tbl.ColAlign = function('s:TableColAlign')
-    let a:tbl.Cell = function('s:TableGetCell')
-    let a:tbl.SetCell = function('s:TableSetCell')
+    let a:tbl.Cell     = function('s:TableGetCell')
+    let a:tbl.SetCell  = function('s:TableSetCell')
 
     " Restore row-level methods
     for row in a:tbl.rows
-        let row.Height = function('s:CellRowHeight')
+        let row.Height   = function('s:CellRowHeight')
         let row.ColCount = function('s:CellColCount')
     endfor
 endfunction
