@@ -211,14 +211,14 @@ function! s:CompleteOption(ArgLead, CmdLine, CursorPos) abort
     let parts = split(a:CmdLine, '\s\+')
     let num_args = len(parts) - 1
 
-    if num_args == 1 || (num_args == 0 && a:CmdLine =~# '\s$')
-        return filter(copy(options), 'v:val =~? "^" .. a:ArgLead')
-    elseif num_args == 2
+    if (num_args == 1 && a:CmdLine !~# '\s$') || (num_args == 0 && a:CmdLine =~# '\s$')
+        return filter(sort(copy(options)), 'v:val =~? "^" .. a:ArgLead')
+    elseif (num_args == 2 && a:CmdLine !~# '\s$') || (num_args == 1 && a:CmdLine =~# '\s$')
         let option_key = parts[1]
         if option_key ==# 'default_alignment'
             return filter(['left', 'center', 'right'], 'v:val =~? "^" .. a:ArgLead')
-        elseif option_key =~# 'enable\|indentation'
-            return filter(['v:true', 'v:false'], 'v:val =~? "^" .. a:ArgLead')
+        elseif option_key =~# 'multiline\|indentation'
+            return filter(['true', 'false'], 'v:val =~? "^" .. a:ArgLead')
         endif
     endif
     return []
@@ -234,13 +234,13 @@ function! s:CompleteStyleOption(ArgLead, CmdLine, CursorPos) abort
     let parts = split(a:CmdLine, '\s\+')
     let num_args = len(parts) - 1
 
-    if num_args == 1 || (num_args == 0 && a:CmdLine =~# '\s$')
+    if (num_args == 1 && a:CmdLine !~# '\s$') || (num_args == 0 && a:CmdLine =~# '\s$')
         let keys_list = keys(style.options)
         return filter(copy(keys_list), 'v:val =~? "^" .. a:ArgLead')
-    elseif num_args == 2
+    elseif (num_args == 2 && a:CmdLine !~# '\s$') || (num_args == 1 && a:CmdLine =~# '\s$')
         let key = parts[1]
         if key =~# '^omit_'
-            return filter(['v:true', 'v:false'], 'v:val =~? "^" .. a:ArgLead')
+            return filter(['true', 'false'], 'v:val =~? "^" .. a:ArgLead')
         endif
     endif
     return []

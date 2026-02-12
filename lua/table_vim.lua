@@ -2,6 +2,7 @@ local M = {}
 
 -- @param opts table: Configuration options
 --   - disable_mappings: boolean - Disable default mappings (default: false)
+--   - disable_ftplugins: boolean - Disable built-in ftplugin configuration files (default: false)
 --   - style: string - Table style name (e.g., 'markdown', 'org', 'single', 'double')
 --   - options: table - Table options
 --     - multiline: boolean - Allow cells to contain newlines
