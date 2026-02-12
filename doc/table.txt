@@ -225,7 +225,7 @@ Table Operations ~
     unless the pipe character is escaped.
     Available in insert mode only.
     Default: | in insert mode (auto-aligns on typing)
-    
+
     Note: This is an implementation detail. This map should be immediately
     preceded by a | insertion in order to work properly. It is not recommended
     to use this mapping directly.
