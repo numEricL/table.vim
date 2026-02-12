@@ -1,6 +1,11 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
+" SortComparator is a global variable because lambdas cannot be used with commands
+if !exists('g:TableSortComparator')
+    let g:TableSortComparator = ''
+endif
+
 function table#sort#Sort(table, dim_kind, id, flags) abort
     if a:dim_kind ==# 'rows'
         call s:SortRows(a:table, a:id, a:flags)
@@ -65,11 +70,10 @@ function s:GetVimSortHow(flags) abort
     elseif index(a:flags, 'n') != -1 | let Op = { x -> str2nr(x[0]) }
     elseif index(a:flags, 'f') != -1 | let Op = { x -> str2float(x[0]) }
     elseif index(a:flags, 'c') != -1
-        let cfg_opts = table#config#Config(bufnr('%')).options
-        if type(cfg_opts.SortComparator) == v:t_func
-            " cfg_opts.SortComparator is assumed to be a LessThan func
-            return { a,b -> cfg_opts.SortComparator(a[0],b[0])? -1 : cfg_opts.SortComparator(b[0],a[0])? 1 : 0 }
+        if type(g:TableSortComparator) != v:t_func
+            throw "Invalid sort comparator: " .. string(g:TableSortComparator)
         endif
+            return { a,b -> g:TableSortComparator(a[0],b[0])? -1 : g:TableSortComparator(b[0],a[0])? 1 : 0 }
     endif
     return { a,b -> Op(a) < Op(b) ? -1 : Op(b) < Op(a) ? 1 : 0 }
 endfunction

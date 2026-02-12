@@ -115,7 +115,16 @@ function! table#commands#TableOptionComplete(ArgLead, CmdLine, CursorPos) abort
 endfunction
 
 function! s:ConvertValue(args) abort
+    let key = a:args[0]
     let value = join(a:args[1:], ' ')
+
+    if key ==# 'chunk_size'
+        " returns a list with the first two numbers found
+        let matches = matchlist(value, '\v(\d+)\D+(\d+)')
+        let matches = matches[1:2]
+        call map(matches, 'str2nr(v:val)')
+        return matches
+    endif
     if value ==? 'v:true' || value ==? 'true' || value ==# '1'
         return v:true
     elseif value ==? 'v:false' || value ==? 'false' || value ==# '0'
@@ -128,7 +137,6 @@ function! s:ConvertValue(args) abort
 endfunction
 
 function! s:SetOption(args) abort
-    echom 'SetOption called with args: ' .. string(a:args)
     let bufnr = bufnr('%')
     let cfg_opts = table#config#Config(bufnr).options
     if len(a:args) == 0

@@ -13,7 +13,6 @@ let s:default_config = {
             \   'i_vertical'           : '|',
             \   'i_horizontal'         : '-',
             \   'i_alignment'          : ':',
-            \   'SortComparator'       : '',
             \ },
             \ 'style_options': {},
             \ }
