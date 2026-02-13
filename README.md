@@ -10,7 +10,7 @@ automatically on pipe insertion. Table style is configurable.
 ```
 |Header 1| Header 2|Header 3|           ║ Header 1 ║ Header 2 ║ Header 3 ║
 |--                              -->    ╠══════════╣
-|Cell 1          |Cell 2 ░              ║ Cell 1   ║ Cell 2   ║
+|Cell 1          |Cell 2 ░              ║ Cell 1   ║ Cell 2   ║░
 ```
 
 And may to completed to:
