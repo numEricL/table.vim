@@ -7,7 +7,7 @@ function! table#sort#Sort(table, dim_kind, id, flags) abort
     elseif a:dim_kind ==# 'cols'
         call s:SortCols(a:table, a:id, a:flags)
     else
-        throw "Invalid dim_kind: %s" .. string(a:dim_kind)
+        throw "Invalid dim_kind: " .. string(a:dim_kind)
     endif
 endfunction
 
@@ -61,7 +61,7 @@ function! s:SortCols(table, row_id, flags) abort
 endfunction
 
 " script local s:Op and s:LessThan used to avoid memory leaks from referencing the
-" clouser the in the context it depends on. See :help lambda
+" closure the in the context it depends on. See :help lambda
 function! s:GetVimSortHow(flags) abort
     let s:Op = ''
         if index(a:flags, 'i') != -1 | let s:Op = { x ->   tolower(x[0]) }
