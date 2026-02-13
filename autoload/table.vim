@@ -1,6 +1,12 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
+let g:table_version = '0.1.0'
+
+function! table#Version() abort
+    return g:table_version
+endfunction
+
 function! table#Setup(config) abort
     call table#config#Setup(a:config)
 endfunction
@@ -111,6 +117,15 @@ function! table#CellEditor() abort
     else
         call table#cell_editor#EditAtCursor()
     endif
+endfunction
+
+function! table#Sort(linenr, dim_kind, id, flags) abort
+    let table = s:GetFullTable(a:linenr)
+    if !table.valid
+        return
+    endif
+    call table#sort#Sort(table, a:dim_kind, a:id, a:flags)
+    call table#draw#CurrentlyPlaced(table)
 endfunction
 
 function! s:UpdateOnCycleWrapCell(table, dir, coord) abort

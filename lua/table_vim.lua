@@ -23,4 +23,6 @@ function M.setup(opts)
     vim.fn['table#config#Setup'](opts)
 end
 
+M.version = vim.fn['table#Version']()
+
 return M

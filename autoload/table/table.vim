@@ -286,12 +286,12 @@ function! table#table#RestoreMethods(tbl) abort
     let a:tbl.RowCount = function('s:TableRowCount')
     let a:tbl.ColCount = function('s:TableColCount')
     let a:tbl.ColAlign = function('s:TableColAlign')
-    let a:tbl.Cell = function('s:TableGetCell')
-    let a:tbl.SetCell = function('s:TableSetCell')
+    let a:tbl.Cell     = function('s:TableGetCell')
+    let a:tbl.SetCell  = function('s:TableSetCell')
 
     " Restore row-level methods
     for row in a:tbl.rows
-        let row.Height = function('s:CellRowHeight')
+        let row.Height   = function('s:CellRowHeight')
         let row.ColCount = function('s:CellColCount')
     endfor
 endfunction

@@ -8,9 +8,19 @@ Create tables using pipes `|` and dashes `-`. The table is aligned and redrawn
 automatically on pipe insertion. Table style is configurable.
 
 ```
-| Header 1 | Header 2 | Header 3 |
-|---|---|---|
-| Cell 1 | Cell 2 | Cell 3 |
+|Header 1| Header 2|Header 3|           ║ Header 1 ║ Header 2 ║ Header 3 ║
+|--                              -->    ╠══════════╣
+|Cell 1          |Cell 2 ░              ║ Cell 1   ║ Cell 2   ║░
+```
+
+And may be completed to:
+
+```
+╔══════════╦══════════╦══════════╗
+║ Header 1 ║ Header 2 ║ Header 3 ║
+╠══════════╬══════════╬══════════╣
+║ Cell 1   ║ Cell 2   ║          ║
+╚══════════╩══════════╩══════════╝
 ```
 
 - Use `:Table Align` to manually align tables
@@ -29,6 +39,7 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 
 - **Multiline rows**        - must be enabled in your configuration
 - **Cell editing window**   - edit in a floating window, hooks provided (split window in Vim)
+- **Sorting**               - sort rows and columns
 - **Text objects**          - cell, row, and column
 - **Multiple table styles** - markdown, org, rst, and box-drawing styles included, or define your own
 - **Chunk processing**      - align only nearby lines for fast operation with large tables
@@ -73,7 +84,6 @@ behavior.
 
 See `:help table-events`.
 
-
 ## Keybindings
 
 Auto-alignment, navigational, and text object keybindings are mapped by default.
@@ -111,8 +121,6 @@ nnoremap <leader>td    <Plug>(table_to_default)
 nnoremap <leader>te    <Plug>(table_cell_edit)
 ```
 
-See `:help table-text-objects` for details.
-
 ## Commands
 
 Two top level commands are defined, `:Table` and `:TableOption`. Tab-completion
@@ -121,11 +129,13 @@ is available for all subcommands and arguments.
 ### `:Table` - Table Actions
 
 ```vim
-:Table EditCell         " Edit cell in split (Vim) or floating (Neovim) window
-:Table Complete         " Fill missing cells and borders (processes entire table)
-:Table Align            " Align table columns (processes chunk near cursor)
-:Table ToDefault        " Convert to default style (using i_vertical/i_horizontal)
-:Table ToStyle {style}  " Convert to specified style and update buffer style
+:Table EditCell                  " Edit cell in split (Vim) or floating (Neovim) window
+:Table Complete                  " Fill missing cells and borders (processes entire table)
+:Table Align                     " Align table columns (processes chunk near cursor)
+:Table SortRows[!] {col} [flags] " Sort rows by specified column (! for reverse)
+:Table SortCols[!] {row} [flags] " Sort columns by specified row (! for reverse)
+:Table ToDefault                 " Convert to default style (using i_vertical/i_horizontal)
+:Table ToStyle {style}           " Convert to specified style and update buffer style
 ```
 
 ### `:TableOption` - Runtime Configuration
@@ -144,14 +154,23 @@ current configuration.
 **Note:** Style registration is only for the current session. Add the
 registration to your vimrc/init.lua for persistence.
 
-See `:help table-commands` for complete details.
+## Sorting
+
+Sort table rows by a specific column or sort columns by a specific row:
+
+```vim
+:Table SortRows 2      " Sort rows by column 2 (alphabetical)
+:Table SortCols! 3 n   " Reverse sort columns by row 3 (numeric)
+:Table SortRows 1 c    " Custom sort via user defined comparator function
+```
+
+See `:help :Table-SortRows` and `:help :Table-SortCols`
 
 ## Chunk Processing
 
 For performance, the align action (auto-align and `:Table Align`) only processes
 the lines near the cursor according to the `chunk_size` option. The `:Table
 Complete` command processes the entire table and may be slow for large tables.
-
 
 ## Table Detection
 
