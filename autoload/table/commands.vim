@@ -64,8 +64,8 @@ function! table#commands#TableOptionCommand(...) abort
         let subcommands = ['Option', 'StyleOption', 'Style', 'RegisterStyle']
         echomsg 'TableOption subcommands: ' .. join(subcommands, ', ')
         echomsg ' '
-        echomsg 'table.vim configuration for buffer ' .. (bufname('%') !=# '' ? bufname('%') : bufnr('%'))
-        echomsg ' '
+        echomsg 'table.vim ' .. table#Version()
+        echomsg 'Configuration for buffer ' .. (bufname('%') !=# '' ? bufname('%') : bufnr('%'))
         echomsg 'Current Style = ' .. table#config#Config(bufnr('%')).style
         echomsg ' '
         call s:ShowOption([])
@@ -218,7 +218,7 @@ function! s:ShowStyleOption(args) abort
     let style_opts = table#config#Style(bufnr('%')).options
     echomsg "Table StyleOptions:"
     let maxlen = max(map(keys(style_opts), 'len(v:val)'))
-    let sorted_items = sort(items(style_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
+    let sorted_items = sort(items(style_opts), {a, b -> a[0] <? b[0] ? -1 : a[0] >? b[0] ? 1 : 0})
     for [key, value] in sorted_items
         let padded_key = table#util#Pad(key, maxlen)
         echomsg '  ' .. padded_key .. ' = ' .. string(value)
@@ -231,7 +231,7 @@ function! s:CompleteOption(ArgLead, CmdLine, CursorPos) abort
     let num_args = len(parts) - 1
 
     if (num_args == 1 && a:CmdLine !~# '\s$') || (num_args == 0 && a:CmdLine =~# '\s$')
-        return filter(sort(copy(options)), 'v:val =~? "^" .. a:ArgLead')
+        return filter(sort(copy(options), 'i'), 'v:val =~? "^" .. a:ArgLead')
     elseif (num_args == 2 && a:CmdLine !~# '\s$') || (num_args == 1 && a:CmdLine =~# '\s$')
         let option_key = parts[1]
         if option_key ==# 'default_alignment'
