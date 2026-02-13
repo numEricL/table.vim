@@ -26,6 +26,7 @@ Features:
   • Automatic alignment on pipe insertion
   • Multiline cell support (optional)
   • Cell editing in floating/split windows
+  • Table sorting by rows or columns
   • Cell, row, and column text objects
   • Multiple built-in table styles (Markdown, Org, reStructuredText, Unicode)
   • Custom style support
@@ -119,6 +120,41 @@ COMMANDS                                                      *table-commands*
             :Table ToStyle rest
             :Table ToStyle single
 <
+    :Table SortRows[!] {col_id} [flags]                     *:Table-SortRows*
+        Sort table rows based on the values in the specified column. The header
+        row (first row) is not sorted. Column IDs are 1-indexed.
+
+        The optional ! suffix reverses the sort order.
+
+        Flags:
+        i - Case-insensitive alphabetical sort
+        n - Numeric sort (converts values to numbers)
+        f - Floating-point numeric sort
+        c - Custom comparator (uses |SortComparator| option)
+
+        Multiple flags can be combined, though typically only one sort type
+        should be used at a time.
+
+        Examples: >
+            :Table SortRows 2           " Sort by column 2 (alphabetical)
+            :Table SortRows! 1          " Reverse sort by column 1
+            :Table SortRows 3 n         " Sort by column 3 (numeric)
+            :Table SortRows 1 i         " Case-insensitive sort by column 1
+            :Table SortRows 2 f         " Float sort by column 2
+            :Table SortRows 1 c         " Custom sort using SortComparator
+<
+    :Table SortCols[!] {row_id} [flags]                     *:Table-SortCols*
+        Sort all columns based on the values in the specified row. All rows,
+        including the header, are reordered. Row IDs are 1-indexed.
+
+        The optional ! suffix reverses the sort order.
+
+        Flags are the same as |:Table-SortRows|: i, n, f, c
+
+        Examples: >
+            :Table SortCols 1           " Sort columns by row 1 values
+            :Table SortCols! 2 n        " Reverse numeric sort by row 2
+<
 
                                                                  *:TableOption*
 :TableOption [subcommand] [args]
@@ -143,10 +179,13 @@ COMMANDS                                                      *table-commands*
           When true, cells can contain newline characters.
         - preserve_indentation: Keep leading whitespace in multiline cells
           (default: true)
+        - SortComparator: Custom comparison function for sorting
+          (default: empty)
 
         Examples: >
             :TableOption Option default_alignment center
             :TableOption Option multiline true
+            :TableOption Option SortComparator {a, b -> len(a) < len(b)}
 <
     :TableOption Style [name]                            *:TableOption-Style*
         Get or set the current style. Without arguments, lists available
@@ -522,6 +561,41 @@ i_alignment
     Example alignment row: |:---:|---:|---| indicates center, right, left. >
         :TableOption Option i_alignment :
 <
+                                                            *SortComparator*
+SortComparator
+    Type: Funcref or Lambda
+    Default: '' (empty)
+
+    Custom comparison function for sorting tables. Used when the 'c' flag is
+    passed to |:Table-SortRows| or |:Table-SortCols|.
+
+    The function should be a 'less than' operator on two string arguments. It
+    should return true if the first argument should come before the second in
+    the sort order, and false otherwise.
+
+    Example (VimScript): >
+        " Sort by string length
+        :TableOption Option SortComparator {a, b -> len(a) < len(b)}
+        :Table SortRows 1 c
+<
+    Example (Lua): >
+        -- In ftplugin or setup
+        vim.fn['table#SetBufferConfig']({
+            options = {
+                SortComparator = function(a, b)
+                    return #a < #b
+                end
+            }
+        })
+<
+    Example (setup configuration): >
+        " In vimrc
+        call table#Setup({
+            \ 'options': {
+            \   'SortComparator': {a, b -> str2nr(a) < str2nr(b)}
+            \ }
+            \ })
+<
 Style Options ~
                                                    *table-style-option-list*
 
@@ -884,6 +958,21 @@ table#CellEditor()
 
     Example: >
         nnoremap <leader>te :call table#CellEditor()<CR>
+<
+                                                              *table#Sort()*
+table#Sort({linenr}, {dim_kind}, {id}, {flags})
+    Sort table rows or columns programmatically. Low-level function for
+    custom scripting.
+
+    Parameters: ~
+        {linenr}    Line number within the table
+        {dim_kind}  Either 'rows' or 'cols'
+        {id}        0-indexed column ID (for rows) or row ID (for cols)
+        {flags}     List of flag characters: 'i', 'n', 'f', 'c', '!'
+
+    Example: >
+        " Sort rows by column 2 (0-indexed = 1), numeric
+        call table#Sort(line('.'), 'rows', 1, ['n'])
 <
 ==============================================================================
 LIMITATIONS                                                *table-limitations*

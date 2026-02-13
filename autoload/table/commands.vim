@@ -64,7 +64,9 @@ function! table#commands#TableOptionCommand(...) abort
         let subcommands = ['Option', 'StyleOption', 'Style', 'RegisterStyle']
         echomsg 'TableOption subcommands: ' .. join(subcommands, ', ')
         echomsg ' '
-        echomsg "Current Style = " .. table#config#Config(bufnr('%')).style
+        echomsg 'table.vim configuration for buffer ' .. (bufname('%') !=# '' ? bufname('%') : bufnr('%'))
+        echomsg ' '
+        echomsg 'Current Style = ' .. table#config#Config(bufnr('%')).style
         echomsg ' '
         call s:ShowOption([])
         echomsg ' '
@@ -124,6 +126,12 @@ function! s:ConvertValue(args) abort
         let matches = matches[1:2]
         call map(matches, 'str2nr(v:val)')
         return matches
+    elseif key ==# 'SortComparator'
+        if value[0] ==# '{' && value[-1:] ==# '}'
+            return eval(value)
+        else
+            return funcref(value)
+        endif
     endif
     if value ==? 'v:true' || value ==? 'true' || value ==# '1'
         return v:true
@@ -148,8 +156,9 @@ function! s:SetOption(args) abort
         echo key .. ' = ' .. string(cfg_opts[key])
         return
     endif
-    let value = s:ConvertValue(a:args)
-    call table#config#SetBufferConfig(bufnr, { 'options': { key : value } })
+    " capital in case of funcref (e.g. SortComparator)
+    let Value = s:ConvertValue(a:args)
+    call table#config#SetBufferConfig(bufnr, { 'options': { key : Value } })
 endfunction
 
 function! s:ShowOption(args) abort
@@ -157,9 +166,9 @@ function! s:ShowOption(args) abort
     echomsg "Table Options:"
     let maxlen = max(map(keys(cfg_opts), 'len(v:val)'))
     let sorted_items = sort(items(cfg_opts), {a, b -> a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0})
-    for [key, value] in sorted_items
+    for [key, Value] in sorted_items
         let padded_key = table#util#Pad(key, maxlen)
-        echomsg '  ' .. padded_key .. ' = ' .. string(value)
+        echomsg '  ' .. padded_key .. ' = ' .. string(Value)
     endfor
 endfunction
 

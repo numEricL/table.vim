@@ -1,12 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-" SortComparator is a global variable because lambdas cannot be used with commands
-if !exists('g:TableSortComparator')
-    let g:TableSortComparator = ''
-endif
-
-function table#sort#Sort(table, dim_kind, id, flags) abort
+function! table#sort#Sort(table, dim_kind, id, flags) abort
     if a:dim_kind ==# 'rows'
         call s:SortRows(a:table, a:id, a:flags)
     elseif a:dim_kind ==# 'cols'
@@ -16,7 +11,11 @@ function table#sort#Sort(table, dim_kind, id, flags) abort
     endif
 endfunction
 
-function s:SortRows(table, col_id, flags) abort
+function! s:SortRows(table, col_id, flags) abort
+    if a:col_id < 0 || a:col_id >= a:table.ColCount()
+        throw "col_id out of range"
+    endif
+
     " remove the header row
     let tagged_cells = copy(a:table.rows)
     call remove(tagged_cells, 0)
@@ -24,11 +23,8 @@ function s:SortRows(table, col_id, flags) abort
 
     " compute the permutation from sorting column col_id
     let tagged_cells = map(tagged_cells, {id, row -> [ join(row.cells[a:col_id], "\n"), id ] })
-    let Vim_sort_how = s:GetVimSortHow(a:flags)
-    if Vim_sort_how ==# 'f'
-        call map(tagged_cells, {_, v -> [ str2float(v[0]), v[1] ] })
-    endif
-    call sort(tagged_cells, Vim_sort_how)
+    let VimSortHow = s:GetVimSortHow(a:flags)
+    call sort(tagged_cells, VimSortHow)
     let permutation = map(copy(tagged_cells), {_, v -> v[1]})
     if index(a:flags, '!') != -1
         call reverse(permutation)
@@ -40,15 +36,16 @@ function s:SortRows(table, col_id, flags) abort
     endfor
 endfunction
 
-function s:SortCols(table, row_id, flags) abort
+function! s:SortCols(table, row_id, flags) abort
+    if a:row_id < 0 || a:row_id >= a:table.RowCount()
+        throw "row_id out of range"
+    endif
+
     let tagged_cells = copy(a:table.rows[a:row_id].cells)
     " compute the permutation from sorting column col_id
     let tagged_cells = map(tagged_cells, {id, cell -> [ join(cell, "\n"), id ] })
-    let Vim_sort_how = s:GetVimSortHow(a:flags)
-    if Vim_sort_how == 'f'
-        call map(tagged_cells, {_, v -> [ str2float(v[0]), v[1] ] })
-    endif
-    call sort(tagged_cells, Vim_sort_how)
+    let VimSortHow = s:GetVimSortHow(a:flags)
+    call sort(tagged_cells, VimSortHow)
     let permutation = map(copy(tagged_cells), {_, v -> v[1]})
     if index(a:flags, '!') != -1
         call reverse(permutation)
@@ -63,19 +60,27 @@ function s:SortCols(table, row_id, flags) abort
     endfor
 endfunction
 
-function s:GetVimSortHow(flags) abort
-    let Op = { x -> x[0] }
-
-        if index(a:flags, 'i') != -1 | let Op = { x -> tolower(x[0]) }
-    elseif index(a:flags, 'n') != -1 | let Op = { x -> str2nr(x[0]) }
-    elseif index(a:flags, 'f') != -1 | let Op = { x -> str2float(x[0]) }
-    elseif index(a:flags, 'c') != -1
-        if type(g:TableSortComparator) != v:t_func
-            throw "Invalid sort comparator: " .. string(g:TableSortComparator)
-        endif
-            return { a,b -> g:TableSortComparator(a[0],b[0])? -1 : g:TableSortComparator(b[0],a[0])? 1 : 0 }
+" script local s:Op and s:LessThan used to avoid memory leaks from referencing the
+" clouser the in the context it depends on. See :help lambda
+function! s:GetVimSortHow(flags) abort
+    let s:Op = ''
+        if index(a:flags, 'i') != -1 | let s:Op = { x ->   tolower(x[0]) }
+    elseif index(a:flags, 'n') != -1 | let s:Op = { x ->    str2nr(x[0]) }
+    elseif index(a:flags, 'f') != -1 | let s:Op = { x -> str2float(x[0]) }
+    else 
+        let s:Op = { x -> x[0] }
     endif
-    return { a,b -> Op(a) < Op(b) ? -1 : Op(b) < Op(a) ? 1 : 0 }
+    let s:LessThan = ''
+    if index(a:flags, 'c') != -1
+        let cfg_opts = table#config#Config(bufnr('%')).options
+        let s:LessThan = cfg_opts.SortComparator
+        if type(s:LessThan) != v:t_func
+            throw "Invalid sort comparator: " .. string(s:LessThan)
+        endif
+    else
+        let s:LessThan = { a,b -> a <# b }
+    endif
+    return { a,b -> s:LessThan(s:Op(a),s:Op(b)) ? -1 : s:LessThan(s:Op(b),s:Op(a)) ? 1 : 0 }
 endfunction
 
 let &cpo = s:save_cpo
