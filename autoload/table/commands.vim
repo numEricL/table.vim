@@ -276,7 +276,7 @@ endfunction
 function! s:ParseSortArgs(type, bang, args) abort
     let allowed_flags = ['i', 'n', 'f', 'c']
     let func_name = (a:type ==# 'rows')? 'SortRows' : 'SortCols'
-    let id_name   = (a:type ==# 'rows')? 'row' : 'col'
+    let id_name   = (a:type ==# 'rows')? 'col' : 'row'
 
     if len(a:args) == 0
         " print calling convention if no args provided

@@ -13,7 +13,7 @@ automatically on pipe insertion. Table style is configurable.
 |Cell 1          |Cell 2 ░              ║ Cell 1   ║ Cell 2   ║░
 ```
 
-And may to completed to:
+And may be completed to:
 
 ```
 ╔══════════╦══════════╦══════════╗
