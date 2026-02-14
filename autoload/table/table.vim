@@ -15,7 +15,7 @@ function! table#table#Get(linenr, chunk_size, ...) abort
 endfunction
 
 function! s:ComputeChunkBounds(linenr, full_bounds, chunk_size) abort
-    if a:chunk_size == [0, -1]
+    if empty(a:chunk_size) || a:chunk_size == [0, -1]
         return a:full_bounds
     endif
 
@@ -305,7 +305,7 @@ if s:debug_table
     abbreviate PC PrintCells
 
     function! s:GetTable(args) abort
-        let args = (a:args == '')? [0,-1] : eval(a:args)
+        let args = (a:args == '')? [] : eval(a:args)
         call table#table#Get(line('.'), args)
     endfunction
 

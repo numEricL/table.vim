@@ -517,13 +517,13 @@ chunk_size
 
     Number of lines to process around the cursor for alignment operations.
     First element is lines before cursor (negative), second is lines after.
-    Use [0, -1] to process entire table regardless of size.
+    Use [] to process the entire table regardless of size.
 
     Smaller chunks improve performance for large tables but may not align
     the entire visible table. Increase if you have large tables and
     alignment doesn't cover enough rows. >
         :TableOption Option chunk_size [-20, 20]
-        :TableOption Option chunk_size [0, -1]
+        :TableOption Option chunk_size []
 <
                                                                 *i_vertical*
 i_vertical

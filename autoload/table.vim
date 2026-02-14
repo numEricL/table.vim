@@ -168,7 +168,7 @@ function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
 endfunction
 
 function! s:GetFullTable(linenr) abort
-    return table#table#Get(a:linenr, [0, -1])
+    return table#table#Get(a:linenr, [])
 endfunction
 
 function! s:CycleCursor(table, dir, coord) abort
