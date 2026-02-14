@@ -31,7 +31,9 @@ function! table#AlignIfNotEscaped() abort
     if char_before_cursor ==# '\'
         return
     else
+        let coord = s:GetCursorLineCoord()
         call table#Align(line('.'))
+        call s:SetCursorLineCoord(coord)
     endif
 endfunction
 
@@ -41,20 +43,7 @@ function! table#Align(linenr) abort
     if !table.valid
         return
     endif
-    let coord = table#cursor#GetCoord(table, getpos('.')[1:2])
     call table#draw#CurrentlyPlaced(table)
-
-    let table = table#table#Get(a:linenr, [0,0])
-    let sep_id = (a:linenr - table.placement.bounds[0]) > 0? 0 : -1
-    if coord.type ==# 'cell'
-        let coord.coord[0] = 0
-    elseif coord.type ==# 'alignment'
-        let coord.type= 'separator'
-        let coord.coord = [ sep_id, (coord.coord[0]+1)/2 ]
-    elseif coord.type ==# 'separator'
-        let coord.coord[0] = sep_id
-    endif
-    call table#cursor#SetCoord(table, coord)
 endfunction
 
 function! table#Complete(linenr) abort
@@ -126,6 +115,27 @@ function! table#Sort(linenr, dim_kind, id, flags) abort
     endif
     call table#sort#Sort(table, a:dim_kind, a:id, a:flags)
     call table#draw#CurrentlyPlaced(table)
+endfunction
+
+function! s:GetCursorLineCoord() abort
+    let table = table#table#Get(line('.'), [0,0])
+    return table#cursor#GetCoord(table, getpos('.')[1:2])
+endfunction
+
+function! s:SetCursorLineCoord(coord) abort
+    let table = table#table#Get(line('.'), [0,0])
+    if a:coord.type ==# 'cell'
+        let a:coord.coord[0] = 0
+    else
+        let sep_id = (table.placement.bounds[0] - line('.')) < 0? 0 : -1
+        if a:coord.type ==# 'alignment'
+            let a:coord.type= 'separator'
+            let a:coord.coord = [ sep_id, (a:coord.coord[0]+1)/2 ]
+        elseif a:coord.type ==# 'separator'
+            let a:coord.coord[0] = sep_id
+        endif
+    endif
+    call table#cursor#SetCoord(table, a:coord)
 endfunction
 
 function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
