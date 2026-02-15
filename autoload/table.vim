@@ -162,7 +162,7 @@ function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
             else
                 let new_table = table#table#Get(a:table.placement.full_bounds[1], [0,0])
             endif
-            let last_col = new_table.rows[last_row].ColCount() - 1
+            let last_col = new_table.rows[0].ColCount() - 1
             let new_coord.coord[2] = last_col
         endif
     endif
