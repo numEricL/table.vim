@@ -1,8 +1,8 @@
 # table.vim
 
-Your one-stop stop for all your table editing needs in Vim and Neovim. Supports
+Your one-stop shop for all your table editing needs in Vim and Neovim. Supports
 multi-line rows and features a cell editing window for editing cell content in a
-separate buffer. Neovim users get a seamless floating window.
+separate buffer (Neovim users get a seamless floating window)
 
 ## Quick Start
 
