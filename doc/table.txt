@@ -801,7 +801,7 @@ Both events provide data via `args.data` in Lua autocommands or via the
 - cell_id: Cell identifier {row_id, col_id}
 
 Note: cell_id coordinates are 0-indexed and relative to the chunked table
-processed near the cursor (based on |g:table_options.chunk_size|), not absolute
+processed near the cursor (based on |chunk_size|), not absolute
 coordinates of the full table. In particular, the row_id indexes the row within
 the chunk.
 
@@ -852,7 +852,7 @@ g:table_cell_edit_data
     Contains the same fields as Lua event data (see Event Data above).
 
     Note: cell_id[0] (row_id) is relative to the table chunk (see
-    |g:table_options.chunk_size|), not absolute buffer line numbers.
+    |chunk_size|), not absolute buffer line numbers.
 
     Example: >
     autocmd User TableCellEditPost
