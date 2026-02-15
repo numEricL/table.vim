@@ -243,7 +243,7 @@ function! s:TryCache(linenr, chunk_size) abort
         endif
     endfor
 
-    let table = table#table#Get(a:linenr, a:chunk_size, v:false)
+    let table = table#table#Get(a:linenr, a:chunk_size)
     if table.valid
         let bounds = table.placement.bounds
         let cache_key = string(bounds)
