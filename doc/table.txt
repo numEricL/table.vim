@@ -798,12 +798,12 @@ Both events provide data via `args.data` in Lua autocommands or via the
 - bufnr: Buffer number of cell edit window
 - winid: Window ID of cell edit window
 - table: Table object (internal details, advanced use cases)
-- cell_id: Cell identifier {row_id, byte_offset, col_id}
+- cell_id: Cell identifier {row_id, col_id}
 
 Note: cell_id coordinates are 0-indexed and relative to the chunked table
-processed near the cursor (based on |g:table_options.chunk_size|), not
-absolute coordinates of the full table. The row_id corresponds to the row
-within the chunk, not the buffer line number.
+processed near the cursor (based on |g:table_options.chunk_size|), not absolute
+coordinates of the full table. In particular, the row_id indexes the row within
+the chunk.
 
                                                        *User-TableCellEditPre*
 TableCellEditPre
@@ -851,12 +851,12 @@ g:table_cell_edit_data
 
     Contains the same fields as Lua event data (see Event Data above).
 
-    Note: cell_id.row_id is relative to the table chunk (see
+    Note: cell_id[0] (row_id) is relative to the table chunk (see
     |g:table_options.chunk_size|), not absolute buffer line numbers.
 
     Example: >
     autocmd User TableCellEditPost
-        \ if g:table_cell_edit_data.cell_id[2] == 0 |
+        \ if g:table_cell_edit_data.cell_id[1] == 0 |
         \     echom "Editing first column" |
         \ endif
 <
