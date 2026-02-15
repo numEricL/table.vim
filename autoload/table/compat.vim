@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " compatibility for vim8 shipped with ubuntu 20.04
 
 function! table#compat#getbufoneline(bufnr, lnum) abort
@@ -22,3 +25,29 @@ function! table#compat#trim(text, mask, dir) abort
         endif
     endif
 endfunction
+
+function! table#compat#virtcol2col(winid, lnum, col) abort
+    if exists('*virtcol2col')
+        return virtcol2col(a:winid, a:lnum, a:col)
+    endif
+
+    " input col and output byte are 1-based, internal computations are 0-based
+    let bufnr = winbufnr(a:winid)
+    let line = table#compat#getbufoneline(bufnr, a:lnum)
+    let byte = 0
+    let vcol = 0
+    let idx = 0
+    while byte < len(line) && vcol < a:col-1
+        let char = strcharpart(line, idx, 1)
+        let idx += 1
+        let vcol += strdisplaywidth(char, vcol)
+        if vcol > a:col-1
+            break
+        endif
+        let byte += len(char)
+    endwhile
+    return byte+1
+endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

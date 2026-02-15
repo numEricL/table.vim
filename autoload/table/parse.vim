@@ -27,9 +27,13 @@ function! table#parse#FindTableRange(linenr) abort
 endfunction
 
 " type may be: 'row', 'separator', 'alignment', 'incomplete'
-function! table#parse#ParseLine(linenr) abort
+function! table#parse#ParseLine(linenr, vcol_bounds) abort
+    let col_byte_bounds = copy(a:vcol_bounds)
+    if !empty(col_byte_bounds)
+        call map(col_byte_bounds, 'table#compat#virtcol2col(win_getid(), a:linenr, v:val) - 1')
+    endif
     let line = getline(a:linenr)
-    let [line_stripped, prefix, _] = s:CommentAwareTrim(line)
+    let [line_stripped, prefix, _] = s:CommentAwareTrim(line, col_byte_bounds)
     let [cells, sep_pos, seps] = s:SplitPos(line_stripped)
     let [cells, sep_pos] = s:HandleOmittedBorders(line_stripped, cells, sep_pos)
 
@@ -240,23 +244,35 @@ function! s:GeneralSeparatorLinePattern() abort
     " return pattern
 endfunction
 
-function! s:CommentAwareTrim(line) abort
+" col_byte_bounds is optional [start_byte, end_byte] inclusive range, zero indexed
+function! s:CommentAwareTrim(line, col_byte_bounds) abort
     let cs = table#util#CommentString(bufnr('%'))
     if empty(cs[0])
         return [a:line, '', '']
     endif
     let line = a:line
 
-    let cs_pattern = '\V\^' .. table#util#CommentStringPattern(bufnr('%'))[0]
-    let prefix = matchstrpos(line, cs_pattern)
+    let cs_pat = table#util#CommentStringPattern(bufnr('%'))
+    let prefix = matchstrpos(line, '\V' .. '\^' .. cs_pat[0])
+    let suffix = matchstrpos(line, '\V' .. cs_pat[1] .. '\$')
+    if suffix[1] != -1
+        let line = strpart(line, 0, suffix[1])
+    endif
     if prefix[1] != -1
         let line = strpart(line, prefix[2])
     endif
 
-    let cs_pattern = '\V' .. table#util#CommentStringPattern(bufnr('%'))[1] .. '\$'
-    let suffix = matchstrpos(line, cs_pattern)
-    if suffix[1] != -1
-        let line = strpart(line, 0, suffix[1])
+    " Adjust prefix and suffix based on col bounds if provided
+    if !empty(a:col_byte_bounds)
+        let byte_start = a:col_byte_bounds[0]
+        let byte_end   = a:col_byte_bounds[1] + 1 " make end exclusive like matchstrpos
+        if prefix[2] < byte_start
+            let prefix = [strpart(a:line, 0, byte_start), 0, byte_start]
+        endif
+        if byte_end < suffix[1]
+            let suffix = [strpart(a:line, byte_end), byte_end, len(a:line)]
+        endif
+        let line = strpart(a:line, byte_start, byte_end - byte_start)
     endif
 
     return [line, prefix, suffix]

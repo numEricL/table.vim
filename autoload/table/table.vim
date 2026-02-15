@@ -1,21 +1,20 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:cache_table = v:false
 let s:debug_table = v:false
 
 function! table#table#Get(linenr, chunk_size, ...) abort
-    let cache_table = a:0 ? a:1 : s:cache_table
-    if !cache_table
-        return s:Generate(a:linenr, a:chunk_size)
-    else
-        throw 'caching disabled'
-        " return s:TryCache(a:linenr, a:chunk_size)
-    endif
+    let vcol_bounds = a:0? a:1 : []
+    return s:Generate(a:linenr, a:chunk_size, vcol_bounds)
 endfunction
 
-function! s:ComputeChunkBounds(linenr, full_bounds, chunk_size) abort
-    if a:chunk_size == [0, -1]
+function! table#table#GetCached(linenr, chunk_size) abort
+    throw 'caching disabled'
+    " return s:TryCache(a:linenr, a:chunk_size)
+endfunction
+
+function! s:ComputeChunkBounds(linenr, full_bounds, chunk_size, vcol_bounds) abort
+    if empty(a:chunk_size) || a:chunk_size == [0, -1]
         return a:full_bounds
     endif
 
@@ -25,21 +24,21 @@ function! s:ComputeChunkBounds(linenr, full_bounds, chunk_size) abort
     let start_line = max([a:full_bounds[0], start_line])
     let end_line = min([a:full_bounds[1], end_line])
 
-    let [start_line, end_line] = s:ExpandEmptyChunk(start_line, end_line, a:full_bounds)
-    let start_line = s:ExpandToCompleteRow(start_line, a:full_bounds[0], -1)
-    let end_line = s:ExpandToCompleteRow(end_line, a:full_bounds[1], 1)
+    let [start_line, end_line] = s:ExpandEmptyChunk(start_line, end_line, a:full_bounds, a:vcol_bounds)
+    let start_line = s:ExpandToCompleteRow(start_line, a:full_bounds[0], -1, a:vcol_bounds)
+    let end_line = s:ExpandToCompleteRow(end_line, a:full_bounds[1], 1, a:vcol_bounds)
 
     return [start_line, end_line]
 endfunction
 
-function! s:ExpandEmptyChunk(start_line, end_line, full_bounds) abort
+function! s:ExpandEmptyChunk(start_line, end_line, full_bounds, vcol_bounds) abort
     if a:start_line == a:end_line
-        let [_, _, _, type] = table#parse#ParseLine(a:start_line)
+        let [_, _, _, type] = table#parse#ParseLine(a:start_line, a:vcol_bounds)
         if type =~# '\v^separator|alignment|top|bottom$'
             " try expanding downwards
             let current = a:start_line + 1
             while current <= a:full_bounds[1]
-                let [_, _, _, type] = table#parse#ParseLine(current)
+                let [_, _, _, type] = table#parse#ParseLine(current, a:vcol_bounds)
                 if type =~# '\v^row|incomplete$'
                     return [a:start_line, current]
                 else
@@ -49,7 +48,7 @@ function! s:ExpandEmptyChunk(start_line, end_line, full_bounds) abort
             " try expanding upwards
             let current = a:start_line - 1
             while current >= a:full_bounds[0]
-                let [_, _, _, type] = table#parse#ParseLine(current)
+                let [_, _, _, type] = table#parse#ParseLine(current, a:vcol_bounds)
                 if type =~# '\v^row|incomplete$'
                     return [current, a:end_line]
                 else
@@ -61,20 +60,20 @@ function! s:ExpandEmptyChunk(start_line, end_line, full_bounds) abort
     return [a:start_line, a:end_line]
 endfunction
 
-function! s:ExpandToCompleteRow(linenr, boundary, direction) abort
+function! s:ExpandToCompleteRow(linenr, boundary, direction, vcol_bounds) abort
     let current = a:linenr
     let cfg_opts = table#config#Config(bufnr('%')).options
     if !cfg_opts.multiline
-        let [_, _, _, type] = table#parse#ParseLine(current)
+        let [_, _, _, type] = table#parse#ParseLine(current, a:vcol_bounds)
         if type =~# '\v^row|incomplete$' && current != a:boundary
-            let [_, _, _, type] = table#parse#ParseLine(current + a:direction)
+            let [_, _, _, type] = table#parse#ParseLine(current + a:direction, a:vcol_bounds)
             if type =~# '\v^separator|alignment|top|bottom$'
                 let current += a:direction
             endif
         endif
     else
         while current != a:boundary
-            let [_, _, _, type] = table#parse#ParseLine(current)
+            let [_, _, _, type] = table#parse#ParseLine(current, a:vcol_bounds)
             if type =~# '\v^separator|alignment|top|bottom$'
                 break
             endif
@@ -91,12 +90,12 @@ function! s:ExpandToCompleteRow(linenr, boundary, direction) abort
     return current
 endfunction
 
-function! s:Generate(linenr, chunk_size) abort
+function! s:Generate(linenr, chunk_size, vcol_bounds) abort
     let full_bounds = table#parse#FindTableRange(a:linenr)
     if full_bounds[0] == -1
         return {'valid': v:false}
     endif
-    let bounds = s:ComputeChunkBounds(a:linenr, full_bounds, a:chunk_size)
+    let bounds = s:ComputeChunkBounds(a:linenr, full_bounds, a:chunk_size, a:vcol_bounds)
     let placement = {
                 \ 'bufnr'         : bufnr('%'),
                 \ 'bounds'        : bounds,
@@ -122,7 +121,7 @@ function! s:Generate(linenr, chunk_size) abort
 
     let last_type = 'separator'
     for pos_id in range(bounds[1] - bounds[0] + 1)
-        let [line_cells, col_start, sep_pos, type] = table#parse#ParseLine(bounds[0] + pos_id)
+        let [line_cells, col_start, sep_pos, type] = table#parse#ParseLine(bounds[0] + pos_id, a:vcol_bounds)
         if type ==# 'separator'
             if pos_id == 0 && (bounds[0] == full_bounds[0]) " top chunk
                 let type = 'top'
@@ -305,7 +304,7 @@ if s:debug_table
     abbreviate PC PrintCells
 
     function! s:GetTable(args) abort
-        let args = (a:args == '')? [0,-1] : eval(a:args)
+        let args = (a:args == '')? [] : eval(a:args)
         call table#table#Get(line('.'), args)
     endfunction
 

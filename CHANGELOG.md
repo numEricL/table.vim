@@ -8,6 +8,13 @@ All notable changes to this project will be documented in this file.
 - Fixed cursor positioning when inserting pipe character on top of an existing pipe
 - Fixed cursor positioning on separator row after pipe insertion
 
+### Changed
+- Empty chunk_size means handle the entire table
+
+### Added
+- Column bounds in the parse module
+- Added compatibility layer for virtcol2col function
+
 ## [v0.1.0] - 2026-02-13
 
 ### Added
