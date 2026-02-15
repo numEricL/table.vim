@@ -149,7 +149,7 @@ function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
         if !is_bottom_hunk
             let new_table = table#table#Get(a:table.placement.bounds[1] + 1, [0,0])
         else
-            let new_table = table#table#Get(a:table.placement.full_bounds[0], [0,1])
+            let new_table = table#table#Get(a:table.placement.full_bounds[0], [0,0])
         endif
     elseif a:dir ==# 'backward'
         let last_row = a:table.RowCount() - 1
@@ -160,8 +160,10 @@ function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
             if !is_top_hunk
                 let new_table = table#table#Get(a:table.placement.bounds[0] - 1, [0,0])
             else
-                let new_table = table#table#Get(a:table.placement.full_bounds[1], [-1,0])
+                let new_table = table#table#Get(a:table.placement.full_bounds[1], [0,0])
             endif
+            let last_col = new_table.rows[last_row].ColCount() - 1
+            let new_coord.coord[2] = last_col
         endif
     endif
     return [ new_table, new_coord ]
