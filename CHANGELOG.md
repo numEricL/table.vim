@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Column bounds in the parse module
 - Added compatibility layer for virtcol2col function
+- `g:table_cell_edit_data` global variable for accessing cell editor event data in Vimscript
+- Clarified that `cell_id.row_id` is relative to chunked table, not absolute buffer coordinates
 
 ## [v0.1.0] - 2026-02-13
 
