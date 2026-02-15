@@ -99,7 +99,7 @@ function! s:OnWinClosed(tbl_id) abort
         return
     endif
 
-    let g:TableCellEditData = {'bufnr': bufnr, 'winid': win_getid(winnr), 'table': tbl, 'cell_id': cell_id}
+    let g:table_cell_edit_data = {'bufnr': bufnr, 'winid': win_getid(winnr), 'table': tbl, 'cell_id': cell_id}
     if exists('#User#TableCellEditPost')
         doautocmd User TableCellEditPost
     endif
@@ -124,7 +124,7 @@ function! s:EditCell(tbl, cell_id) abort
     call cursor(pos[0], pos[1])
     call s:SetWindowAutocmds(a:tbl, a:cell_id, winnr, bufnr)
 
-    let g:TableCellEditData = {'bufnr': bufnr, 'winid': win_getid(winnr), 'table': a:tbl, 'cell_id': a:cell_id}
+    let g:table_cell_edit_data = {'bufnr': bufnr, 'winid': win_getid(winnr), 'table': a:tbl, 'cell_id': a:cell_id}
     if exists('#User#TableCellEditPre')
         doautocmd User TableCellEditPre
     endif

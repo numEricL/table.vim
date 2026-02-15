@@ -793,14 +793,17 @@ User autocommands fired during cell editing.
 
 Event Data ~
 
-Both events provide data via `args.data` in Lua autocommands:
+Both events provide data via `args.data` in Lua autocommands or via the
+|g:table_cell_edit_data| global variable in Vimscript autocommands:
 - bufnr: Buffer number of cell edit window
 - winid: Window ID of cell edit window
 - table: Table object (internal details, advanced use cases)
 - cell_id: Cell identifier {row_id, byte_offset, col_id}
 
-Note: cell_id is 0-indexed to the chunked table, it may not
-correspond to the full table.
+Note: cell_id coordinates are 0-indexed and relative to the chunked table
+processed near the cursor (based on |g:table_options.chunk_size|), not
+absolute coordinates of the full table. The row_id corresponds to the row
+within the chunk, not the buffer line number.
 
                                                        *User-TableCellEditPre*
 TableCellEditPre
@@ -824,6 +827,10 @@ TableCellEditPre
         end
     })
 <
+    Example (Vimscript): >
+    autocmd User TableCellEditPre
+        \ call setbufvar(g:table_cell_edit_data.bufnr, '&filetype', 'markdown')
+<
                                                       *User-TableCellEditPost*
 TableCellEditPost
 
@@ -835,9 +842,24 @@ TableCellEditPost
     - Validate cell content and show warnings/errors
     - Transform or normalize data
 
+                                                   *g:table_cell_edit_data*
+g:table_cell_edit_data
+
+    Dictionary containing event data for cell editor events. Available in
+    Vimscript autocommands for |User-TableCellEditPre| and
+    |User-TableCellEditPost| events.
+
+    Contains the same fields as Lua event data (see Event Data above).
+
+    Note: cell_id.row_id is relative to the table chunk (see
+    |g:table_options.chunk_size|), not absolute buffer line numbers.
+
+    Example: >
+    autocmd User TableCellEditPost
+        \ if g:table_cell_edit_data.cell_id[2] == 0 |
+        \     echom "Editing first column" |
+        \ endif
 <
-Note: Event data only accessible via Lua. Vimscript autocommands can trigger
-but cannot access data.
 
 
 ==============================================================================
@@ -954,7 +976,8 @@ table#CellEditor()
 
     The window automatically closes and saves changes on WinLeave. User
     events |User-TableCellEditPre| and |User-TableCellEditPost| are fired
-    for customization.
+    for customization. Event data is accessible via |g:table_cell_edit_data|
+    in Vimscript or via args.data in Lua.
 
     Example: >
         nnoremap <leader>te :call table#CellEditor()<CR>
