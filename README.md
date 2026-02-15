@@ -1,6 +1,8 @@
 # table.vim
 
-Text table manipulation for Vim and Neovim.
+Your one-stop stop for all your table editing needs in Vim and Neovim. Supports
+multi-line rows and features a cell editing window for editing cell content in a
+separate buffer. Neovim users get a seamless floating window.
 
 ## Quick Start
 
@@ -23,10 +25,8 @@ And may be completed to:
 ╚══════════╩══════════╩══════════╝
 ```
 
-- Use `:Table Align` to manually align tables
-- Use `:Table Complete` to fill missing cells and borders
-- Use `<Tab>` / `<S-Tab>` to navigate between cells
-- Use `:TableOption` to configure table or style options
+- Use `:Table <action>` to perform table actions like completion, sorting, and style conversion.
+- Use `:TableOption <option>` to view and change configuration at runtime, such as enabling multiline rows or changing the table style.
 
 See [`:help table.txt`](doc/table.txt) for complete documentation.
 
@@ -39,10 +39,10 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 
 - **Multiline rows**        - must be enabled in your configuration
 - **Cell editing window**   - edit in a floating window, hooks provided (split window in Vim)
-- **Sorting**               - sort rows and columns
+- **Sorting**               - sort rows and columns by any column/row
+- **Table navigation**      - move between cells even if the table is not yet aligned
 - **Text objects**          - cell, row, and column
 - **Multiple table styles** - markdown, org, rst, and box-drawing styles included, or define your own
-- **Chunk processing**      - align only nearby lines for fast operation with large tables
 
 ## Demo
 
