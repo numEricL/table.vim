@@ -32,7 +32,7 @@ function! table#AlignIfNotEscaped() abort
         return
     else
         let coord = s:GetCursorLineCoord()
-        let char_under_cursor = getline('.')[col('.') - offset + 2]
+        let char_under_cursor = getline('.')[col('.') - 1]
         let coord.coord[-1] -= ( char_under_cursor ==# '|' )? 1 : 0
         call table#Align(line('.'))
         call s:SetCursorLineCoord(coord)
