@@ -178,7 +178,7 @@ function! s:SetCursorSeparator(table, sep_id) abort
     if col_id < 0 || col_id >= len(sep_pos)
         return
     else
-        let col = sep_pos[col_id][1]
+        let col = sep_pos[col_id][1] + 1
     endif
     call cursor(linenr, col)
 endfunction
