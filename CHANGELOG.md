@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed cursor positioning when inserting pipe character on top of an existing pipe
 - Fixed cursor positioning on separator row after pipe insertion
+- Tab cycle works on non-aligned tables now
 
 ### Changed
 - Empty chunk_size means handle the entire table
