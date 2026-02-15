@@ -244,6 +244,7 @@ function! s:GeneralSeparatorLinePattern() abort
     " return pattern
 endfunction
 
+" col_byte_bounds is optional [start_byte, end_byte] inclusive range, zero indexed
 function! s:CommentAwareTrim(line, col_byte_bounds) abort
     let cs = table#util#CommentString(bufnr('%'))
     if empty(cs[0])
@@ -263,10 +264,9 @@ function! s:CommentAwareTrim(line, col_byte_bounds) abort
 
     " Adjust prefix and suffix based on col bounds if provided
     if !empty(a:col_byte_bounds)
-        let [byte_start, byte_end] = a:col_byte_bounds
         let byte_start = a:col_byte_bounds[0]
-        let byte_end = a:col_byte_bounds[1] + 1 " make end exclusive like matchstrpos
-        if byte_start > prefix[2]
+        let byte_end   = a:col_byte_bounds[1] + 1 " make end exclusive like matchstrpos
+        if prefix[2] < byte_start
             let prefix = [strpart(a:line, 0, byte_start), 0, byte_start]
         endif
         if byte_end < suffix[1]
