@@ -4,7 +4,7 @@ set cpo&vim
 " :Table command - for actions
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        let actions = ['Align', 'Complete', 'EditCell', 'ToDefault', 'ToStyle']
+        let actions = ['Align', 'Complete', 'EditCell', 'SortCols', 'SortRows', 'ToDefault', 'ToStyle']
         echomsg 'Table actions: ' .. join(actions, ', ')
         return
     endif

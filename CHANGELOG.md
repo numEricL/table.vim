@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.1.1] - 2026-02-15
+
+### Fixed
+- Fixed cursor positioning when inserting pipe character on top of an existing pipe
+- Fixed cursor positioning on separator row after pipe insertion
+- Tab cycle works on non-aligned tables now
+- Clarified that `cell_id.row_id` is relative to chunked table, not absolute buffer coordinates
+
+### Changed
+- Use an empty `chunk_size` to indicate handling the entire table instead of a special value
+
+### Added
+- `g:table_cell_edit_data` global variable for accessing cell editor event data in Vimscript
+
 ## [v0.1.0] - 2026-02-13
 
 ### Added

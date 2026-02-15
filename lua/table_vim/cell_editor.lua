@@ -131,6 +131,7 @@ local function set_window_autocmds(tbl, cell_id, winid, bufnr)
             local closed_winid = tonumber(vim.fn.expand("<amatch>"))
             if closed_winid == winid then
                 -- Fire user event for cell edit window close
+                vim.g.table_cell_edit_data = { bufnr = bufnr, winid = winid, table = tbl, cell_id = cell_id }
                 vim.api.nvim_exec_autocmds('User', {
                     pattern = 'TableCellEditPost',
                     data = { bufnr = bufnr, winid = winid, table = tbl, cell_id = cell_id }
@@ -158,6 +159,7 @@ local function edit_cell(tbl, cell_id)
     set_window_autocmds(tbl, cell_id, winid, bufnr)
 
     -- Fire user event for cell edit window open
+    vim.g.table_cell_edit_data = { bufnr = bufnr, winid = winid, table = tbl, cell_id = cell_id }
     vim.api.nvim_exec_autocmds('User', {
         pattern = 'TableCellEditPre',
         data = { bufnr = bufnr, winid = winid, table = tbl, cell_id = cell_id }
