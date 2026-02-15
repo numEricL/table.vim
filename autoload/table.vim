@@ -27,11 +27,13 @@ endfunction
 function! table#AlignIfNotEscaped() abort
     " in vim versions without <cmd> we leave insert mode in <plug>(table_align_if_not_escaped)
     let offset = (!has('nvim') && v:version < 900)? 2 : 3
-    let char_before_cursor = getline('.')[col('.') - offset]
-    if char_before_cursor ==# '\'
+    let char_before_pipe = getline('.')[col('.') - offset]
+    if char_before_pipe ==# '\'
         return
     else
         let coord = s:GetCursorLineCoord()
+        let char_under_cursor = getline('.')[col('.') - offset + 2]
+        let coord.coord[-1] -= ( char_under_cursor ==# '|' )? 1 : 0
         call table#Align(line('.'))
         call s:SetCursorLineCoord(coord)
     endif
