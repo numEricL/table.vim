@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let g:table_version = '0.1.0'
+let g:table_version = '0.1.1'
 
 function! table#Version() abort
     return g:table_version
