@@ -40,7 +40,7 @@ function! table#AlignIfNotEscaped() abort
         let coord = table#cursor#GetCoord(table, cur_pos)
         " let char_under_cursor = getline('.')[col('.') - 1]
         " let coord.coord[-1] -= ( char_under_cursor ==# '|' )? 1 : 0
-        call table#draw#CurrentlyPlaced(table)
+        let table = table#draw#CurrentlyPlaced(table)
         call table#cursor#SetCoord(table, coord)
         " call s:SetCursorLineCoord(coord)
     endif

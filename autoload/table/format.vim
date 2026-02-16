@@ -20,7 +20,7 @@ endfunction
 function! s:WrapCells(table) abort
     let bufnr = a:table.placement.bufnr
     let cfg_opts = table#config#Config(bufnr).options
-    if cfg_opts.wrap_lines
+    if cfg_opts.multiline && cfg_opts.wrap_lines
         for row in a:table.rows
             for j in range(len(row.cells))
                 let width = a:table.max_widths[j]

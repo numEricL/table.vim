@@ -23,8 +23,7 @@ function! table#draw#CurrentlyPlaced(table, ...) abort
             throw 'unknown line type: ' .. line_type
         endif
     endfor
-    " call s:ClearRemaining(a:table.placement, new_id)
-    call table#table#InvalidateCache()
+    return table#table#Get(a:table.placement.bounds[0], [0,new_id-1])
 endfunction
 
 function! table#draw#Table(table) abort
@@ -71,10 +70,6 @@ function! table#draw#Table(table) abort
 endfunction
 
 function! s:DrawLine(placement, pos_id, line) abort
-    " echom 'drawing line at pos_id: ' .. a:pos_id .. ': ' .. a:line
-    " if a:pos_id > len(a:placement.positions)
-    "     throw 'pos_id out of range'
-    " endif
     if empty(a:line)
         return a:pos_id
     endif
@@ -92,11 +87,9 @@ function! s:DrawLine(placement, pos_id, line) abort
     endif
 
     if a:pos_id >= len(a:placement.positions)
-        " let linenr = a:placement.bounds[0] + len(a:placement.positions) - 1
         let linenr = a:placement.bounds[0] + a:pos_id
         call s:AppendConditionalCommentLine(a:placement, linenr)
         let [col_start, col_end] = [display_col_start, display_col_start]
-        " call add(a:placement.positions, {})
     elseif style_opts.omit_left_border
         let col_start = display_col_start
         let col_end   = a:placement.positions[a:pos_id]['separator_pos'][-1][1]
@@ -107,7 +100,6 @@ function! s:DrawLine(placement, pos_id, line) abort
 
     let linenr = a:placement.bounds[0] + a:pos_id
     let current_line = table#compat#getbufoneline(a:placement.bufnr, linenr)
-    " echom 'current line: ' .. current_line
     let newline = strpart(current_line, 0, col_start)
     let newline ..= repeat(' ', display_col_start - strdisplaywidth(newline))
     let newline ..= a:line
@@ -218,11 +210,13 @@ function! s:AppendConditionalCommentLine(placement, linenr) abort
         let found = !empty(match[0])
     endif
     let new_line = found? cs[0] : ''
-    " echom 'appending new line at ' .. a:linenr .. ' with content: ' .. new_line
     call appendbufline(a:placement.bufnr, a:linenr, new_line)
 endfunction
 
 function! s:ClearRemaining(placement, pos_id) abort
+    if a:pos_id >= len(a:placement.positions)
+        return
+    endif
     let [cs_left, cs_right] = table#util#CommentStringPattern(a:placement.bufnr)
     for id in reverse(range(a:pos_id, len(a:placement.positions)-1))
         let linenr = a:placement.bounds[0] + id
