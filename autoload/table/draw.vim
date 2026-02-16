@@ -23,7 +23,7 @@ function! table#draw#CurrentlyPlaced(table, ...) abort
             throw 'unknown line type: ' .. line_type
         endif
     endfor
-    call s:ClearRemaining(a:table.placement, new_id)
+    " call s:ClearRemaining(a:table.placement, new_id)
     call table#table#InvalidateCache()
 endfunction
 
@@ -71,9 +71,10 @@ function! table#draw#Table(table) abort
 endfunction
 
 function! s:DrawLine(placement, pos_id, line) abort
-    if a:pos_id > len(a:placement.positions)
-        throw 'pos_id out of range'
-    endif
+    " echom 'drawing line at pos_id: ' .. a:pos_id .. ': ' .. a:line
+    " if a:pos_id > len(a:placement.positions)
+    "     throw 'pos_id out of range'
+    " endif
     if empty(a:line)
         return a:pos_id
     endif
@@ -90,11 +91,12 @@ function! s:DrawLine(placement, pos_id, line) abort
         endif
     endif
 
-    if a:pos_id == len(a:placement.positions)
-        let linenr = a:placement.bounds[0] + len(a:placement.positions) - 1
+    if a:pos_id >= len(a:placement.positions)
+        " let linenr = a:placement.bounds[0] + len(a:placement.positions) - 1
+        let linenr = a:placement.bounds[0] + a:pos_id
         call s:AppendConditionalCommentLine(a:placement, linenr)
         let [col_start, col_end] = [display_col_start, display_col_start]
-        call add(a:placement.positions, {})
+        " call add(a:placement.positions, {})
     elseif style_opts.omit_left_border
         let col_start = display_col_start
         let col_end   = a:placement.positions[a:pos_id]['separator_pos'][-1][1]
@@ -105,6 +107,7 @@ function! s:DrawLine(placement, pos_id, line) abort
 
     let linenr = a:placement.bounds[0] + a:pos_id
     let current_line = table#compat#getbufoneline(a:placement.bufnr, linenr)
+    " echom 'current line: ' .. current_line
     let newline = strpart(current_line, 0, col_start)
     let newline ..= repeat(' ', display_col_start - strdisplaywidth(newline))
     let newline ..= a:line
@@ -162,8 +165,11 @@ function! s:HasRightMostSeparator(table, row_id, row_offset) abort
     if pos_id == -1 || pos_id + a:row_offset >= len(a:table.placement.positions)
         return v:true
     endif
-    let pos_id += a:row_offset
-    return len(a:table.placement.positions[pos_id]['separator_pos']) > a:table.rows[a:row_id].ColCount()
+    let pos_data = a:table.placement.positions[pos_id + a:row_offset]
+    if empty(pos_data) || pos_data.row_id != a:row_id || pos_data.type !=# 'row'
+        return v:true
+    endif
+    return len(pos_data['separator_pos']) > a:table.rows[a:row_id].ColCount()
 endfunction
 
 function! s:NumSubRowCols(table, row_id, row_offset) abort
@@ -212,6 +218,7 @@ function! s:AppendConditionalCommentLine(placement, linenr) abort
         let found = !empty(match[0])
     endif
     let new_line = found? cs[0] : ''
+    " echom 'appending new line at ' .. a:linenr .. ' with content: ' .. new_line
     call appendbufline(a:placement.bufnr, a:linenr, new_line)
 endfunction
 
