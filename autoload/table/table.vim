@@ -317,8 +317,9 @@ if s:debug_table
     endfunction
 
     function! s:PrintPositions() abort
-        for pos in g:t.placement.positions
-            echomsg string(pos)
+        for id in range(len(g:t.placement.positions))
+            let pos = g:t.placement.positions[id]
+            echomsg printf('%02d', id) .. ' ' .. string(pos)
         endfor
     endfunction
 

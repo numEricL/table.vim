@@ -100,12 +100,15 @@ endfunction
 
 function! s:CheckAlignmentOrgStyle(cells) abort
     let pat = '\%(<\a*\d*>\)'
+    let all_empty = v:true
     for cell in a:cells
-        if cell !~# '^\s*' .. pat .. '\?\s*$'
+        let is_empty = cell =~# '^\s*$'
+        let all_empty = all_empty && is_empty
+        if !is_empty && cell !~# '^\s*' .. pat .. '\s*$'
             return v:false
         endif
     endfor
-    return v:true
+    return !all_empty
 endfunction
 
 function! s:CheckAlignmentSeparator(line) abort

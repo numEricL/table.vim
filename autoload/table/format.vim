@@ -179,6 +179,23 @@ function! s:TrimBlock(lines, alignment) abort
     endif
 endfunction
 
+" function! s:RemoveEmptyLines(lines) abort
+"     echom 'removing empty lines from block: ' .. string(a:lines)
+"     " remove empty lines from the top
+"     let empty = a:lines[0] =~# '^\s*$'
+"     while empty && !empty(a:lines)
+"         call remove(a:lines, 0)
+"         let empty = a:lines[0] =~# '^\s*$'
+"     endwhile
+"
+"     " remove empty lines from the bottom
+"     let empty = a:lines[-1] =~# '^\s*$'
+"     while empty && !empty(a:lines)
+"         call remove(a:lines, len(a:lines) - 1)
+"         let empty = a:lines[-1] =~# '^\s*$'
+"     endwhile
+" endfunction
+
 function! s:MinTrimIndent(lines, side) abort
     let min_indent = -1
     let indent = -1
