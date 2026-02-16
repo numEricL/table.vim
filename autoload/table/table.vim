@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:debug_table = v:false
+let s:debug_table = v:true
 
 function! table#table#Get(linenr, chunk_size, ...) abort
     let vcol_bounds = a:0? a:1 : []
@@ -111,6 +111,7 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
                 \ 'rows'          : [],
                 \ 'col_align'     : [],
                 \ 'col_widths'    : [],
+                \ 'max_widths'    : [],
                 \ 'max_col_count' : 0,
                 \ 'RowCount'      : function('s:TableRowCount'),
                 \ 'ColCount'      : function('s:TableColCount'),
@@ -150,6 +151,7 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
             for cell in line_cells
                 let [align, width] = table#parse#OrgStyleAlignment(cell)
                 call add(table.col_align, align)
+                call add(table.max_widths, width)
             endfor
         elseif subtype ==# 'alignment' && empty(table.col_align)
             let placement.align_id = pos_id
@@ -159,7 +161,7 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
             let table.max_col_count = max([table.max_col_count, len(line_cells)])
         endif
     endfor
-    let table.col_widths = table#util#ComputeWidths(table)
+    let table.max_widths += repeat([0], table.max_col_count - len(table.max_widths))
     if s:debug_table
         let g:t = table
     endif

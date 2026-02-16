@@ -8,6 +8,7 @@ let s:default_config = {
             \ 'options': {
             \   'multiline'            : v:false,
             \   'preserve_indentation' : v:true,
+            \   'wrap_lines'           : v:false,
             \   'default_alignment'    : 'left',
             \   'chunk_size'           : [-10, 10],
             \   'i_vertical'           : '|',
