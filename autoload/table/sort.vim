@@ -43,7 +43,7 @@ function! s:SortCols(table, row_id, flags) abort
 
     let tagged_cells = copy(a:table.rows[a:row_id].cells)
     " compute the permutation from sorting column col_id
-    let tagged_cells = map(tagged_cells, {id, cell -> [ join(cell, "\n"), id ] })
+    let tagged_cells = map(tagged_cells, {id, cell -> [ trim(join(cell, "\n")), id ] })
     let VimSortHow = s:GetVimSortHow(a:flags)
     call sort(tagged_cells, VimSortHow)
     let permutation = map(copy(tagged_cells), {_, v -> v[1]})
@@ -51,7 +51,15 @@ function! s:SortCols(table, row_id, flags) abort
         call reverse(permutation)
     endif
 
-    "sort the cols according to the permutation
+    " sort table metadata according to the permutation
+    let temp_col_align  = copy(a:table.col_align)
+    let temp_max_widths = copy(a:table.max_widths)
+    for i in range(a:table.ColCount())
+        let a:table.col_align[i] = temp_col_align[permutation[i]]
+        let a:table.max_widths[i] = temp_max_widths[permutation[i]]
+    endfor
+
+    " sort the cols according to the permutation
     for i in range(len(a:table.rows))
         let temp_row_cells = copy(a:table.rows[i].cells)
         for j in range(a:table.rows[i].ColCount())
