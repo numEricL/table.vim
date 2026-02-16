@@ -1,7 +1,8 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! table#draw#CurrentlyPlaced(table) abort
+function! table#draw#CurrentlyPlaced(table, ...) abort
+    let opts = get(a:000, 0, {'fill_multiline_gaps': v:false})
     call table#format#Align(a:table)
     let bufnr = a:table.placement.bufnr
     let cfg_opts = table#config#Config(bufnr).options
@@ -15,7 +16,7 @@ function! table#draw#CurrentlyPlaced(table) abort
         elseif line_type =~# '\v^(row|incomplete)$'
             if positions[pos_id].row_offset == 0
                 let row_id = positions[pos_id].row_id
-                let new_id = s:DrawRow(a:table, new_id, row_id, v:false)
+                let new_id = s:DrawRow(a:table, new_id, row_id, opts)
             endif
         else
             throw 'unknown line type: ' .. line_type
@@ -37,7 +38,7 @@ function! table#draw#Table(table) abort
         let num_cols = a:table.rows[0].ColCount()
         let pos_id = s:DrawSeparator(a:table, pos_id, 'top', num_cols)
     endif
-    let pos_id = s:DrawRow(a:table, pos_id, 0)
+    let pos_id = s:DrawRow(a:table, pos_id, 0, {})
 
     if a:table.RowCount() > 1
         let row_id = 0
@@ -47,7 +48,7 @@ function! table#draw#Table(table) abort
 
     if a:table.RowCount() > 2
         for row_id in range(1, a:table.RowCount() - 2)
-            let pos_id = s:DrawRow(a:table, pos_id, row_id)
+            let pos_id = s:DrawRow(a:table, pos_id, row_id, {})
             if cfg_opts.multiline || !style_opts.omit_separator_rows
                 let num_cols = max([a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
                 let pos_id = s:DrawSeparator(a:table, pos_id, 'separator', num_cols)
@@ -56,7 +57,7 @@ function! table#draw#Table(table) abort
     endif
 
     if a:table.RowCount() > 1
-        let pos_id = s:DrawRow(a:table, pos_id, a:table.RowCount() - 1)
+        let pos_id = s:DrawRow(a:table, pos_id, a:table.RowCount() - 1, {})
     endif
 
     if !style_opts.omit_bottom_border
@@ -112,8 +113,8 @@ function! s:DrawLine(placement, pos_id, line) abort
     return a:pos_id + 1
 endfunction
 
-function! s:DrawRow(table, pos_id, row_id, ...) abort
-    let fill_cell_multirows = get(a:000, 0, v:true)
+function! s:DrawRow(table, pos_id, row_id, opts) abort
+    let fill_multiline_gaps = get(a:opts, 'fill_multiline_gaps', v:true)
     let row = a:table.rows[a:row_id]
     let pos_id = a:pos_id
     let bufnr = a:table.placement.bufnr
@@ -122,7 +123,7 @@ function! s:DrawRow(table, pos_id, row_id, ...) abort
     let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars(bufnr, 'row')
 
     for i in range(row.Height())
-        let fill_cell = fill_cell_multirows || s:HasRightMostSeparator(a:table, a:row_id, i)
+        let fill_cell = fill_multiline_gaps || s:HasRightMostSeparator(a:table, a:row_id, i)
         let rowline = ''
 
         if get(row.types, i, '') ==# 'incomplete'

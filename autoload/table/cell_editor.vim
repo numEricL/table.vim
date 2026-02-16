@@ -105,7 +105,7 @@ function! s:OnWinClosed(tbl_id) abort
     endif
 
     call s:UpdateCell(tbl, cell_id, bufnr)
-    call table#draw#CurrentlyPlaced(tbl)
+    call table#draw#CurrentlyPlaced(tbl, {'fill_multiline_gaps': v:true})
     augroup table.vim
         autocmd!
     augroup END
