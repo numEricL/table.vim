@@ -38,6 +38,7 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 ## Features
 
 - **Multiline rows**        - must be enabled in your configuration
+- **Fixed-width columns**   - hard-wrap columns with alignment tags
 - **Cell editing window**   - edit in a floating window, hooks provided (split window in Vim)
 - **Sorting**               - sort rows and columns by any column/row
 - **Table navigation**      - move between cells even if the table is not yet aligned
@@ -165,6 +166,37 @@ Sort table rows by a specific column or sort columns by a specific row:
 ```
 
 See `:help :Table-SortRows` and `:help :Table-SortCols`
+
+## Fixed-Width Columns
+
+Bound column widths using alignment tags. Tags use the format
+`<[alignment][width]>` where alignment is `l` (left), `c` (center), or `r`
+(right), and width is a positive integer. `multline` and `wrap_lines` options
+must be enabled for wrapping to work.
+
+```vim
+| Description     | Column 1 width  | Status   |
+|-----------------|-----------------|----------|
+| <l30>           | <c10>           |          |
+| Long content... | This cell will wrap | Done |
+
+
+| Description     | Column 1  | Status |
+|                 |   width   |        |
+|-----------------|-----------|--------|
+| <l30>           |   <c10>   |        |
+| Long content... | This cell | Done   |
+|                 | will wrap |        |
+```
+
+Enable wrapping in configuration:
+```vim
+call table#Setup({
+    \ 'options': {'multiline': v:true, 'wrap_lines': v:true, 'preserve_indentation': v:false}
+    \ })
+```
+
+See `:help table-fixed-width` for details.
 
 ## Chunk Processing
 

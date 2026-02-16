@@ -9,11 +9,12 @@ CONTENTS                                                      *table-contents*
     4. Mappings ............................. |table-mappings|
     5. Text Objects ......................... |table-text-objects|
     6. Configuration ........................ |table-configuration|
-    7. Styles ............................... |table-styles|
-    8. User Events .......................... |table-events|
-    9. Functions ............................ |table-functions|
-    10. Limitations ......................... |table-limitations|
-    11. License ............................. |table-license|
+    7. Fixed-Width Columns .................. |table-fixed-width|
+    8. Styles ............................... |table-styles|
+    9. User Events .......................... |table-events|
+    10. Functions ........................... |table-functions|
+    11. Limitations ......................... |table-limitations|
+    12. License ............................. |table-license|
 
 ==============================================================================
 INTRODUCTION                                              *table-introduction*
@@ -25,6 +26,7 @@ objects, and a split/floating window cell editor.
 Features:
   • Automatic alignment on pipe insertion
   • Multiline cell support (optional)
+  • Fixed-width columns with automatic wrapping
   • Cell editing in floating/split windows
   • Table sorting by rows or columns
   • Cell, row, and column text objects
@@ -424,6 +426,7 @@ table#Setup({config})
             'options': {
                 'multiline': v:false,
                 'preserve_indentation': v:true,
+                'wrap_lines': v:false,
                 'default_alignment': 'left',
                 'chunk_size': [-10, 10],
                 'i_vertical': '|',
@@ -499,6 +502,21 @@ preserve_indentation
 
     Only affects multiline cells when |multiline| is enabled. >
         :TableOption Option preserve_indentation false
+<
+                                                               *wrap_lines*
+wrap_lines
+    Type: Boolean
+    Default: v:false (false)
+
+    Hard-wrap long cell content to fit within fixed-width columns. Requires
+    |multiline| to be enabled. When true, text exceeding the column width
+    specified by fixed-width tags will automatically wrap to multiple lines
+    within the cell.
+
+    Only affects cells in columns with fixed-width tags (|table-fixed-width|).
+    >
+        :TableOption Option multiline true
+        :TableOption Option wrap_lines true
 <
                                                           *default_alignment*
 default_alignment
@@ -718,6 +736,57 @@ Use |:TableOption| to view or modify current buffer settings at runtime: >
 Changes via |:TableOption| affect only the current buffer and do not
 persist across Vim sessions. Add to your vimrc/init.lua to make permanent.
 
+
+==============================================================================
+FIXED-WIDTH COLUMNS                                        *table-fixed-width*
+
+Fixed-width columns allow you to specify bounds on column widths using special
+alignment tags.
+
+Tag Syntax ~
+
+Fixed-width tags use the format: `<[alignment][width]>`
+
+Where:
+- alignment is one of: l (left), c (center), r (right)
+- width is a positive integer
+
+Examples: `<l30>` `<c10>` `<r20>`
+
+Usage ~
+
+Place fixed-width tags in a special alignment row, typically the first or
+second row of your table. Each tag defines the width and alignment for its
+corresponding column: >
+
+    | Description     | Column 1 width  | Status   |
+    |-----------------|-----------------|----------|
+    | <l30>           | <c10>           |          |
+    | Long content... | This cell will wrap | Done |
+<
+When the |multiline| and |wrap_lines| options are enabled, content exceeding
+the specified width will automatically wrap to multiple lines within the cell. >
+
+    | Description     | Column 1  | Status |
+    |                 |   width   |        |
+    |-----------------|-----------|--------|
+    | <l30>           |   <c10>   |        |
+    | Long content... | This cell | Done   |
+    |                 | will wrap |        |
+<
+
+Configuration ~
+
+Enable wrapping with fixed-width columns: >
+    call table#Setup({
+        \ 'options': {'multiline': v:true, 'wrap_lines': v:true, 'preserve_indentation': v:false}
+        \ })
+<
+Or at runtime: >
+    :TableOption Option multiline true
+    :TableOption Option wrap_lines true
+    :TableOption Option preserve_indentation false
+<
 
 ==============================================================================
 STYLES                                                          *table-styles*
