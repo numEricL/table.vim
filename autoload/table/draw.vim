@@ -10,9 +10,10 @@ function! table#draw#CurrentlyPlaced(table, ...) abort
     let new_id = 0
     for pos_id in range(len(positions))
         let line_type = positions[pos_id].type
-        if line_type =~# '\v^(top|bottom|separator|alignment)$'
+        if line_type ==# 'separator'
+            let line_subtype = positions[pos_id].subtype
             let num_cols = len(positions[pos_id]['separator_pos']) - 1
-            let new_id = s:DrawSeparator(a:table, new_id, line_type, num_cols)
+            let new_id = s:DrawSeparator(a:table, new_id, line_subtype, num_cols)
         elseif line_type =~# '\v^(row|incomplete)$'
             if positions[pos_id].row_offset == 0
                 let row_id = positions[pos_id].row_id
@@ -120,7 +121,7 @@ function! s:DrawRow(table, pos_id, row_id, opts) abort
     let bufnr = a:table.placement.bufnr
     let cfg_opts = table#config#Config(bufnr).options
     let style_opts = table#config#Style(bufnr).options
-    let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars(bufnr, 'row')
+    let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars(bufnr, 'row', '')
 
     for i in range(row.Height())
         let fill_cell = fill_multiline_gaps || s:HasRightMostSeparator(a:table, a:row_id, i)
@@ -148,8 +149,8 @@ function! s:DrawRow(table, pos_id, row_id, opts) abort
     return pos_id
 endfunction
 
-function! s:DrawSeparator(table, pos_id, type, num_cols) abort
-    let sep = s:MakeSeparator(a:table, a:type, a:num_cols)
+function! s:DrawSeparator(table, pos_id, subtype, num_cols) abort
+    let sep = s:MakeSeparator(a:table, a:subtype, a:num_cols)
     let pos_id = s:DrawLine(a:table.placement, a:pos_id, sep)
     return pos_id
 endfunction
@@ -174,16 +175,16 @@ function! s:NumSubRowCols(table, row_id, row_offset) abort
     endif
 endfunction
 
-function! s:MakeSeparator(table, type, num_cols) abort
+function! s:MakeSeparator(table, subtype, num_cols) abort
     let bufnr = a:table.placement.bufnr
-    let [ left, right, sep, horiz ] = table#config#GetBoxDrawingChars(bufnr, a:type)
+    let [ left, right, sep, horiz ] = table#config#GetBoxDrawingChars(bufnr, 'separator', a:subtype)
     if a:num_cols == 0
         return ''
     endif
     let cfg_opts = table#config#Config(bufnr).options
     let align_char = cfg_opts.i_alignment
     let line = left
-    let show_alignment = (a:type ==# 'alignment')
+    let show_alignment = (a:subtype ==# 'alignment')
     for i in range(a:num_cols-1)
         let col_align = get(a:table.col_align, i, '')
         let pad_left  = (show_alignment && col_align =~# '\v^l|c$') ? align_char : horiz

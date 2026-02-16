@@ -33,13 +33,13 @@ endfunction
 
 function! s:ExpandEmptyChunk(start_line, end_line, full_bounds, vcol_bounds) abort
     if a:start_line == a:end_line
-        let [_, _, _, type] = table#parse#ParseLine(a:start_line, a:vcol_bounds)
-        if type =~# '\v^separator|alignment|top|bottom$'
+        let [_, _, _, type, _] = table#parse#ParseLine(a:start_line, a:vcol_bounds)
+        if type ==# 'separator'
             " try expanding downwards
             let current = a:start_line + 1
             while current <= a:full_bounds[1]
-                let [_, _, _, type] = table#parse#ParseLine(current, a:vcol_bounds)
-                if type =~# '\v^row|incomplete$'
+                let [_, _, _, type, _] = table#parse#ParseLine(current, a:vcol_bounds)
+                if type =~# '\v^(row|incomplete)$'
                     return [a:start_line, current]
                 else
                     let current += 1
@@ -48,8 +48,8 @@ function! s:ExpandEmptyChunk(start_line, end_line, full_bounds, vcol_bounds) abo
             " try expanding upwards
             let current = a:start_line - 1
             while current >= a:full_bounds[0]
-                let [_, _, _, type] = table#parse#ParseLine(current, a:vcol_bounds)
-                if type =~# '\v^row|incomplete$'
+                let [_, _, _, type, _] = table#parse#ParseLine(current, a:vcol_bounds)
+                if type =~# '\v^(row|incomplete)$'
                     return [current, a:end_line]
                 else
                     let current -= 1
@@ -64,17 +64,17 @@ function! s:ExpandToCompleteRow(linenr, boundary, direction, vcol_bounds) abort
     let current = a:linenr
     let cfg_opts = table#config#Config(bufnr('%')).options
     if !cfg_opts.multiline
-        let [_, _, _, type] = table#parse#ParseLine(current, a:vcol_bounds)
-        if type =~# '\v^row|incomplete$' && current != a:boundary
-            let [_, _, _, type] = table#parse#ParseLine(current + a:direction, a:vcol_bounds)
-            if type =~# '\v^separator|alignment|top|bottom$'
+        let [_, _, _, type, _] = table#parse#ParseLine(current, a:vcol_bounds)
+        if type =~# '\v^(row|incomplete)$' && current != a:boundary
+            let [_, _, _, type, _] = table#parse#ParseLine(current + a:direction, a:vcol_bounds)
+            if type ==# 'separator'
                 let current += a:direction
             endif
         endif
     else
         while current != a:boundary
-            let [_, _, _, type] = table#parse#ParseLine(current, a:vcol_bounds)
-            if type =~# '\v^separator|alignment|top|bottom$'
+            let [_, _, _, type, _] = table#parse#ParseLine(current, a:vcol_bounds)
+            if type ==# 'separator'
                 break
             endif
             let next = current + a:direction
@@ -121,12 +121,12 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
 
     let last_type = 'separator'
     for pos_id in range(bounds[1] - bounds[0] + 1)
-        let [line_cells, col_start, sep_pos, type] = table#parse#ParseLine(bounds[0] + pos_id, a:vcol_bounds)
+        let [line_cells, col_start, sep_pos, type, subtype] = table#parse#ParseLine(bounds[0] + pos_id, a:vcol_bounds)
         if type ==# 'separator'
             if pos_id == 0 && (bounds[0] == full_bounds[0]) " top chunk
-                let type = 'top'
+                let subtype = 'top'
             elseif pos_id == (bounds[1] - bounds[0]) && (bounds[1] == full_bounds[1]) " bottom chunk
-                let type = 'bottom'
+                let subtype = 'bottom'
             endif
         endif
 
@@ -140,12 +140,17 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
                     \ 'row_id'        : (table.RowCount() == 0)? -1 : table.RowCount() - 1,
                     \ 'row_offset'    : (table.RowCount() == 0)? -1 : table.rows[-1].Height() - 1,
                     \ 'type'          : type,
+                    \ 'subtype'       : subtype,
                     \ 'separator_pos' : sep_pos,
                     \ } )
         let placement.min_col_start = (placement.min_col_start == -1)? col_start : min([placement.min_col_start, col_start])
         let placement.max_col_start = max([placement.max_col_start, col_start])
 
-        if type ==# 'alignment' && placement.align_id == -1
+        if subtype ==# 'alignment_org_style' && empty(table.col_align)
+            for cell in line_cells
+                call add(table.col_align, table#parse#OrgStyleAlignment(cell))
+            endfor
+        elseif subtype ==# 'alignment' && empty(table.col_align)
             let placement.align_id = pos_id
             for cell in line_cells
                 call add(table.col_align, table#parse#SeparatorAlignment(cell))
@@ -202,7 +207,7 @@ endfunction
 
 function! s:TableAppendRow(table, line_type, last_type, line_cells, pos_id) abort
     let cfg_opts = table#config#Config(bufnr('%')).options
-    if !cfg_opts.multiline ||  a:last_type =~# '\v' .. 'separator|alignment|top|bottom'
+    if !cfg_opts.multiline ||  a:last_type ==# 'separator'
         let cells = empty(a:line_cells)? [['']] : map(copy(a:line_cells), '[v:val]')
         let row = {
                     \ 'cells'         : cells,
