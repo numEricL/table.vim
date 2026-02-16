@@ -148,7 +148,8 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
 
         if subtype ==# 'alignment_org_style' && empty(table.col_align)
             for cell in line_cells
-                call add(table.col_align, table#parse#OrgStyleAlignment(cell))
+                let [align, width] = table#parse#OrgStyleAlignment(cell)
+                call add(table.col_align, align)
             endfor
         elseif subtype ==# 'alignment' && empty(table.col_align)
             let placement.align_id = pos_id

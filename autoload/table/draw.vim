@@ -44,7 +44,8 @@ function! table#draw#Table(table) abort
     if a:table.RowCount() > 1
         let row_id = 0
         let num_cols = max([len(a:table.col_align), a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
-        let pos_id = s:DrawSeparator(a:table, pos_id, 'alignment', num_cols)
+        let subtype = (a:table.placement.align_id != -1) ? 'alignment' : ''
+        let pos_id = s:DrawSeparator(a:table, pos_id, subtype, num_cols)
     endif
 
     if a:table.RowCount() > 2

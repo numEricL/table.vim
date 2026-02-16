@@ -71,6 +71,14 @@ function! table#parse#SeparatorAlignment(cell) abort
     endif
 endfunction
 
+function! table#parse#OrgStyleAlignment(cell) abort
+    let cell = trim(a:cell)
+    let char = cell[1]
+    let char = (char =~? '[clr]') ? tolower(char) : ''
+    let width = str2nr(matchstr(cell, '\d\+'))
+    return [char, width]
+endfunction
+
 function! s:IsTableLine(linenr) abort
     let line = getline(a:linenr)
     let prev = getline(a:linenr-1)
@@ -91,7 +99,13 @@ function! s:IsTableLine(linenr) abort
 endfunction
 
 function! s:CheckAlignmentOrgStyle(cells) abort
-    return v:false
+    let pat = '\%(<\a*\d*>\)'
+    for cell in a:cells
+        if cell !~# '^\s*' .. pat .. '\?\s*$'
+            return v:false
+        endif
+    endfor
+    return v:true
 endfunction
 
 function! s:CheckAlignmentSeparator(line) abort
