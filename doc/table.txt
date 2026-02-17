@@ -180,7 +180,7 @@ COMMANDS                                                      *table-commands*
         - multiline: Enable multiline cells (default: false)
           When true, cells can contain newline characters.
         - preserve_indentation: Keep leading whitespace in multiline cells
-          (default: true)
+          (default: false)
         - SortComparator: Custom comparison function for sorting
           (default: empty)
 
@@ -425,8 +425,8 @@ table#Setup({config})
             'style': 'default',
             'options': {
                 'multiline': v:false,
-                'preserve_indentation': v:true,
-                'wrap_lines': v:false,
+                'preserve_indentation': v:false,
+                'wrap_lines': v:true,
                 'default_alignment': 'left',
                 'chunk_size': [-10, 10],
                 'i_vertical': '|',
@@ -494,7 +494,7 @@ multiline
                                                         *preserve_indentation*
 preserve_indentation
     Type: Boolean
-    Default: v:true (true)
+    Default: v:false (false)
 
     Keep leading whitespace in multiline cells. When true, indentation at
     the start of lines within cells is preserved. When false, leading
@@ -506,7 +506,7 @@ preserve_indentation
                                                                *wrap_lines*
 wrap_lines
     Type: Boolean
-    Default: v:false (false)
+    Default: v:true (true)
 
     Hard-wrap long cell content to fit within fixed-width columns. Requires
     |multiline| to be enabled. When true, text exceeding the column width

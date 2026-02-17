@@ -150,11 +150,14 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
         let placement.min_col_start = (placement.min_col_start == -1)? col_start : min([placement.min_col_start, col_start])
         let placement.max_col_start = max([placement.max_col_start, col_start])
 
-        if subtype ==# 'alignment_org_style' && empty(table.col_align)
-            for cell in line_cells
-                let [align, width] = table#parse#OrgStyleAlignment(cell)
-                call add(table.col_align, align)
-                call add(table.max_widths, width)
+        if subtype ==# 'alignment_org_style'
+            for id in range(len(line_cells))
+                let org_align = table#parse#OrgStyleAlignment(line_cells[id])
+                if !empty(org_align)
+                    let [align, width] = org_align
+                    call s:SetOrAppend(table.col_align, id, align)
+                    call s:SetOrAppend(table.max_widths, id, width)
+                endif
             endfor
         elseif subtype ==# 'alignment' && empty(table.col_align)
             let placement.align_id = pos_id
@@ -169,6 +172,14 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
         let g:t = table
     endif
     return table
+endfunction
+
+function! s:SetOrAppend(list, index, value) abort
+    if a:index < len(a:list)
+        let a:list[a:index] = a:value
+    else
+        call add(a:list, a:value)
+    endif
 endfunction
 
 function! s:TableRowCount() dict abort
