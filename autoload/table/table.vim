@@ -128,6 +128,9 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
                 let subtype = 'top'
             elseif pos_id == (bounds[1] - bounds[0]) && (bounds[1] == full_bounds[1]) " bottom chunk
                 let subtype = 'bottom'
+            elseif placement.align_id == -1
+                let subtype = 'alignment'
+                let placement.align_id = pos_id
             endif
         endif
 

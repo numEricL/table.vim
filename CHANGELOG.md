@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 - Sort functionality now works correctly with right-aligned columns
 - Org-style alignment detection no longer triggers false positives on empty lines
 - Improved table parser to handle column bounds for visual block operations
+- Fixed cleanup in table drawing lines to clear removed data
+- Fixed alignment row identification when placement align_id is unset
 
 ## [v0.1.1] - 2026-02-15
 

@@ -42,6 +42,11 @@ function! s:WrapCell(cell, width) abort
             call add(new_cell, a:cell[i])
         endif
     endfor
+    let empty_last_line = new_cell[-1] =~# '^\s*$'
+    while empty_last_line && !empty(new_cell)
+        call remove(new_cell, len(new_cell) - 1)
+        let empty_last_line = get(new_cell, -1, '') =~# '^\s*$'
+    endwhile
     return new_cell
 endfunction
 
