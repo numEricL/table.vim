@@ -53,10 +53,10 @@ function! s:SortCols(table, row_id, flags) abort
 
     " sort table metadata according to the permutation
     let temp_col_align  = copy(a:table.col_align)
-    let temp_max_widths = copy(a:table.max_widths)
+    let temp_fixed_widths = copy(a:table.fixed_widths)
     for i in range(a:table.ColCount())
         let a:table.col_align[i] = temp_col_align[permutation[i]]
-        let a:table.max_widths[i] = temp_max_widths[permutation[i]]
+        let a:table.fixed_widths[i] = temp_fixed_widths[permutation[i]]
     endfor
 
     " sort the cols according to the permutation

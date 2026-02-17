@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:debug_table = v:false
+let s:debug_table = v:true
 
 function! table#table#Get(linenr, chunk_size, ...) abort
     let vcol_bounds = a:0? a:1 : []
@@ -97,13 +97,14 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
     endif
     let bounds = s:ComputeChunkBounds(a:linenr, full_bounds, a:chunk_size, a:vcol_bounds)
     let placement = {
-                \ 'bufnr'         : bufnr('%'),
-                \ 'bounds'        : bounds,
-                \ 'full_bounds'   : full_bounds,
-                \ 'positions'     : [],
-                \ 'align_id'      : -1,
-                \ 'min_col_start' : -1,
-                \ 'max_col_start' : -1,
+                \ 'bufnr'           : bufnr('%'),
+                \ 'bounds'          : bounds,
+                \ 'full_bounds'     : full_bounds,
+                \ 'positions'       : [],
+                \ 'align_id'        : -1,
+                \ 'has_align_chars' : v:false,
+                \ 'min_col_start'   : -1,
+                \ 'max_col_start'   : -1,
                 \ }
     let table = {
                 \ 'valid'         : v:true,
@@ -111,7 +112,7 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
                 \ 'rows'          : [],
                 \ 'col_align'     : [],
                 \ 'col_widths'    : [],
-                \ 'max_widths'    : [],
+                \ 'fixed_widths'  : [],
                 \ 'max_col_count' : 0,
                 \ 'RowCount'      : function('s:TableRowCount'),
                 \ 'ColCount'      : function('s:TableColCount'),
@@ -130,7 +131,6 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
                 let subtype = 'bottom'
             elseif placement.align_id == -1
                 let subtype = 'alignment'
-                let placement.align_id = pos_id
             endif
         endif
 
@@ -156,18 +156,20 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
                 if !empty(org_align)
                     let [align, width] = org_align
                     call s:SetOrAppend(table.col_align, id, align)
-                    call s:SetOrAppend(table.max_widths, id, width)
+                    call s:SetOrAppend(table.fixed_widths, id, width)
                 endif
             endfor
         elseif subtype ==# 'alignment' && empty(table.col_align)
             let placement.align_id = pos_id
             for cell in line_cells
+                let align_char = table#parse#SeparatorAlignment(cell)
+                let placement.has_align_chars = placement.has_align_chars || !empty(align_char)
                 call add(table.col_align, table#parse#SeparatorAlignment(cell))
             endfor
             let table.max_col_count = max([table.max_col_count, len(line_cells)])
         endif
     endfor
-    let table.max_widths += repeat([0], table.max_col_count - len(table.max_widths))
+    let table.fixed_widths += repeat([0], table.max_col_count - len(table.fixed_widths))
     if s:debug_table
         let g:t = table
     endif
