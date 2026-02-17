@@ -1,7 +1,8 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! table#draw#CurrentlyPlaced(table) abort
+function! table#draw#CurrentlyPlaced(table, ...) abort
+    let opts = get(a:000, 0, {'fill_multiline_gaps': v:false})
     call table#format#Align(a:table)
     let bufnr = a:table.placement.bufnr
     let cfg_opts = table#config#Config(bufnr).options
@@ -9,20 +10,20 @@ function! table#draw#CurrentlyPlaced(table) abort
     let new_id = 0
     for pos_id in range(len(positions))
         let line_type = positions[pos_id].type
-        if line_type =~# '\v^(top|bottom|separator|alignment)$'
+        if line_type ==# 'separator'
+            let line_subtype = positions[pos_id].subtype
             let num_cols = len(positions[pos_id]['separator_pos']) - 1
-            let new_id = s:DrawSeparator(a:table, new_id, line_type, num_cols)
+            let new_id = s:DrawSeparator(a:table, new_id, line_subtype, num_cols)
         elseif line_type =~# '\v^(row|incomplete)$'
             if positions[pos_id].row_offset == 0
                 let row_id = positions[pos_id].row_id
-                let new_id = s:DrawRow(a:table, new_id, row_id, v:false)
+                let new_id = s:DrawRow(a:table, new_id, row_id, opts)
             endif
         else
             throw 'unknown line type: ' .. line_type
         endif
     endfor
-    call s:ClearRemaining(a:table.placement, new_id)
-    call table#table#InvalidateCache()
+    return table#table#Get(a:table.placement.bounds[0], [0,new_id-1])
 endfunction
 
 function! table#draw#Table(table) abort
@@ -37,17 +38,18 @@ function! table#draw#Table(table) abort
         let num_cols = a:table.rows[0].ColCount()
         let pos_id = s:DrawSeparator(a:table, pos_id, 'top', num_cols)
     endif
-    let pos_id = s:DrawRow(a:table, pos_id, 0)
+    let pos_id = s:DrawRow(a:table, pos_id, 0, {})
 
     if a:table.RowCount() > 1
         let row_id = 0
         let num_cols = max([len(a:table.col_align), a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
-        let pos_id = s:DrawSeparator(a:table, pos_id, 'alignment', num_cols)
+        let subtype = (a:table.placement.align_id != -1) ? 'alignment' : ''
+        let pos_id = s:DrawSeparator(a:table, pos_id, subtype, num_cols)
     endif
 
     if a:table.RowCount() > 2
         for row_id in range(1, a:table.RowCount() - 2)
-            let pos_id = s:DrawRow(a:table, pos_id, row_id)
+            let pos_id = s:DrawRow(a:table, pos_id, row_id, {})
             if cfg_opts.multiline || !style_opts.omit_separator_rows
                 let num_cols = max([a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
                 let pos_id = s:DrawSeparator(a:table, pos_id, 'separator', num_cols)
@@ -56,7 +58,7 @@ function! table#draw#Table(table) abort
     endif
 
     if a:table.RowCount() > 1
-        let pos_id = s:DrawRow(a:table, pos_id, a:table.RowCount() - 1)
+        let pos_id = s:DrawRow(a:table, pos_id, a:table.RowCount() - 1, {})
     endif
 
     if !style_opts.omit_bottom_border
@@ -68,9 +70,6 @@ function! table#draw#Table(table) abort
 endfunction
 
 function! s:DrawLine(placement, pos_id, line) abort
-    if a:pos_id > len(a:placement.positions)
-        throw 'pos_id out of range'
-    endif
     if empty(a:line)
         return a:pos_id
     endif
@@ -87,11 +86,10 @@ function! s:DrawLine(placement, pos_id, line) abort
         endif
     endif
 
-    if a:pos_id == len(a:placement.positions)
-        let linenr = a:placement.bounds[0] + len(a:placement.positions) - 1
+    if a:pos_id >= len(a:placement.positions)
+        let linenr = a:placement.bounds[0] + a:pos_id
         call s:AppendConditionalCommentLine(a:placement, linenr)
         let [col_start, col_end] = [display_col_start, display_col_start]
-        call add(a:placement.positions, {})
     elseif style_opts.omit_left_border
         let col_start = display_col_start
         let col_end   = a:placement.positions[a:pos_id]['separator_pos'][-1][1]
@@ -112,17 +110,17 @@ function! s:DrawLine(placement, pos_id, line) abort
     return a:pos_id + 1
 endfunction
 
-function! s:DrawRow(table, pos_id, row_id, ...) abort
-    let fill_cell_multirows = get(a:000, 0, v:true)
+function! s:DrawRow(table, pos_id, row_id, opts) abort
+    let fill_multiline_gaps = get(a:opts, 'fill_multiline_gaps', v:true)
     let row = a:table.rows[a:row_id]
     let pos_id = a:pos_id
     let bufnr = a:table.placement.bufnr
     let cfg_opts = table#config#Config(bufnr).options
     let style_opts = table#config#Style(bufnr).options
-    let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars(bufnr, 'row')
+    let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars(bufnr, 'row', '')
 
     for i in range(row.Height())
-        let fill_cell = fill_cell_multirows || s:HasRightMostSeparator(a:table, a:row_id, i)
+        let fill_cell = fill_multiline_gaps || s:HasRightMostSeparator(a:table, a:row_id, i)
         let rowline = ''
 
         if get(row.types, i, '') ==# 'incomplete'
@@ -147,8 +145,8 @@ function! s:DrawRow(table, pos_id, row_id, ...) abort
     return pos_id
 endfunction
 
-function! s:DrawSeparator(table, pos_id, type, num_cols) abort
-    let sep = s:MakeSeparator(a:table, a:type, a:num_cols)
+function! s:DrawSeparator(table, pos_id, subtype, num_cols) abort
+    let sep = s:MakeSeparator(a:table, a:subtype, a:num_cols)
     let pos_id = s:DrawLine(a:table.placement, a:pos_id, sep)
     return pos_id
 endfunction
@@ -159,8 +157,11 @@ function! s:HasRightMostSeparator(table, row_id, row_offset) abort
     if pos_id == -1 || pos_id + a:row_offset >= len(a:table.placement.positions)
         return v:true
     endif
-    let pos_id += a:row_offset
-    return len(a:table.placement.positions[pos_id]['separator_pos']) > a:table.rows[a:row_id].ColCount()
+    let pos_data = a:table.placement.positions[pos_id + a:row_offset]
+    if empty(pos_data) || pos_data.row_id != a:row_id || pos_data.type !=# 'row'
+        return v:true
+    endif
+    return len(pos_data['separator_pos']) > a:table.rows[a:row_id].ColCount()
 endfunction
 
 function! s:NumSubRowCols(table, row_id, row_offset) abort
@@ -173,16 +174,16 @@ function! s:NumSubRowCols(table, row_id, row_offset) abort
     endif
 endfunction
 
-function! s:MakeSeparator(table, type, num_cols) abort
+function! s:MakeSeparator(table, subtype, num_cols) abort
     let bufnr = a:table.placement.bufnr
-    let [ left, right, sep, horiz ] = table#config#GetBoxDrawingChars(bufnr, a:type)
+    let [ left, right, sep, horiz ] = table#config#GetBoxDrawingChars(bufnr, 'separator', a:subtype)
     if a:num_cols == 0
         return ''
     endif
     let cfg_opts = table#config#Config(bufnr).options
     let align_char = cfg_opts.i_alignment
     let line = left
-    let show_alignment = (a:type ==# 'alignment')
+    let show_alignment = (a:subtype ==# 'alignment')
     for i in range(a:num_cols-1)
         let col_align = get(a:table.col_align, i, '')
         let pad_left  = (show_alignment && col_align =~# '\v^l|c$') ? align_char : horiz
@@ -213,6 +214,9 @@ function! s:AppendConditionalCommentLine(placement, linenr) abort
 endfunction
 
 function! s:ClearRemaining(placement, pos_id) abort
+    if a:pos_id >= len(a:placement.positions)
+        return
+    endif
     let [cs_left, cs_right] = table#util#CommentStringPattern(a:placement.bufnr)
     for id in reverse(range(a:pos_id, len(a:placement.positions)-1))
         let linenr = a:placement.bounds[0] + id

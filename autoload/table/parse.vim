@@ -26,7 +26,7 @@ function! table#parse#FindTableRange(linenr) abort
     return [top, bottom]
 endfunction
 
-" type may be: 'row', 'separator', 'alignment', 'incomplete'
+" type may be: 'row', 'separator', 'incomplete'
 function! table#parse#ParseLine(linenr, vcol_bounds) abort
     let col_byte_bounds = copy(a:vcol_bounds)
     if !empty(col_byte_bounds)
@@ -44,13 +44,16 @@ function! table#parse#ParseLine(linenr, vcol_bounds) abort
     if empty(cells)
         let [ sep_pos, type ] = s:ParseIncompleteBorders(line_stripped, seps, sep_pos)
     endif
-    if type ==# 'separator' && s:CheckAlignmentSeparator(line_stripped)
-        let type = 'alignment'
+    let subtype = ''
+    if type ==# 'row' && s:CheckAlignmentOrgStyle(cells)
+        let subtype = 'alignment_org_style'
+    elseif type ==# 'separator' && s:CheckAlignmentSeparator(line_stripped)
+        let subtype = 'alignment'
     endif
     let offset = prefix[2]
     call map(sep_pos, '[v:val[0] + offset, v:val[1] + offset]')
     let col_start = strdisplaywidth(strpart(line, 0, sep_pos[0][0]))
-    return [ cells, col_start, sep_pos, type ]
+    return [ cells, col_start, sep_pos, type, subtype ]
 endfunction
 
 function! table#parse#SeparatorAlignment(cell) abort
@@ -66,6 +69,14 @@ function! table#parse#SeparatorAlignment(cell) abort
     else
         return ''
     endif
+endfunction
+
+function! table#parse#OrgStyleAlignment(cell) abort
+    let cell = trim(a:cell)
+    let char = cell[1]
+    let char = (char =~? '[clr]') ? tolower(char) : ''
+    let width = str2nr(matchstr(cell, '\d\+'))
+    return [char, width]
 endfunction
 
 function! s:IsTableLine(linenr) abort
@@ -85,6 +96,19 @@ function! s:IsTableLine(linenr) abort
         endif
     endif
     return v:false
+endfunction
+
+function! s:CheckAlignmentOrgStyle(cells) abort
+    let pat = '\%(<\a*\d*>\)'
+    let all_empty = v:true
+    for cell in a:cells
+        let is_empty = cell =~# '^\s*$'
+        let all_empty = all_empty && is_empty
+        if !is_empty && cell !~# '^\s*' .. pat .. '\s*$'
+            return v:false
+        endif
+    endfor
+    return !all_empty
 endfunction
 
 function! s:CheckAlignmentSeparator(line) abort
@@ -153,23 +177,23 @@ function! s:ParseIncompleteBorders(line, seps, sep_pos) abort
     return [ a:sep_pos, type ]
 endfunction
 
-function! s:BoxDrawingPatterns(type) abort
-    " sep = [ left, right, sep, horiz ]
-    let sep = table#config#GetBoxDrawingChars(bufnr('%'), a:type)
-    let cfg_opts = table#config#Config(bufnr('%')).options
-    for i in range(3)
-        let sep[i] = table#util#AnyPattern([sep[i], cfg_opts.i_vertical])
-    endfor
-    if a:type ==# 'alignment'
-        let sep[3] = table#util#AnyPattern([sep[i], cfg_opts.i_horizontal, ':'])
-    else
-        let sep[3] = table#util#AnyPattern([sep[i], cfg_opts.i_horizontal])
-    endif
-    let style_opts = table#config#Style(bufnr('%')).options
-    let sep[0] = style_opts.omit_left_border  ? '' : sep[0]
-    let sep[1] = style_opts.omit_right_border ? '' : sep[1]
-    return sep
-endfunction
+" function! s:BoxDrawingPatterns(type) abort
+"     " sep = [ left, right, sep, horiz ]
+"     let sep = table#config#GetBoxDrawingChars(bufnr('%'), a:type)
+"     let cfg_opts = table#config#Config(bufnr('%')).options
+"     for i in range(3)
+"         let sep[i] = table#util#AnyPattern([sep[i], cfg_opts.i_vertical])
+"     endfor
+"     if a:type ==# 'alignment'
+"         let sep[3] = table#util#AnyPattern([sep[i], cfg_opts.i_horizontal, ':'])
+"     else
+"         let sep[3] = table#util#AnyPattern([sep[i], cfg_opts.i_horizontal])
+"     endif
+"     let style_opts = table#config#Style(bufnr('%')).options
+"     let sep[0] = style_opts.omit_left_border  ? '' : sep[0]
+"     let sep[1] = style_opts.omit_right_border ? '' : sep[1]
+"     return sep
+" endfunction
 
 function! s:GeneralSeparatorPattern() abort
     let box = table#config#Style(bufnr('%')).box_drawing

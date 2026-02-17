@@ -31,22 +31,10 @@ function! table#compat#virtcol2col(winid, lnum, col) abort
         return virtcol2col(a:winid, a:lnum, a:col)
     endif
 
-    " input col and output byte are 1-based, internal computations are 0-based
     let bufnr = winbufnr(a:winid)
     let line = table#compat#getbufoneline(bufnr, a:lnum)
-    let byte = 0
-    let vcol = 0
-    let idx = 0
-    while byte < len(line) && vcol < a:col-1
-        let char = strcharpart(line, idx, 1)
-        let idx += 1
-        let vcol += strdisplaywidth(char, vcol)
-        if vcol > a:col-1
-            break
-        endif
-        let byte += len(char)
-    endwhile
-    return byte+1
+    " input col and output byte are 1-based, internal computations are 0-based
+    return table#util#DisplayWidthToByteWidth(line, a:col-1) + 1
 endfunction
 
 let &cpo = s:save_cpo

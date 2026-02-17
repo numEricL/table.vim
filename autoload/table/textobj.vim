@@ -134,14 +134,14 @@ function! s:AdjustForType(table1, coord1, table2, coord2, text_obj, text_obj_typ
     let pos_id = a:table1.rows[row_id].placement_id
     let pos_id = max([0, pos_id - 1])
     let line_type = a:table1.placement.positions[pos_id]['type']
-    let has_top_border = (line_type =~# '\v^(separator|top|alignment|bottom)$')
+    let has_top_border = (line_type ==# 'separator')
 
     "check placement for bottom border
     let row_id = a:coord2[0]
     let pos_id = a:table2.rows[row_id].placement_id + a:table2.rows[row_id].Height() - 1
     let pos_id = min([pos_id + 1, len(a:table2.placement.positions) - 1])
     let line_type = a:table2.placement.positions[pos_id]['type']
-    let has_bottom_border = (line_type =~# '\v^(separator|top|alignment|bottom)$')
+    let has_bottom_border = (line_type ==# 'separator')
 
     let bufnr = a:table2.placement.bufnr
     let style_opts = table#config#Style(bufnr).options

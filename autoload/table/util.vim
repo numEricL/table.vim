@@ -108,5 +108,22 @@ function! table#util#Pad(string, length) abort
     return a:string .. pad
 endfunction
 
+function! table#util#DisplayWidthToByteWidth(line, vcol) abort
+    " indices are 0-based
+    let byte = 0
+    let running_vcol = 0
+    let idx = 0
+    while byte < len(a:line) && running_vcol < a:vcol
+        let char = strcharpart(a:line, idx, 1)
+        let idx += 1
+        let running_vcol += strdisplaywidth(char, running_vcol)
+        if running_vcol > a:vcol
+            break
+        endif
+        let byte += len(char)
+    endwhile
+    return byte
+endfunction
+
 let &cpo = s:save_cpo
 unlet s:save_cpo

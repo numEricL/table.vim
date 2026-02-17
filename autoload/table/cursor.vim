@@ -88,14 +88,15 @@ function! s:GetType(table, linenr) abort
         return ''
     endif
     let type = a:table.placement.positions[placement_id]['type']
+    let subtype = a:table.placement.positions[placement_id]['subtype']
     if type =~# '\v^(row|incomplete)$'
         return 'cell'
-    elseif type ==# 'alignment'
+    elseif subtype ==# 'alignment'
         return 'alignment'
-    elseif type =~# '\v^(top|bottom|separator|incomplete)$'
+    elseif type ==# 'separator'
         return 'separator'
     else
-        throw 'unknown line type: ' .. type
+        throw 'unknown line type: ' .. type .. ' with subtype: ' .. subtype
     endif
 endfunction
 

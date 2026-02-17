@@ -1,13 +1,15 @@
 # table.vim
 
-Your one-stop shop for all your table editing needs in Vim and Neovim. Supports
-multi-line rows and features a cell editing window for editing cell content in a
-separate buffer (Neovim users get a seamless floating window)
+Advanced table editing for Vim and Neovim. Create, edit, and format tables with
+ease. Supports multi-line rows, fixed-width columns, sorting, and multiple table
+styles. Edit cell content in a separate window for greater control. Highly
+configurable and extensible.
 
 ## Quick Start
 
 Create tables using pipes `|` and dashes `-`. The table is aligned and redrawn
-automatically on pipe insertion. Table style is configurable.
+automatically on pipe insertion. Table style is configurable, "double" is shown
+here:
 
 ```
 |Header 1| Header 2|Header 3|           ║ Header 1 ║ Header 2 ║ Header 3 ║
@@ -38,6 +40,7 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 ## Features
 
 - **Multiline rows**        - must be enabled in your configuration
+- **Fixed-width columns**   - hard-wrap columns with alignment tags
 - **Cell editing window**   - edit in a floating window, hooks provided (split window in Vim)
 - **Sorting**               - sort rows and columns by any column/row
 - **Table navigation**      - move between cells even if the table is not yet aligned
@@ -93,7 +96,7 @@ keybindings work normally.
 
 ### Navigation
 
-- `<Tab>` / `<S-Tab>` - Next/previous cell (wraps rows)
+- `<Tab>` / `<S-Tab>` - Next/previous cell
 - `<C-h>` / `<C-j>` / `<C-k>` / `<C-l>` - Navigate left/down/up/right
 
 ### Text Objects
@@ -165,6 +168,37 @@ Sort table rows by a specific column or sort columns by a specific row:
 ```
 
 See `:help :Table-SortRows` and `:help :Table-SortCols`
+
+## Fixed-Width Columns
+
+Bound column widths using alignment tags. Tags use the format
+`<[alignment][width]>` where alignment is `l` (left), `c` (center), or `r`
+(right), and width is a positive integer. `multiline` and `wrap_lines` options
+must be enabled for wrapping to work.
+
+```vim
+| Description        |   Column 1 width    |
+|--------------------|---------------------|
+| <l30>              |        <c10>        |
+| Next col will wrap | This cell will wrap |
+
+
+| Description        | Column 1  |
+|                    |   width   |
+|--------------------|-----------|
+| <l30>              |   <c10>   |
+| Next col will wrap | This cell |
+|                    | will wrap |
+```
+
+Enable wrapping in configuration:
+```vim
+call table#Setup({
+    \ 'options': {'multiline': v:true, 'wrap_lines': v:true, 'preserve_indentation': v:false}
+    \ })
+```
+
+See `:help table-fixed-width` for details.
 
 ## Chunk Processing
 

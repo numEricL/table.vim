@@ -8,6 +8,7 @@ let s:default_config = {
             \ 'options': {
             \   'multiline'            : v:false,
             \   'preserve_indentation' : v:true,
+            \   'wrap_lines'           : v:false,
             \   'default_alignment'    : 'left',
             \   'chunk_size'           : [-10, 10],
             \   'i_vertical'           : '|',
@@ -165,19 +166,19 @@ function! s:GenerateDefaultStyle(bufnr) abort
     return style
 endfunction
 
-function! table#config#GetBoxDrawingChars(bufnr, type) abort
+function! table#config#GetBoxDrawingChars(bufnr, type, subtype) abort
     let box_drawing = table#config#Style(a:bufnr).box_drawing
-    if a:type == 'top'
+    if a:subtype == 'top'
         let left  = box_drawing.top_left
         let right = box_drawing.top_right
         let sep   = box_drawing.top_sep
         let horiz = box_drawing.top_horiz
-    elseif a:type == 'bottom'
+    elseif a:subtype == 'bottom'
         let left  = box_drawing.bottom_left
         let right = box_drawing.bottom_right
         let sep   = box_drawing.bottom_sep
         let horiz = box_drawing.bottom_horiz
-    elseif a:type == 'alignment'
+    elseif a:subtype == 'alignment'
         let left  = box_drawing.align_left
         let right = box_drawing.align_right
         let sep   = box_drawing.align_sep
@@ -193,7 +194,7 @@ function! table#config#GetBoxDrawingChars(bufnr, type) abort
         let sep   = box_drawing.row_sep
         let horiz = ''
     else
-        throw 'unknown separator type: ' .. a:type
+        throw 'unknown separator type: ' .. a:type .. ' subtype: ' .. a:subtype
     endif
     let style = table#config#Style(a:bufnr)
     let left = style.options.omit_left_border ? '' : left

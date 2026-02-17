@@ -12,6 +12,61 @@ endfunction
 
 function! table#format#Align(table) abort
     call s:TrimCells(a:table)
+    call s:WrapCells(a:table)
+    let a:table.col_widths = table#util#ComputeWidths(a:table)
+    call s:PadAlignCells(a:table)
+endfunction
+
+function! s:WrapCells(table) abort
+    let bufnr = a:table.placement.bufnr
+    let cfg_opts = table#config#Config(bufnr).options
+    if cfg_opts.multiline && cfg_opts.wrap_lines
+        for row in a:table.rows
+            for j in range(len(row.cells))
+                let width = get(a:table.max_widths, j, 0)
+                let row.cells[j] = s:WrapCell(row.cells[j], width)
+            endfor
+        endfor
+    endif
+endfunction
+
+function! s:WrapCell(cell, width) abort
+    if a:width <= 0
+        return a:cell
+    endif
+    let new_cell = []
+    for i in range(len(a:cell))
+        if strdisplaywidth(a:cell[i]) > a:width
+            call extend(new_cell, s:WrapLine(a:cell[i], a:width))
+        else
+            call add(new_cell, a:cell[i])
+        endif
+    endfor
+    return new_cell
+endfunction
+
+function! s:WrapLine(line, width) abort
+    let result = []
+    let text = a:line
+    while strdisplaywidth(text) > a:width
+        let byte_width = table#util#DisplayWidthToByteWidth(text, a:width)
+        let chunk = strpart(text, 0, byte_width)
+        let break_at = match(chunk, '\s\zs\S\+$')
+        if break_at == -1 || break_at == 0
+            let break_at = table#util#DisplayWidthToByteWidth(text, a:width)
+        endif
+        let line_part = strpart(text, 0, break_at)
+        let line_part = substitute(line_part, '\s\+$', '', '')
+        call add(result, line_part)
+        let text = substitute(strpart(text, break_at), '^\s\+', '', '')
+    endwhile
+    if strlen(text)
+        call add(result, text)
+    endif
+    return result
+endfunction
+
+function! s:PadAlignCells(table) abort
     let widths = a:table.col_widths
     for row in a:table.rows
         for j in range(len(row.cells))
@@ -60,7 +115,6 @@ function! s:TrimCells(table) abort
             endif
         endfor
     endfor
-    let a:table.col_widths = table#util#ComputeWidths(a:table)
 endfunction
 
 function! s:TrimBlock(lines, alignment) abort
@@ -92,6 +146,23 @@ function! s:TrimBlock(lines, alignment) abort
         endfor
     endif
 endfunction
+
+" function! s:RemoveEmptyLines(lines) abort
+"     echom 'removing empty lines from block: ' .. string(a:lines)
+"     " remove empty lines from the top
+"     let empty = a:lines[0] =~# '^\s*$'
+"     while empty && !empty(a:lines)
+"         call remove(a:lines, 0)
+"         let empty = a:lines[0] =~# '^\s*$'
+"     endwhile
+"
+"     " remove empty lines from the bottom
+"     let empty = a:lines[-1] =~# '^\s*$'
+"     while empty && !empty(a:lines)
+"         call remove(a:lines, len(a:lines) - 1)
+"         let empty = a:lines[-1] =~# '^\s*$'
+"     endwhile
+" endfunction
 
 function! s:MinTrimIndent(lines, side) abort
     let min_indent = -1
