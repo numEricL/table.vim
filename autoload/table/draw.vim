@@ -23,6 +23,7 @@ function! table#draw#CurrentlyPlaced(table, ...) abort
             throw 'unknown line type: ' .. line_type
         endif
     endfor
+    call s:ClearRemaining(a:table.placement, new_id)
     return table#table#Get(a:table.placement.bounds[0], [0,new_id-1])
 endfunction
 
