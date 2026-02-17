@@ -215,7 +215,6 @@ Tables must be
 
 - No merged/spanning cells (multiline rows are supported)
 - `i_vertical` and `i_horizontal` must be different characters
-- Wrapping multiline cells with `wrap_lines` assumes no multibyte chars
 
 ## License
 

@@ -48,11 +48,12 @@ endfunction
 function! s:WrapLine(line, width) abort
     let result = []
     let text = a:line
-    while strlen(text) > a:width
-        let chunk = strpart(text, 0, a:width + 1)
+    while strdisplaywidth(text) > a:width
+        let byte_width = table#util#DisplayWidthToByteWidth(text, a:width + 1)
+        let chunk = strpart(text, 0, byte_width)
         let break_at = match(chunk, '\s\zs\S\+$')
         if break_at == -1 || break_at == 0
-            let break_at = a:width
+            let break_at = table#util#DisplayWidthToByteWidth(text, a:width)
         endif
         let line_part = strpart(text, 0, break_at)
         let line_part = substitute(line_part, '\s\+$', '', '')
@@ -64,39 +65,6 @@ function! s:WrapLine(line, width) abort
     endif
     return result
 endfunction
-
-"WIP to handle multibyte characters
-" function! s:WrapLine(line, width) abort
-"     let result = []
-"     let text = a:line
-"     while strdisplaywidth(text) > a:width
-"         " Find the byte position for the display width
-"         let byte_pos = 0
-"         let display_len = 0
-"         while byte_pos < len(text) && display_len < a:width
-"             let char = strpart(text, byte_pos, 1)
-"             let display_len += strdisplaywidth(char)
-"             if display_len <= a:width
-"                 let byte_pos += len(char)
-"             endif
-"         endwhile
-"
-"         " Try to break at word boundary
-"         let chunk = strpart(text, 0, byte_pos + 1)
-"         let break_at = match(chunk, '\s\zs\S\+$')
-"         if break_at == -1 || break_at == 0
-"             let break_at = byte_pos
-"         endif
-"         let line_part = strpart(text, 0, break_at)
-"         let line_part = substitute(line_part, '\s\+$', '', '')
-"         call add(result, line_part)
-"         let text = substitute(strpart(text, break_at), '^\s\+', '', '')
-"     endwhile
-"     if len(text)
-"         call add(result, text)
-"     endif
-"     return result
-" endfunction
 
 function! s:PadAlignCells(table) abort
     let widths = a:table.col_widths
