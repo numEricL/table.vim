@@ -73,6 +73,9 @@ endfunction
 
 function! table#parse#OrgStyleAlignment(cell) abort
     let cell = trim(a:cell)
+    if cell ==# ''
+        return []
+    endif
     let char = cell[1]
     let char = (char =~? '[clr]') ? tolower(char) : ''
     let width = str2nr(matchstr(cell, '\d\+'))

@@ -18,7 +18,7 @@ All notable changes to this project will be documented in this file.
 - Fixed alignment row identification when placement align_id is unset
 
 ### Changed
-- default option `preserve_indent` is now `false`
+- default option `preserve_indentation` is now `false`
 - org-style alignment tags take precedence over alignment header
 
 ## [v0.1.1] - 2026-02-15
