@@ -759,20 +759,20 @@ Place fixed-width tags in a special alignment row, typically the first or
 second row of your table. Each tag defines the width and alignment for its
 corresponding column: >
 
-    | Description     | Column 1 width  | Status   |
-    |-----------------|-----------------|----------|
-    | <l30>           | <c10>           |          |
-    | Long content... | This cell will wrap | Done |
+    | Description        |   Column 1 width    |
+    |--------------------|---------------------|
+    | <l30>              |        <c10>        |
+    | Next col will wrap | This cell will wrap |
 <
 When the |multiline| and |wrap_lines| options are enabled, content exceeding
 the specified width will automatically wrap to multiple lines within the cell. >
 
-    | Description     | Column 1  | Status |
-    |                 |   width   |        |
-    |-----------------|-----------|--------|
-    | <l30>           |   <c10>   |        |
-    | Long content... | This cell | Done   |
-    |                 | will wrap |        |
+    | Description        | Column 1  |
+    |                    |   width   |
+    |--------------------|-----------|
+    | <l30>              |   <c10>   |
+    | Next col will wrap | This cell |
+    |                    | will wrap |
 <
 
 Configuration ~

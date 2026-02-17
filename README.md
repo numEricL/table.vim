@@ -2,12 +2,13 @@
 
 Your one-stop shop for all your table editing needs in Vim and Neovim. Supports
 multi-line rows and features a cell editing window for editing cell content in a
-separate buffer (Neovim users get a seamless floating window)
+separate buffer. In Neovim, an auto-resizing floating window is used.
 
 ## Quick Start
 
 Create tables using pipes `|` and dashes `-`. The table is aligned and redrawn
-automatically on pipe insertion. Table style is configurable.
+automatically on pipe insertion. Table style is configurable, "double" is shown
+here:
 
 ```
 |Header 1| Header 2|Header 3|           ║ Header 1 ║ Header 2 ║ Header 3 ║
@@ -94,7 +95,7 @@ keybindings work normally.
 
 ### Navigation
 
-- `<Tab>` / `<S-Tab>` - Next/previous cell (wraps rows)
+- `<Tab>` / `<S-Tab>` - Next/previous cell
 - `<C-h>` / `<C-j>` / `<C-k>` / `<C-l>` - Navigate left/down/up/right
 
 ### Text Objects
@@ -175,18 +176,18 @@ Bound column widths using alignment tags. Tags use the format
 must be enabled for wrapping to work.
 
 ```vim
-| Description     | Column 1 width  | Status   |
-|-----------------|-----------------|----------|
-| <l30>           | <c10>           |          |
-| Long content... | This cell will wrap | Done |
+| Description        |   Column 1 width    |
+|--------------------|---------------------|
+| <l30>              |        <c10>        |
+| Next col will wrap | This cell will wrap |
 
 
-| Description     | Column 1  | Status |
-|                 |   width   |        |
-|-----------------|-----------|--------|
-| <l30>           |   <c10>   |        |
-| Long content... | This cell | Done   |
-|                 | will wrap |        |
+| Description        | Column 1  |
+|                    |   width   |
+|--------------------|-----------|
+| <l30>              |   <c10>   |
+| Next col will wrap | This cell |
+|                    | will wrap |
 ```
 
 Enable wrapping in configuration:
