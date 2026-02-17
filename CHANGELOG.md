@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **Fixed-width columns**: Support for org-style alignment tags (`<l30>`, `<c10>`, `<r20>`)
+  - Tags specify alignment (left/center/right) and column width
+  - Automatic text wrapping for cells exceeding column width
+- Cell editor now automatically fills missing multiline rows when editing cells
+
+### Fixed
+- Sort functionality now works correctly with right-aligned columns
+- Org-style alignment detection no longer triggers false positives on empty lines
+- Improved table parser to handle column bounds for visual block operations
+
 ## [v0.1.1] - 2026-02-15
 
 ### Fixed
