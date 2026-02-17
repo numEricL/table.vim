@@ -7,7 +7,7 @@ local M = {}
 --   - options: table - Table options
 --     - multiline: boolean - Allow cells to contain newlines
 --     - preserve_indentation: boolean - Keep leading whitespace in multiline cells
---     - wrap_lines: boolean - hard-long lines with width tags
+--     - wrap_lines: boolean - hard-wrap lines with width tags
 --     - default_alignment: string - Default column alignment: 'left', 'center', or 'right'
 --     - chunk_size: list - Chunk size for parsing
 --     - i_vertical: string - Input vertical character

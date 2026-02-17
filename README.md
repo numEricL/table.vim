@@ -1,8 +1,9 @@
 # table.vim
 
-Your one-stop shop for all your table editing needs in Vim and Neovim. Supports
-multi-line rows and features a cell editing window for editing cell content in a
-separate buffer. In Neovim, an auto-resizing floating window is used.
+Advanced table editing for Vim and Neovim. Create, edit, and format tables with
+ease. Supports multi-line rows, fixed-width columns, sorting, and multiple table
+styles. Edit cell content in a separate window for greater control. Highly
+configurable and extensible.
 
 ## Quick Start
 
@@ -172,7 +173,7 @@ See `:help :Table-SortRows` and `:help :Table-SortCols`
 
 Bound column widths using alignment tags. Tags use the format
 `<[alignment][width]>` where alignment is `l` (left), `c` (center), or `r`
-(right), and width is a positive integer. `multline` and `wrap_lines` options
+(right), and width is a positive integer. `multiline` and `wrap_lines` options
 must be enabled for wrapping to work.
 
 ```vim

@@ -23,7 +23,7 @@ function! s:WrapCells(table) abort
     if cfg_opts.multiline && cfg_opts.wrap_lines
         for row in a:table.rows
             for j in range(len(row.cells))
-                let width = a:table.max_widths[j]
+                let width = get(a:table.max_widths, j, 0)
                 let row.cells[j] = s:WrapCell(row.cells[j], width)
             endfor
         endfor
@@ -49,7 +49,7 @@ function! s:WrapLine(line, width) abort
     let result = []
     let text = a:line
     while strdisplaywidth(text) > a:width
-        let byte_width = table#util#DisplayWidthToByteWidth(text, a:width + 1)
+        let byte_width = table#util#DisplayWidthToByteWidth(text, a:width)
         let chunk = strpart(text, 0, byte_width)
         let break_at = match(chunk, '\s\zs\S\+$')
         if break_at == -1 || break_at == 0
