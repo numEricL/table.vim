@@ -171,10 +171,11 @@ See `:help :Table-SortRows` and `:help :Table-SortCols`
 
 ## Fixed-Width Columns
 
-Bound column widths using alignment tags. Tags use the format
+Set column widths using alignment tags. Tags use the format
 `<[alignment][width]>` where alignment is `l` (left), `c` (center), or `r`
-(right), and width is a positive integer. `multiline` and `wrap_lines` options
-must be enabled for wrapping to work.
+(right), and width is a positive integer. When `multiline` and `wrap_lines`
+options are enabled, content exceeding the specified width automatically wraps
+to multiple lines within the cell. 
 
 ```vim
 | Description        |   Column 1 width    |

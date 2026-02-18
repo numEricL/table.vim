@@ -740,8 +740,9 @@ persist across Vim sessions. Add to your vimrc/init.lua to make permanent.
 ==============================================================================
 FIXED-WIDTH COLUMNS                                        *table-fixed-width*
 
-Fixed-width columns allow you to specify bounds on column widths using special
-alignment tags.
+Fixed-width columns allow you to specify column widths using special alignment
+tags. Content exceeding the specified width automatically wraps to multiple
+lines within the cell when |multiline| and |wrap_lines| are enabled.
 
 Tag Syntax ~
 
@@ -765,7 +766,7 @@ corresponding column: >
     | Next col will wrap | This cell will wrap |
 <
 When the |multiline| and |wrap_lines| options are enabled, content exceeding
-the specified width will automatically wrap to multiple lines within the cell. >
+the specified width will automatically wrap to multiple lines within the cell: >
 
     | Description        | Column 1  |
     |                    |   width   |
@@ -779,13 +780,12 @@ Configuration ~
 
 Enable wrapping with fixed-width columns: >
     call table#Setup({
-        \ 'options': {'multiline': v:true, 'wrap_lines': v:true, 'preserve_indentation': v:false}
+        \ 'options': {'multiline': v:true, 'wrap_lines': v:true}
         \ })
 <
 Or at runtime: >
     :TableOption Option multiline true
     :TableOption Option wrap_lines true
-    :TableOption Option preserve_indentation false
 <
 
 ==============================================================================
