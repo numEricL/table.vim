@@ -125,11 +125,11 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
     for pos_id in range(bounds[1] - bounds[0] + 1)
         let [line_cells, col_start, sep_pos, type, subtype] = table#parse#ParseLine(bounds[0] + pos_id, a:vcol_bounds)
         if type ==# 'separator'
-            if pos_id == 0 && (bounds[0] == full_bounds[0]) " top chunk
+            if pos_id == 0 && (bounds[0] == full_bounds[0]) " top chunk &&
                 let subtype = 'top'
             elseif pos_id == (bounds[1] - bounds[0]) && (bounds[1] == full_bounds[1]) " bottom chunk
                 let subtype = 'bottom'
-            elseif placement.align_sep_id == -1
+            elseif placement.align_sep_id == -1 && (bounds[0] == full_bounds[0])
                 let subtype = 'alignment'
             elseif subtype ==# 'alignment_tag' && !s:IsNewRow(last_type)  " alignment tag must begin row
                 let subtype = ''
@@ -157,16 +157,20 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
                 let align_tag = table#parse#AlignmentTag(line_cells[id])
                 if !empty(align_tag)
                     let [align, width] = align_tag
-                    call table#util#SetOrAppend(table.col_align, id, align)
-                    call table#util#SetOrAppend(table.fixed_widths, id, width)
+                    if !empty(align)
+                        call table#util#SetOrAppend(table.col_align, id, align, '')
+                    endif
+                    call table#util#SetOrAppend(table.fixed_widths, id, width, 0)
                 endif
             endfor
-        elseif subtype ==# 'alignment' && empty(table.col_align)
+        elseif subtype ==# 'alignment'
             let placement.align_sep_id = pos_id
-            for cell in line_cells
-                let align_char = table#parse#SeparatorAlignment(cell)
+            for id in range(len(line_cells))
+                let align_char = table#parse#SeparatorAlignment(line_cells[id])
                 let placement.has_align_chars = placement.has_align_chars || !empty(align_char)
-                call add(table.col_align, align_char)
+                if !empty(align_char)
+                    call table#util#SetOrAppend(table.col_align, id, align_char, '')
+                endif
             endfor
             let table.max_col_count = max([table.max_col_count, len(line_cells)])
         endif

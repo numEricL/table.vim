@@ -125,10 +125,13 @@ function! table#util#DisplayWidthToByteWidth(line, vcol) abort
     return byte
 endfunction
 
-function! table#util#SetOrAppend(list, index, value) abort
+function! table#util#SetOrAppend(list, index, value, init_val) abort
     if a:index < len(a:list)
         let a:list[a:index] = a:value
     else
+        while a:index > len(a:list)
+            call add(a:list, a:init_val)
+        endwhile
         call add(a:list, a:value)
     endif
 endfunction

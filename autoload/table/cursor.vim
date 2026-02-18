@@ -151,11 +151,12 @@ function! s:SetCursorAlignmentSeparator(table, col_id) abort
 
     let linenr = a:table.placement.bounds[0] + id
     let sep_pos = a:table.placement.positions[id]['separator_pos']
+    let len_col_align = 2*( len(sep_pos) - 1 )
     let col = 0
 
-    if id == -1 || a:col_id < 0 || a:col_id > 2 * len(a:table.col_align)
+    if id == -1 || a:col_id < 0 || a:col_id > 2 * len_col_align
         return
-    elseif a:col_id == 2 * len(a:table.col_align)
+    elseif a:col_id == 2 * len_col_align
         let col = sep_pos[-1][1] + 1
     else
         let sep_id = (a:col_id+1) / 2
