@@ -58,11 +58,11 @@ function! table#commands#TableComplete(ArgLead, CmdLine, CursorPos) abort
     return []
 endfunction
 
-" :TableOption command - for configuration
-function! table#commands#TableOptionCommand(...) abort
+" :TableConfig command - for configuration
+function! table#commands#TableConfigCommand(...) abort
     if a:0 == 0
         let subcommands = ['Option', 'StyleOption', 'Style', 'RegisterStyle']
-        echomsg 'TableOption subcommands: ' .. join(subcommands, ', ')
+        echomsg 'TableConfig subcommands: ' .. join(subcommands, ', ')
         echomsg ' '
         echomsg 'table.vim ' .. table#Version()
         echomsg 'Configuration for buffer ' .. (bufname('%') !=# '' ? bufname('%') : bufnr('%'))
@@ -87,12 +87,12 @@ function! table#commands#TableOptionCommand(...) abort
         call s:RegisterStyle(args)
     else
         echohl ErrorMsg
-        echomsg "TableOption: unknown subcommand '" .. subcommand .. "'"
+        echomsg "TableConfig: unknown subcommand '" .. subcommand .. "'"
         echohl None
     endif
 endfunction
 
-function! table#commands#TableOptionComplete(ArgLead, CmdLine, CursorPos) abort
+function! table#commands#TableConfigComplete(ArgLead, CmdLine, CursorPos) abort
     let parts = split(a:CmdLine, '\s\+', 1)
     let num_args = len(parts) - 1
 
@@ -315,6 +315,12 @@ function! s:ParseSortArgs(type, bang, args) abort
         endif
     endfor
     return sort_args
+endfunction
+
+function! table#commands#TableOptionCommand(...) abort
+    echom 'TableOption command is deprecated, use TableConfig instead'
+    echom ''
+    call call('table#commands#TableConfigCommand', a:000)
 endfunction
 
 let &cpo = s:save_cpo

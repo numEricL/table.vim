@@ -22,7 +22,12 @@ All notable changes to this project will be documented in this file.
 - **BREAKING**: Replaced `preserve_indentation` and `wrap_lines` options with unified `ml_format` option
   - New `ml_format` values: `'align'` (default), `'wrap'`, `'block_align'`, `'block_wrap'`, `'paragraph_wrap'`
   - Migration: Update your configuration to use `ml_format` instead of `preserve_indentation` and `wrap_lines`
+- `:TableOption` command renamed to `:TableConfig`.
 - org-style alignment tags take precedence over alignment header
+
+### Deprecated
+- `:TableOption` command is deprecated in favor of `:TableConfig`
+  - `:TableOption` still works but shows a deprecation warning
 
 ## [v0.1.1] - 2026-02-15
 
