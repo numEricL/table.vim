@@ -23,14 +23,15 @@ function! table#cursor#GetCoord(table, pos, ...) abort
     let sep_pos    = a:table.placement.positions[placement_id]['separator_pos']
 
     if !empty(type_override)
-        if type_override !=# 'cell'
-            throw 'only cell type override is supported'
-        endif
-        if coord.type =~# '\v^separator|alignment$'
+        if type_override ==# 'cell' && coord.type =~# '\v^(separator|alignment)$'
             let coord.type = 'cell'
             let row_id += 1
             let row_id = min([row_id, a:table.RowCount() - 1])
             let row_offset = 0
+        elseif type_override ==# 'separator' && coord.type ==# 'alignment'
+            let coord.type = 'separator'
+        else
+            throw 'override from ' .. coord.type .. ' to ' .. type_override .. ' is not supported'
         endif
     endif
 
