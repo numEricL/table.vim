@@ -3,10 +3,7 @@ set cpo&vim
 
 function! table#format#FillGaps(table) abort
     for row in a:table.rows
-        call map(row.types, {_, value -> value ==# 'incomplete' ? 'row' : value})
-        while len(row.types) < a:table.ColCount()
-            call add(row.types, '')
-        endwhile
+        call map(row.types, {_, value -> value ==# 'incomplete' ? '' : value})
     endfor
 endfunction
 
@@ -47,9 +44,13 @@ function! s:FormatCell(lines, col_idx, align, width, cfg_opts) abort
         else
             call s:TrimLinewise(lines)
         endif
-        if a:cfg_opts.ml_format ==# 'paragraph_wrap' && a:width > 0
-            call filter(lines, 'v:val !=# ""')
-            let lines = [ join(lines) ]
+        if a:cfg_opts.ml_format ==# 'paragraph_wrap'
+            if a:width > 0
+                call filter(lines, 'v:val !=# ""')
+                let lines = [ join(lines) ]
+            else
+                let lines = s:RemoveEmptyLines(lines)
+            endif
         endif
         if a:cfg_opts.ml_format =~# '\v^(wrap|block_wrap|paragraph_wrap)$'
             let lines = s:WrapCell(lines, a:width)
@@ -187,21 +188,22 @@ function! s:WrapLine(line, width) abort
 endfunction
 
 
-" function! s:RemoveEmptyLines(lines) abort
-"     " remove empty lines from the top
-"     let empty = a:lines[0] =~# '^\s*$'
-"     while empty && !empty(a:lines)
-"         call remove(a:lines, 0)
-"         let empty = a:lines[0] =~# '^\s*$'
-"     endwhile
-"
-"     " remove empty lines from the bottom
-"     let empty = a:lines[-1] =~# '^\s*$'
-"     while empty && !empty(a:lines)
-"         call remove(a:lines, len(a:lines) - 1)
-"         let empty = a:lines[-1] =~# '^\s*$'
-"     endwhile
-" endfunction
+function! s:RemoveEmptyLines(lines) abort
+    " remove empty lines from the top
+    let empty = a:lines[0] =~# '^\s*$'
+    while empty && !empty(a:lines)
+        call remove(a:lines, 0)
+        let empty = a:lines[0] =~# '^\s*$'
+    endwhile
+
+    " remove empty lines from the bottom
+    let empty = a:lines[-1] =~# '^\s*$'
+    while empty && !empty(a:lines)
+        call remove(a:lines, len(a:lines) - 1)
+        let empty = a:lines[-1] =~# '^\s*$'
+    endwhile
+    return a:lines
+endfunction
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

@@ -219,12 +219,11 @@ function! s:CellRowHeight() dict abort
 endfunction
 
 function! s:AppendTableRow(table, subtype, last_type, line_cells, pos_id) abort
-    let row_type = !empty(a:subtype)? a:subtype : 'row'
     if s:IsNewRow(a:last_type)
         let cells = empty(a:line_cells)? [['']] : map(copy(a:line_cells), '[v:val]')
         let row = {
                     \ 'cells'         : cells,
-                    \ 'types'         : [ row_type ],
+                    \ 'types'         : [ a:subtype ],
                     \ 'subtypes'      : [ '' ],
                     \ 'placement_id'  : a:pos_id,
                     \ 'Height'        : function('s:CellRowHeight'),
@@ -239,7 +238,7 @@ function! s:AppendTableRow(table, subtype, last_type, line_cells, pos_id) abort
         for j in range(len(row.cells))
             call add(row.cells[j], get(a:line_cells, j, ''))
         endfor
-        call add(row.types, row_type)
+        call add(row.types, a:subtype)
     endif
 endfunction
 
