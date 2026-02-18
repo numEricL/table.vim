@@ -15,16 +15,17 @@ function! table#format#Align(table) abort
     let cfg_opts = table#config#Config(bufnr).options
 
     for i in range(len(a:table.rows))
-        let has_alignment_tag = (a:table.rows[i].types[0] ==# 'alignment_tag')
+        let align_tag_pos = s:AlignmentTagPos(a:table.rows[i])
         for j in range(len(a:table.rows[i].cells))
             let cell = a:table.rows[i].cells[j]
             let align = a:table.ColAlign(j)
             let width = get(a:table.fixed_widths, j, 0)
-            let tag = has_alignment_tag? trim(remove(cell, 0)) : ''
+            let tag = s:ExtractAlignmentTag(align_tag_pos, cell)
             let cell = s:FormatCell(cell, j, align, width, cfg_opts)
-            let cell = has_alignment_tag? [tag] + cell : cell
+            call s:ReplaceAlignmentTag(align_tag_pos, cell, tag)
             let a:table.rows[i].cells[j] = cell
         endfor
+        call s:RepositionAlignmentTags(a:table.rows[i], align_tag_pos)
     endfor
 
     let col_widths = table#util#ComputeWidths(a:table)
@@ -35,6 +36,45 @@ function! table#format#Align(table) abort
     endfor
     call s:PadAlignCells(a:table, col_widths)
     let a:table.col_widths = col_widths " used in draw.vim for separator lines
+endfunction
+
+function! s:AlignmentTagPos(row) abort
+    if a:row.types[0] ==# 'alignment_tag'
+        return 'top'
+    elseif a:row.types[-1] ==# 'alignment_tag'
+        return 'bottom'
+    else
+        return ''
+    endif
+endfunction
+
+function! s:ExtractAlignmentTag(tag_pos, cell) abort
+    if a:tag_pos == 'top'
+        return trim(remove(a:cell, 0))
+    elseif a:tag_pos == 'bottom'
+        return trim(remove(a:cell, len(a:cell) - 1))
+    else
+        return ''
+    endif
+endfunction
+
+function! s:ReplaceAlignmentTag(tag_pos, cell, tag) abort
+    if a:tag_pos == 'top'
+        call insert(a:cell, a:tag, 0)
+    elseif a:tag_pos == 'bottom'
+        call add(a:cell, a:tag)
+    endif
+endfunction
+
+function! s:RepositionAlignmentTags(row, tag_pos) abort
+    if a:tag_pos == 'bottom'
+        let height = a:row.Height()
+        for cell in a:row.cells
+            while len(cell) < height
+                call insert(cell, '', -1)
+            endwhile
+        endfor
+    endif
 endfunction
 
 function! s:FormatCell(lines, col_idx, align, width, cfg_opts) abort
