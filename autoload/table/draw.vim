@@ -14,7 +14,7 @@ function! table#draw#CurrentlyPlaced(table, ...) abort
             let line_subtype = positions[pos_id].subtype
             let num_cols = len(positions[pos_id]['separator_pos']) - 1
             let new_id = s:DrawSeparator(a:table, new_id, line_subtype, num_cols)
-        elseif line_type =~# '\v^(row|incomplete)$'
+        elseif line_type ==# 'row'
             if positions[pos_id].row_offset == 0
                 let row_id = positions[pos_id].row_id
                 let new_id = s:DrawRow(a:table, new_id, row_id, opts)
@@ -44,7 +44,7 @@ function! table#draw#Table(table) abort
     if a:table.RowCount() > 1
         let row_id = 0
         let num_cols = max([len(a:table.col_align), a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
-        let subtype = (a:table.placement.align_id != -1) ? 'alignment' : ''
+        let subtype = (a:table.placement.align_sep_id != -1) ? 'alignment' : ''
         let pos_id = s:DrawSeparator(a:table, pos_id, subtype, num_cols)
     endif
 
@@ -82,7 +82,7 @@ function! s:DrawLine(placement, pos_id, line) abort
     let style_opts = table#config#Style(bufnr).options
     if style_opts.omit_left_border
         let display_col_start = a:placement.min_col_start
-        if a:placement.align_id == -1 && style_opts.omit_separator_rows && !cfg_opts.multiline
+        if a:placement.align_sep_id == -1 && style_opts.omit_separator_rows && !cfg_opts.multiline
             let display_col_start -= 1
         endif
     endif

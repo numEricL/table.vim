@@ -89,7 +89,7 @@ function! s:GetType(table, linenr) abort
     endif
     let type = a:table.placement.positions[placement_id]['type']
     let subtype = a:table.placement.positions[placement_id]['subtype']
-    if type =~# '\v^(row|incomplete)$'
+    if type ==# 'row'
         return 'cell'
     elseif subtype ==# 'alignment'
         return 'alignment'
@@ -102,8 +102,9 @@ endfunction
 
 function! s:SetCursorCell(table, cell_id) abort
     let [row_id, row_offset, col_id] = a:cell_id
-    let pos_id = a:table.rows[row_id].placement_id + row_offset
+    let row_offset = min([row_offset, a:table.rows[row_id].Height() - 1])
 
+    let pos_id = a:table.rows[row_id].placement_id + row_offset
     let linenr = a:table.placement.bounds[0] + pos_id
     let sep_pos = a:table.placement.positions[pos_id]['separator_pos']
     let col = 0
@@ -146,15 +147,16 @@ function! s:FindMultiCellSepCol(table, cell_id) abort
 endfunction
 
 function! s:SetCursorAlignmentSeparator(table, col_id) abort
-    let id = a:table.placement.align_id
+    let id = a:table.placement.align_sep_id
 
     let linenr = a:table.placement.bounds[0] + id
     let sep_pos = a:table.placement.positions[id]['separator_pos']
+    let len_col_align = 2*( len(sep_pos) - 1 )
     let col = 0
 
-    if id == -1 || a:col_id < 0 || a:col_id > 2 * len(a:table.col_align)
+    if id == -1 || a:col_id < 0 || a:col_id > 2 * len_col_align
         return
-    elseif a:col_id == 2 * len(a:table.col_align)
+    elseif a:col_id == 2 * len_col_align
         let col = sep_pos[-1][1] + 1
     else
         let sep_id = (a:col_id+1) / 2

@@ -92,7 +92,7 @@ endfunction
 
 function! table#CycleCursor(dir, count1) abort
     let curpos = getpos('.')[1:2]
-    let table = table#table#Get(curpos[0], [0,0])
+    let table = table#table#Get(curpos[0], [-1,0])
     if !table.valid
         return
     endif
@@ -183,7 +183,8 @@ endfunction
 function! s:CycleCursor(table, dir, coord) abort
     let step = (a:dir ==# 'forward') ? 1 : -1
     if a:coord.type ==# 'alignment'
-        let n = 2*len(a:table.col_align)
+        let align_id = a:table.placement.align_sep_id
+        let n = 2*( len(a:table.placement.positions[align_id]['separator_pos']) - 1 )
         let a:coord.coord[0] = (a:coord.coord[0] + step + n) % n
     elseif a:coord.type ==# 'cell'
         let row_bound = a:table.RowCount()

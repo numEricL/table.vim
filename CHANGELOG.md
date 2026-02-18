@@ -16,10 +16,12 @@ All notable changes to this project will be documented in this file.
 - Org-style alignment detection no longer triggers false positives on empty lines
 - Improved table parser to handle column bounds for visual block operations
 - Fixed cleanup in table drawing lines to clear removed data
-- Fixed alignment row identification when placement align_id is unset
+- Fixed alignment row identification when placement align_sep_id is unset
 
 ### Changed
-- default option `preserve_indentation` is now `false`
+- **BREAKING**: Replaced `preserve_indentation` and `wrap_lines` options with unified `ml_format` option
+  - New `ml_format` values: `'align'` (default), `'wrap'`, `'block_align'`, `'block_wrap'`, `'paragraph_wrap'`
+  - Migration: Update your configuration to use `ml_format` instead of `preserve_indentation` and `wrap_lines`
 - org-style alignment tags take precedence over alignment header
 
 ## [v0.1.1] - 2026-02-15

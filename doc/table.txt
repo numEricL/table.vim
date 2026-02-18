@@ -179,14 +179,15 @@ COMMANDS                                                      *table-commands*
           (default: [-10, 10])
         - multiline: Enable multiline cells (default: false)
           When true, cells can contain newline characters.
-        - preserve_indentation: Keep leading whitespace in multiline cells
-          (default: false)
+        - ml_format: Multiline cell formatting mode (default: 'align')
+          Values: 'align', 'wrap', 'block_align', 'block_wrap', 'paragraph_wrap'
         - SortComparator: Custom comparison function for sorting
           (default: empty)
 
         Examples: >
             :TableOption Option default_alignment center
             :TableOption Option multiline true
+            :TableOption Option ml_format paragraph_wrap
             :TableOption Option SortComparator {a, b -> len(a) < len(b)}
 <
     :TableOption Style [name]                            *:TableOption-Style*
@@ -425,8 +426,7 @@ table#Setup({config})
             'style': 'default',
             'options': {
                 'multiline': v:false,
-                'preserve_indentation': v:false,
-                'wrap_lines': v:true,
+                'ml_format': 'align',
                 'default_alignment': 'left',
                 'chunk_size': [-10, 10],
                 'i_vertical': '|',
@@ -446,14 +446,14 @@ table#Setup({config})
         " In vimrc
         call table#Setup({
             \ 'style': 'markdown',
-            \ 'options': {'default_alignment': 'center', 'multiline': v:true}
+            \ 'options': {'default_alignment': 'center', 'multiline': v:true, 'ml_format': 'paragraph_wrap'}
             \ })
 <
     Example (Lua): >
         -- In init.lua
         require('table_vim').setup({
             style = 'default',
-            options = { multiline = true, chunk_size = {-20, 20} }
+            options = { multiline = true, ml_format = 'paragraph_wrap', chunk_size = {-20, 20} }
         })
 <
                                                       *table#SetBufferConfig()*
@@ -491,33 +491,27 @@ multiline
     When disabled, newlines in cells will cause parsing issues. >
         :TableOption Option multiline true
 <
-                                                        *preserve_indentation*
-preserve_indentation
-    Type: Boolean
-    Default: v:false (false)
+                                                                 *ml_format*
+ml_format
+    Type: String
+    Default: 'align'
+    Values: 'align', 'wrap', 'block_align', 'block_wrap', 'paragraph_wrap'
 
-    Keep leading whitespace in multiline cells. When true, indentation at
-    the start of lines within cells is preserved. When false, leading
-    whitespace is trimmed during alignment.
+    Controls how multiline cell content is formatted when |multiline| is
+    enabled. This option replaces the deprecated `preserve_indentation` and
+    `wrap_lines` options.
 
-    Only affects multiline cells when |multiline| is enabled. >
-        :TableOption Option preserve_indentation false
-<
-                                                               *wrap_lines*
-wrap_lines
-    Type: Boolean
-    Default: v:true (true)
+    'align'          - Trim leading/trailing whitespace, no wrapping
+    
+    'wrap'           - Wrap lines independently of each other in fixed-width columns
+    
+    'block_align'    - Align text as a block based on column alignment
+    
+    'block_wrap'     - Align text as a block with independent line wrapping in fixed-width
+                       columns
+    
+    'paragraph_wrap' - Collapse to single line and wrap in fixed-width columns
 
-    Hard-wrap long cell content to fit within fixed-width columns. Requires
-    |multiline| to be enabled. When true, text exceeding the column width
-    specified by fixed-width tags will automatically wrap to multiple lines
-    within the cell.
-
-    Only affects cells in columns with fixed-width tags (|table-fixed-width|).
-    >
-        :TableOption Option multiline true
-        :TableOption Option wrap_lines true
-<
                                                           *default_alignment*
 default_alignment
     Type: String
@@ -742,7 +736,8 @@ FIXED-WIDTH COLUMNS                                        *table-fixed-width*
 
 Fixed-width columns allow you to specify column widths using special alignment
 tags. Content exceeding the specified width automatically wraps to multiple
-lines within the cell when |multiline| and |wrap_lines| are enabled.
+lines within the cell when |multiline| is enabled with |ml_format| set to
+'wrap', 'paragraph_wrap' or 'block_wrap'.
 
 Tag Syntax ~
 
@@ -765,8 +760,8 @@ corresponding column: >
     | <l30>              |        <c10>        |
     | Next col will wrap | This cell will wrap |
 <
-When the |multiline| and |wrap_lines| options are enabled, content exceeding
-the specified width will automatically wrap to multiple lines within the cell: >
+When the |multiline| and a suitable |ml_format| is set, content exceeding the
+specified width will automatically wrap to multiple lines within the cell: >
 
     | Description        | Column 1  |
     |                    |   width   |
@@ -780,12 +775,12 @@ Configuration ~
 
 Enable wrapping with fixed-width columns: >
     call table#Setup({
-        \ 'options': {'multiline': v:true, 'wrap_lines': v:true}
+        \ 'options': {'multiline': v:true, 'ml_format': 'wrap'}
         \ })
 <
 Or at runtime: >
     :TableOption Option multiline true
-    :TableOption Option wrap_lines true
+    :TableOption Option ml_format wrap
 <
 
 ==============================================================================

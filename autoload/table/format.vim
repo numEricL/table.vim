@@ -3,16 +3,27 @@ set cpo&vim
 
 function! table#format#FillGaps(table) abort
     for row in a:table.rows
-        let row.types = repeat(['row'], row.Height())
-        while len(row.cells) < a:table.ColCount()
-            call add(row.cells, [''])
-        endwhile
+        call map(row.types, {_, value -> value ==# 'incomplete' ? '' : value})
     endfor
 endfunction
 
 function! table#format#Align(table) abort
-    call s:TrimCells(a:table)
-    call s:ReshapeCells(a:table, a:table.fixed_widths)
+    let bufnr = a:table.placement.bufnr
+    let cfg_opts = table#config#Config(bufnr).options
+
+    for i in range(len(a:table.rows))
+        let has_alignment_tag = (a:table.rows[i].types[0] ==# 'alignment_tag')
+        for j in range(len(a:table.rows[i].cells))
+            let cell = a:table.rows[i].cells[j]
+            let align = a:table.ColAlign(j)
+            let width = get(a:table.fixed_widths, j, 0)
+            let tag = has_alignment_tag? trim(remove(cell, 0)) : ''
+            let cell = s:FormatCell(cell, j, align, width, cfg_opts)
+            let cell = has_alignment_tag? [tag] + cell : cell
+            let a:table.rows[i].cells[j] = cell
+        endfor
+    endfor
+
     let col_widths = table#util#ComputeWidths(a:table)
     for i in range(len(a:table.fixed_widths))
         if a:table.fixed_widths[i] > 0
@@ -23,22 +34,123 @@ function! table#format#Align(table) abort
     let a:table.col_widths = col_widths " used in draw.vim for separator lines
 endfunction
 
-function! s:ReshapeCells(table, widths) abort
-    let bufnr = a:table.placement.bufnr
-    let cfg_opts = table#config#Config(bufnr).options
-    if cfg_opts.multiline && cfg_opts.wrap_lines
-        for row in a:table.rows
-            for j in range(len(row.cells))
-                call filter(row.cells[j], 'v:val !=# ""')
-                let row.cells[j] = [ join(row.cells[j]) ]
-                let row.cells[j] = s:WrapCell(row.cells[j], get(a:widths, j, 0))
+function! s:FormatCell(lines, col_idx, align, width, cfg_opts) abort
+    if empty(a:lines)
+        return []
+    endif
+    let lines = a:lines
+    if !a:cfg_opts.multiline
+        call s:TrimLinewise(lines)
+    else
+        if a:cfg_opts.ml_format =~# '\v^(block_align|block_wrap)$'
+            call s:TrimBlock(lines, a:align)
+        else
+            call s:TrimLinewise(lines)
+        endif
+        if a:cfg_opts.ml_format ==# 'paragraph_wrap'
+            if a:width > 0
+                call filter(lines, 'v:val !=# ""')
+                let lines = [ join(lines) ]
+            else
+                let lines = s:RemoveEmptyLines(lines)
+            endif
+        endif
+        if a:cfg_opts.ml_format =~# '\v^(wrap|block_wrap|paragraph_wrap)$'
+            let lines = s:WrapCell(lines, a:width)
+        endif
+    endif
+    return lines
+endfunction
+
+function! s:PadAlignCells(table, widths) abort
+    for row in a:table.rows
+        for j in range(len(row.cells))
+            let cell = row.cells[j]
+            let align = a:table.ColAlign(j)
+            let width = a:widths[j]
+            for i in range(row.Height())
+                if i < len(cell)
+                    let cell[i] = s:PadAlignLine(cell[i], align, width)
+                else
+                    call add(cell, s:PadAlignLine('', align, width))
+                endif
             endfor
+        endfor
+    endfor
+endfunction
+
+function! s:PadAlignLine(line, align, width) abort
+    let pad_size = a:width - strdisplaywidth(a:line)
+    let line = a:line
+    if a:align ==# 'l'
+        let line = ' ' .. line .. repeat(' ', pad_size) .. ' '
+    elseif a:align ==# 'r'
+        let line = ' ' .. repeat(' ', pad_size) .. line .. ' '
+    elseif a:align ==# 'c'
+        let left_pad = float2nr(floor(pad_size / 2))
+        let right_pad = pad_size - left_pad
+        let line = ' ' .. repeat(' ', left_pad) .. line .. repeat(' ', right_pad) .. ' '
+    else
+        throw 'unknown alignment: ' .. a:align .. ' (should be l, r, or c)'
+    endif
+    return line
+endfunction
+
+function! s:TrimLinewise(lines) abort
+    for i in range(len(a:lines))
+        let a:lines[i] = trim(a:lines[i])
+    endfor
+endfunction
+
+function! s:TrimBlock(lines, alignment) abort
+    if empty(a:lines)
+        return
+    endif
+    if len(a:lines) == 1
+        let a:lines[0] = trim(a:lines[0])
+    else
+        for i in range(len(a:lines))
+            if a:alignment ==# 'l'
+                let a:lines[i] = table#compat#trim(a:lines[i], '', 2)
+            elseif a:alignment ==# 'r'
+                let a:lines[i] = table#compat#trim(a:lines[i], '', 1)
+            endif
+        endfor
+    endif
+
+    if a:alignment =~# '\v^l|c$'
+        let indent = s:MinTrimIndent(a:lines, 'left')
+        for i in range(len(a:lines))
+            let a:lines[i] = strpart(a:lines[i], indent)
+        endfor
+    endif
+    if a:alignment =~# '\v^r|c$'
+        let indent = s:MinTrimIndent(a:lines, 'right')
+        for i in range(len(a:lines))
+            let a:lines[i] = strpart(a:lines[i], 0, strlen(a:lines[i]) - indent)
         endfor
     endif
 endfunction
 
+function! s:MinTrimIndent(lines, side) abort
+    let min_indent = -1
+    let indent = -1
+    for i in range(len(a:lines))
+        if a:side ==# 'left'
+            let [_, indent, _] = matchstrpos(a:lines[i], '\S')
+        elseif a:side ==# 'right'
+            let [_, _, end] = matchstrpos(a:lines[i], '\S\ze\s*$')
+            let indent = (end != -1) ? (strlen(a:lines[i]) - end) : -1
+        endif
+        if indent >= 0
+            let min_indent = (min_indent == -1) ? indent : min([min_indent, indent])
+        endif
+    endfor
+    return min_indent
+endfunction
+
 function! s:WrapCell(cell, width) abort
-    if a:width <= 0
+    if empty(a:cell) || a:width <= 0
         return a:cell
     endif
     let new_cell = []
@@ -78,118 +190,25 @@ function! s:WrapLine(line, width) abort
     return result
 endfunction
 
-function! s:PadAlignCells(table, widths) abort
-    for row in a:table.rows
-        for j in range(len(row.cells))
-            let cell = row.cells[j]
-            let align = a:table.ColAlign(j)
-            let width = a:widths[j]
-            for i in range(row.Height())
-                if i < len(cell)
-                    let cell[i] = s:PadAlignLine(cell[i], align, width)
-                else
-                    call add(cell, s:PadAlignLine('', align, width))
-                endif
-            endfor
-        endfor
-    endfor
-endfunction
 
-function! s:PadAlignLine(line, align, width) abort
-    let pad_size = a:width - strdisplaywidth(a:line)
-    let line = a:line
-    if a:align ==# 'l'
-        let line = ' ' .. line .. repeat(' ', pad_size) .. ' '
-    elseif a:align ==# 'r'
-        let line = ' ' .. repeat(' ', pad_size) .. line .. ' '
-    elseif a:align ==# 'c'
-        let left_pad = float2nr(floor(pad_size / 2))
-        let right_pad = pad_size - left_pad
-        let line = ' ' .. repeat(' ', left_pad) .. line .. repeat(' ', right_pad) .. ' '
-    else
-        throw 'unknown alignment: ' .. a:align .. ' (should be l, r, or c)'
-    endif
-    return line
-endfunction
-
-function! s:TrimCells(table) abort
-    let bufnr = a:table.placement.bufnr
-    let cfg_opts = table#config#Config(bufnr).options
-    for row in a:table.rows
-        for j in range(len(row.cells))
-            if cfg_opts.multiline && cfg_opts.preserve_indentation
-                call s:TrimBlock(row.cells[j], a:table.ColAlign(j))
-            else
-                for i in range(len(row.cells[j]))
-                    let row.cells[j][i] = trim(row.cells[j][i])
-                endfor
-            endif
-        endfor
-    endfor
-endfunction
-
-function! s:TrimBlock(lines, alignment) abort
+function! s:RemoveEmptyLines(lines) abort
     if empty(a:lines)
-        return
+        return []
     endif
-    if len(a:lines) == 1
-        let a:lines[0] = trim(a:lines[0])
-    else
-        for i in range(len(a:lines))
-            if a:alignment ==# 'l'
-                let a:lines[i] = table#compat#trim(a:lines[i], '', 2)
-            elseif a:alignment ==# 'r'
-                let a:lines[i] = table#compat#trim(a:lines[i], '', 1)
-            endif
-        endfor
-    endif
+    " remove empty lines from the top
+    let empty = a:lines[0] =~# '^\s*$'
+    while empty && !empty(a:lines)
+        call remove(a:lines, 0)
+        let empty = a:lines[0] =~# '^\s*$'
+    endwhile
 
-    if a:alignment =~# '\v^l|c$'
-        let indent = s:MinTrimIndent(a:lines, 'left')
-        for i in range(len(a:lines))
-            let a:lines[i] = strpart(a:lines[i], indent)
-        endfor
-    endif
-    if a:alignment =~# '\v^r|c$'
-        let indent = s:MinTrimIndent(a:lines, 'right')
-        for i in range(len(a:lines))
-            let a:lines[i] = strpart(a:lines[i], 0, strlen(a:lines[i]) - indent)
-        endfor
-    endif
-endfunction
-
-" function! s:RemoveEmptyLines(lines) abort
-"     echom 'removing empty lines from block: ' .. string(a:lines)
-"     " remove empty lines from the top
-"     let empty = a:lines[0] =~# '^\s*$'
-"     while empty && !empty(a:lines)
-"         call remove(a:lines, 0)
-"         let empty = a:lines[0] =~# '^\s*$'
-"     endwhile
-"
-"     " remove empty lines from the bottom
-"     let empty = a:lines[-1] =~# '^\s*$'
-"     while empty && !empty(a:lines)
-"         call remove(a:lines, len(a:lines) - 1)
-"         let empty = a:lines[-1] =~# '^\s*$'
-"     endwhile
-" endfunction
-
-function! s:MinTrimIndent(lines, side) abort
-    let min_indent = -1
-    let indent = -1
-    for i in range(len(a:lines))
-        if a:side ==# 'left'
-            let [_, indent, _] = matchstrpos(a:lines[i], '\S')
-        elseif a:side ==# 'right'
-            let [_, _, end] = matchstrpos(a:lines[i], '\S\ze\s*$')
-            let indent = (end != -1) ? (strlen(a:lines[i]) - end) : -1
-        endif
-        if indent >= 0
-            let min_indent = (min_indent == -1) ? indent : min([min_indent, indent])
-        endif
-    endfor
-    return min_indent
+    " remove empty lines from the bottom
+    let empty = a:lines[-1] =~# '^\s*$'
+    while empty && !empty(a:lines)
+        call remove(a:lines, len(a:lines) - 1)
+        let empty = a:lines[-1] =~# '^\s*$'
+    endwhile
+    return a:lines
 endfunction
 
 let &cpo = s:save_cpo
