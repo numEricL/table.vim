@@ -4,6 +4,9 @@ set cpo&vim
 function! table#format#FillGaps(table) abort
     for row in a:table.rows
         call map(row.types, {_, value -> value ==# 'incomplete' ? '' : value})
+        while len(row.cells) < a:table.ColCount()
+            call add(row.cells, [''])
+        endwhile
     endfor
 endfunction
 
