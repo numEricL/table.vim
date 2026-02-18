@@ -12,19 +12,26 @@ endfunction
 
 function! table#format#Align(table) abort
     call s:TrimCells(a:table)
-    call s:WrapCells(a:table)
-    let a:table.col_widths = table#util#ComputeWidths(a:table)
-    call s:PadAlignCells(a:table)
+    call s:ReshapeCells(a:table, a:table.fixed_widths)
+    let col_widths = table#util#ComputeWidths(a:table)
+    for i in range(len(a:table.fixed_widths))
+        if a:table.fixed_widths[i] > 0
+            let col_widths[i] = max([col_widths[i], a:table.fixed_widths[i]])
+        endif
+    endfor
+    call s:PadAlignCells(a:table, col_widths)
+    let a:table.col_widths = col_widths " used in draw.vim for separator lines
 endfunction
 
-function! s:WrapCells(table) abort
+function! s:ReshapeCells(table, widths) abort
     let bufnr = a:table.placement.bufnr
     let cfg_opts = table#config#Config(bufnr).options
     if cfg_opts.multiline && cfg_opts.wrap_lines
         for row in a:table.rows
             for j in range(len(row.cells))
-                let width = get(a:table.max_widths, j, 0)
-                let row.cells[j] = s:WrapCell(row.cells[j], width)
+                call filter(row.cells[j], 'v:val !=# ""')
+                let row.cells[j] = [ join(row.cells[j]) ]
+                let row.cells[j] = s:WrapCell(row.cells[j], get(a:widths, j, 0))
             endfor
         endfor
     endif
@@ -71,13 +78,12 @@ function! s:WrapLine(line, width) abort
     return result
 endfunction
 
-function! s:PadAlignCells(table) abort
-    let widths = a:table.col_widths
+function! s:PadAlignCells(table, widths) abort
     for row in a:table.rows
         for j in range(len(row.cells))
             let cell = row.cells[j]
             let align = a:table.ColAlign(j)
-            let width = widths[j]
+            let width = a:widths[j]
             for i in range(row.Height())
                 if i < len(cell)
                     let cell[i] = s:PadAlignLine(cell[i], align, width)

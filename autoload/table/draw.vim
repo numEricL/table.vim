@@ -184,7 +184,7 @@ function! s:MakeSeparator(table, subtype, num_cols) abort
     let cfg_opts = table#config#Config(bufnr).options
     let align_char = cfg_opts.i_alignment
     let line = left
-    let show_alignment = (a:subtype ==# 'alignment')
+    let show_alignment = (a:subtype ==# 'alignment') && a:table.placement.has_align_chars
     for i in range(a:num_cols-1)
         let col_align = get(a:table.col_align, i, '')
         let pad_left  = (show_alignment && col_align =~# '\v^l|c$') ? align_char : horiz
