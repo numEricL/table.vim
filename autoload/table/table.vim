@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:debug_table = v:true
+let s:debug_table = v:false
 
 function! table#table#Get(linenr, chunk_size, ...) abort
     let vcol_bounds = a:0? a:1 : []
@@ -164,7 +164,7 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
             for cell in line_cells
                 let align_char = table#parse#SeparatorAlignment(cell)
                 let placement.has_align_chars = placement.has_align_chars || !empty(align_char)
-                call add(table.col_align, table#parse#SeparatorAlignment(cell))
+                call add(table.col_align, align_char)
             endfor
             let table.max_col_count = max([table.max_col_count, len(line_cells)])
         endif

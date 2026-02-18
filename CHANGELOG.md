@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
   - Tags specify alignment (left/center/right) and column width
   - Automatic text wrapping for cells exceeding column width
 - Cell editor now automatically fills missing multiline rows when editing cells
-- Cell wrapping now unwraps
+- Cell wrapping now joins + wraps
 
 ### Fixed
 - Sort functionality now works correctly with right-aligned columns

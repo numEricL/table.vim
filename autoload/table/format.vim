@@ -16,11 +16,11 @@ function! table#format#Align(table) abort
     let col_widths = table#util#ComputeWidths(a:table)
     for i in range(len(a:table.fixed_widths))
         if a:table.fixed_widths[i] > 0
-            let col_widths[i] = a:table.fixed_widths[i]
+            let col_widths[i] = max([col_widths[i], a:table.fixed_widths[i]])
         endif
     endfor
     call s:PadAlignCells(a:table, col_widths)
-   let a:table.col_widths = col_widths " used in draw.vim for separator lines
+    let a:table.col_widths = col_widths " used in draw.vim for separator lines
 endfunction
 
 function! s:ReshapeCells(table, widths) abort
