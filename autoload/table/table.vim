@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:debug_table = v:false
+let s:debug_table = v:true
 
 function! table#table#Get(linenr, chunk_size, ...) abort
     let vcol_bounds = a:0? a:1 : []
@@ -323,9 +323,9 @@ if s:debug_table
     command! -nargs=? GetTable call <sid>GetTable(<q-args>)
     command! PrintPositions call <sid>PrintPositions()
     command! PrintCells call <sid>PrintCells()
-    abbreviate GT GetTable
-    abbreviate PP PrintPositions
-    abbreviate PC PrintCells
+    cnoreabbrev GT GetTable
+    cnoreabbrev PP PrintPositions
+    cnoreabbrev PC PrintCells
 
     function! s:GetTable(args) abort
         let args = (a:args == '')? [] : eval(a:args)

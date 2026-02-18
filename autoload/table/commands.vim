@@ -236,8 +236,10 @@ function! s:CompleteOption(ArgLead, CmdLine, CursorPos) abort
         let option_key = parts[1]
         if option_key ==# 'default_alignment'
             return filter(['left', 'center', 'right'], 'v:val =~? "^" .. a:ArgLead')
-        elseif option_key =~# 'multiline\|indentation'
+        elseif option_key ==# 'multiline'
             return filter(['true', 'false'], 'v:val =~? "^" .. a:ArgLead')
+        elseif option_key ==# 'ml_format'
+            return filter(['align', 'wrap', 'block_align', 'block_wrap', 'paragraph_wrap'], 'v:val =~? "^" .. a:ArgLead')
         endif
     endif
     return []
