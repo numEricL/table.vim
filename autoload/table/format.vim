@@ -3,9 +3,9 @@ set cpo&vim
 
 function! table#format#FillGaps(table) abort
     for row in a:table.rows
-        let row.types = repeat(['row'], row.Height())
-        while len(row.cells) < a:table.ColCount()
-            call add(row.cells, [''])
+        call map(row.types, {_, value -> value ==# 'incomplete' ? 'row' : value})
+        while len(row.types) < a:table.ColCount()
+            call add(row.types, '')
         endwhile
     endfor
 endfunction
@@ -15,11 +15,14 @@ function! table#format#Align(table) abort
     let cfg_opts = table#config#Config(bufnr).options
 
     for i in range(len(a:table.rows))
+        let has_alignment_tag = (a:table.rows[i].types[0] ==# 'alignment_tag')
         for j in range(len(a:table.rows[i].cells))
             let cell = a:table.rows[i].cells[j]
             let align = a:table.ColAlign(j)
             let width = get(a:table.fixed_widths, j, 0)
+            let tag = has_alignment_tag? trim(remove(cell, 0)) : ''
             let cell = s:FormatCell(cell, j, align, width, cfg_opts)
+            let cell = has_alignment_tag? [tag] + cell : cell
             let a:table.rows[i].cells[j] = cell
         endfor
     endfor
@@ -44,7 +47,7 @@ function! s:FormatCell(lines, col_idx, align, width, cfg_opts) abort
         else
             call s:TrimLinewise(lines)
         endif
-        if a:cfg_opts.ml_format ==# 'paragraph_wrap'
+        if a:cfg_opts.ml_format ==# 'paragraph_wrap' && a:width > 0
             call filter(lines, 'v:val !=# ""')
             let lines = [ join(lines) ]
         endif

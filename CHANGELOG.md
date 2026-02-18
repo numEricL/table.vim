@@ -16,7 +16,7 @@ All notable changes to this project will be documented in this file.
 - Org-style alignment detection no longer triggers false positives on empty lines
 - Improved table parser to handle column bounds for visual block operations
 - Fixed cleanup in table drawing lines to clear removed data
-- Fixed alignment row identification when placement align_id is unset
+- Fixed alignment row identification when placement align_sep_id is unset
 
 ### Changed
 - default option `preserve_indentation` is now `false`

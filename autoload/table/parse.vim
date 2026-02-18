@@ -26,7 +26,7 @@ function! table#parse#FindTableRange(linenr) abort
     return [top, bottom]
 endfunction
 
-" type may be: 'row', 'separator', 'incomplete'
+" type may be: 'row', 'separator'
 function! table#parse#ParseLine(linenr, vcol_bounds) abort
     let col_byte_bounds = copy(a:vcol_bounds)
     if !empty(col_byte_bounds)
@@ -40,13 +40,13 @@ function! table#parse#ParseLine(linenr, vcol_bounds) abort
     " strip lines of text before/after the table borders for determining type
     let line_table_only = strpart(line_stripped, sep_pos[0][0], sep_pos[-1][1] - sep_pos[0][0])
     let type = s:LineType(line_table_only)
+    let subtype = ''
 
     if empty(cells)
-        let [ sep_pos, type ] = s:ParseIncompleteBorders(line_stripped, seps, sep_pos)
+        let [ sep_pos, type, subtype ] = s:ParseIncompleteBorders(line_stripped, seps, sep_pos)
     endif
-    let subtype = ''
-    if type ==# 'row' && s:CheckAlignmentOrgStyle(cells)
-        let subtype = 'alignment_org_style'
+    if type ==# 'row' && s:CheckAlignmentTagLine(cells)
+        let subtype = 'alignment_tag'
     elseif type ==# 'separator' && s:CheckAlignmentSeparator(line_stripped)
         let subtype = 'alignment'
     endif
@@ -71,7 +71,7 @@ function! table#parse#SeparatorAlignment(cell) abort
     endif
 endfunction
 
-function! table#parse#OrgStyleAlignment(cell) abort
+function! table#parse#AlignmentTag(cell) abort
     let cell = trim(a:cell)
     if cell ==# ''
         return []
@@ -101,7 +101,7 @@ function! s:IsTableLine(linenr) abort
     return v:false
 endfunction
 
-function! s:CheckAlignmentOrgStyle(cells) abort
+function! s:CheckAlignmentTagLine(cells) abort
     let pat = '\%(<\a*\d*>\)'
     let all_empty = v:true
     for cell in a:cells
@@ -163,6 +163,7 @@ endfunction
 function! s:ParseIncompleteBorders(line, seps, sep_pos) abort
     let horiz = s:GeneralHorizPattern()
     let type = ''
+    let subtype = ''
     if empty(a:seps)
         let match = matchstrpos(a:line, '\V' .. horiz .. '\+')
         call add(a:sep_pos, [match[1], match[1]])
@@ -174,10 +175,11 @@ function! s:ParseIncompleteBorders(line, seps, sep_pos) abort
             call add(a:sep_pos, match[1:2])
             let type = 'separator'
         else
-            let type = 'incomplete'
+            let type = 'row'
+            let subtype = 'incomplete'
         endif
     endif
-    return [ a:sep_pos, type ]
+    return [ a:sep_pos, type, subtype ]
 endfunction
 
 " function! s:BoxDrawingPatterns(type) abort
