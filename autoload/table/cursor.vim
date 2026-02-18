@@ -22,7 +22,7 @@ function! table#cursor#GetCoord(table, pos, ...) abort
     let row_offset = a:table.placement.positions[placement_id]['row_offset']
     let sep_pos    = a:table.placement.positions[placement_id]['separator_pos']
 
-    if !empty(type_override)
+    if !empty(type_override) && type_override !=# coord.type
         if type_override ==# 'cell' && coord.type =~# '\v^(separator|alignment)$'
             let coord.type = 'cell'
             let row_id += 1
