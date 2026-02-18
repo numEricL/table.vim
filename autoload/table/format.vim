@@ -35,12 +35,15 @@ function! table#format#Align(table) abort
 endfunction
 
 function! s:FormatCell(lines, col_idx, align, width, cfg_opts) abort
+    if empty(a:lines)
+        return []
+    endif
     let lines = a:lines
     if !a:cfg_opts.multiline
         call s:TrimLinewise(lines)
     else
         if a:cfg_opts.ml_format =~# '\v^(block_align|block_wrap)$'
-            call s:TrimBlock(lines, a:table.ColAlign(col_idx))
+            call s:TrimBlock(lines, a:align)
         else
             call s:TrimLinewise(lines)
         endif
@@ -147,7 +150,7 @@ function! s:MinTrimIndent(lines, side) abort
 endfunction
 
 function! s:WrapCell(cell, width) abort
-    if a:width <= 0
+    if empty(a:cell) || a:width <= 0
         return a:cell
     endif
     let new_cell = []
@@ -189,6 +192,9 @@ endfunction
 
 
 function! s:RemoveEmptyLines(lines) abort
+    if empty(a:lines)
+        return []
+    endif
     " remove empty lines from the top
     let empty = a:lines[0] =~# '^\s*$'
     while empty && !empty(a:lines)

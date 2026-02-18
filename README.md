@@ -174,8 +174,9 @@ See `:help :Table-SortRows` and `:help :Table-SortCols`
 Set column widths using alignment tags. Tags use the format
 `<[alignment][width]>` where alignment is `l` (left), `c` (center), or `r`
 (right), and width is a positive integer. When `multiline` is enabled with
-`ml_format` set to `'paragraph_wrap'` or `'block_wrap'`, content exceeding the
-specified width automatically wraps to multiple lines within the cell.
+`ml_format` set to `'wrap'`, `'paragraph_wrap'`, or `'block_wrap'`, content
+exceeding the specified width automatically wraps to multiple lines within the
+cell.
 
 ```vim
 | Description        |   Column 1 width    |
