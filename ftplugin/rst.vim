@@ -7,7 +7,7 @@ set cpo&vim
 
 call table#SetBufferConfig({
             \ 'style': 'rest',
-            \ 'options': {'multiline': v:true }
+            \ 'options': {'multiline': v:true}
             \ })
 
 let &cpo = s:save_cpo
