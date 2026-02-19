@@ -13,6 +13,7 @@ endfunction
 function! table#format#Align(table) abort
     let bufnr = a:table.placement.bufnr
     let cfg_opts = table#config#Config(bufnr).options
+    let multiline = a:table.placement.multiline
 
     for i in range(len(a:table.rows))
         let align_tag_pos = s:AlignmentTagPos(a:table.rows[i])
@@ -21,7 +22,7 @@ function! table#format#Align(table) abort
             let align = a:table.ColAlign(j)
             let width = get(a:table.fixed_widths, j, 0)
             let tag = s:ExtractAlignmentTag(align_tag_pos, cell)
-            let cell = s:FormatCell(cell, j, align, width, cfg_opts)
+            let cell = s:FormatCell(cell, j, align, width, multiline, cfg_opts)
             call s:InsertAlignmentTag(align_tag_pos, cell, tag)
             let a:table.rows[i].cells[j] = cell
         endfor
@@ -77,12 +78,12 @@ function! s:RepositionAlignmentTags(row, tag_pos) abort
     endif
 endfunction
 
-function! s:FormatCell(lines, col_idx, align, width, cfg_opts) abort
+function! s:FormatCell(lines, col_idx, align, width, multiline, cfg_opts) abort
     if empty(a:lines)
         return []
     endif
     let lines = a:lines
-    if !a:cfg_opts.multiline
+    if !a:multiline
         call s:TrimLinewise(lines)
     else
         if a:cfg_opts.ml_format =~# '\v^(block_align|block_wrap)$'

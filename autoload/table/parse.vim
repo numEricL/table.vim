@@ -30,7 +30,7 @@ function! table#parse#DetectMultilineRows(linenr, full_bounds) abort
     let cfg_opts = table#config#Config(bufnr('%')).options
     let multiline_opt = (type(cfg_opts.multiline) == v:t_string)? cfg_opts.multiline : string(cfg_opts.multiline)
     if multiline_opt !=? 'auto'
-        return multiline_opt
+        return cfg_opts.multiline
     endif
 
     let chunk_size = cfg_opts.chunk_size
@@ -43,22 +43,13 @@ function! table#parse#DetectMultilineRows(linenr, full_bounds) abort
         let bounds[1] = min([bounds[1], a:full_bounds[1]])
     endif
 
-    " skip possible top/bottom separators
-    let start_offset = (bounds[0] == a:full_bounds[0])?  1 : 0
-    let end_offset   = (bounds[1] == a:full_bounds[1])? -1 : 0
-    let start = bounds[0] + start_offset
-    let end = bounds[1] + end_offset
-
-    " if two separators are counted, it must be a multiline table
-    let sep_count = 0
-    for linenr in range(start, end)
+    let row_count = 0
+    for linenr in range(bounds[0], bounds[1])
         let [_, _, _, type, _] = table#parse#ParseLine(linenr, [])
-        if type ==# 'separator'
-            let sep_count += 1
-            if sep_count >= 2
-                return v:true
-            endif
+        if type ==# 'separator' && row_count >= 2
+            return v:true
         endif
+        let row_count = (type ==# 'row')? row_count + 1 : 0
     endfor
     return v:false
 endfunction
