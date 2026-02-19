@@ -38,11 +38,14 @@ function! table#AlignIfNotEscaped() abort
             return
         endif
         let coord = table#cursor#GetCoord(table, cur_pos)
+        if coord.type ==# 'alignment'
+            let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'separator'})
+        endif
+        " if char under cursor before insertion is a pipe, offset by one for correct coordinate
         let char_under_cursor = getline('.')[col('.') - 1]
         let coord.coord[-1] -= ( char_under_cursor ==# '|' )? 1 : 0
         let table = table#draw#CurrentlyPlaced(table)
         call table#cursor#SetCoord(table, coord)
-        " call s:SetCursorLineCoord(coord)
     endif
 endfunction
 
@@ -98,6 +101,7 @@ function! table#CycleCursor(dir, count1) abort
     endif
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2], {'dir': a:dir})
     if coord.type ==# 'separator'
+        let table = table#table#Get(curpos[0], [0,0])
         let coord = table#cursor#GetCoord(table, getpos('.')[1:2], {'type_override': 'cell'})
     endif
     for _ in range(a:count1)
@@ -125,27 +129,6 @@ function! table#Sort(linenr, dim_kind, id, flags) abort
     call table#sort#Sort(table, a:dim_kind, a:id, a:flags)
     call table#draw#CurrentlyPlaced(table)
 endfunction
-
-" function! s:GetCursorLineCoord() abort
-"     let table = table#table#Get(line('.'), [0,0])
-"     return table#cursor#GetCoord(table, getpos('.')[1:2])
-" endfunction
-"
-" function! s:SetCursorLineCoord(coord) abort
-"     let table = table#table#Get(line('.'), [0,0])
-"     if a:coord.type ==# 'cell'
-"         let a:coord.coord[0] = 0
-"     else
-"         let sep_id = (table.placement.bounds[0] - line('.')) < 0? 0 : -1
-"         if a:coord.type ==# 'alignment'
-"             let a:coord.type= 'separator'
-"             let a:coord.coord = [ sep_id, (a:coord.coord[0]+1)/2 ]
-"         elseif a:coord.type ==# 'separator'
-"             let a:coord.coord[0] = sep_id
-"         endif
-"     endif
-"     call table#cursor#SetCoord(table, a:coord)
-" endfunction
 
 function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
     let new_table = a:table
