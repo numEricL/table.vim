@@ -49,9 +49,9 @@ function! s:AlignmentTagPos(row) abort
 endfunction
 
 function! s:ExtractAlignmentTag(tag_pos, cell) abort
-    if a:tag_pos == 'top'
+    if a:tag_pos ==# 'top'
         return trim(remove(a:cell, 0))
-    elseif a:tag_pos == 'bottom'
+    elseif a:tag_pos ==# 'bottom'
         return trim(remove(a:cell, len(a:cell) - 1))
     else
         return ''
@@ -59,15 +59,15 @@ function! s:ExtractAlignmentTag(tag_pos, cell) abort
 endfunction
 
 function! s:InsertAlignmentTag(tag_pos, cell, tag) abort
-    if a:tag_pos == 'top'
+    if a:tag_pos ==# 'top'
         call insert(a:cell, a:tag, 0)
-    elseif a:tag_pos == 'bottom'
+    elseif a:tag_pos ==# 'bottom'
         call add(a:cell, a:tag)
     endif
 endfunction
 
 function! s:RepositionAlignmentTags(row, tag_pos) abort
-    if a:tag_pos == 'bottom'
+    if a:tag_pos ==# 'bottom'
         let height = a:row.Height()
         for cell in a:row.cells
             while len(cell) < height
