@@ -8,7 +8,7 @@ let s:default_config = {
             \ 'style': 'default',
             \ 'options': {
             \   'multiline'         : 'auto',
-            \   'multiline_format'  : 'wrap',
+            \   'multiline_format'  : 'block_wrap',
             \   'default_alignment' : 'left',
             \   'chunk_size'        : [-10, 10],
             \   'i_vertical'        : '|',

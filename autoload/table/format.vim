@@ -114,9 +114,9 @@ function! s:PadAlignCells(table, widths) abort
             let width = a:widths[j]
             for i in range(row.Height())
                 if i < len(cell)
-                    let cell[i] = s:PadAlignLine(cell[i], align, width)
+                    let cell[i] = ' ' .. s:PadAlignLine(cell[i], align, width) .. ' '
                 else
-                    call add(cell, s:PadAlignLine('', align, width))
+                    call add(cell, ' ' .. s:PadAlignLine('', align, width) .. ' ')
                 endif
             endfor
         endfor
@@ -127,13 +127,13 @@ function! s:PadAlignLine(line, align, width) abort
     let pad_size = a:width - strdisplaywidth(a:line)
     let line = a:line
     if a:align ==# 'l'
-        let line = ' ' .. line .. repeat(' ', pad_size) .. ' '
+        let line = line .. repeat(' ', pad_size)
     elseif a:align ==# 'r'
-        let line = ' ' .. repeat(' ', pad_size) .. line .. ' '
+        let line = repeat(' ', pad_size) .. line
     elseif a:align ==# 'c'
         let left_pad = float2nr(floor(pad_size / 2))
         let right_pad = pad_size - left_pad
-        let line = ' ' .. repeat(' ', left_pad) .. line .. repeat(' ', right_pad) .. ' '
+        let line = repeat(' ', left_pad) .. line .. repeat(' ', right_pad)
     else
         throw 'unknown alignment: ' .. a:align .. ' (should be l, r, or c)'
     endif
@@ -154,26 +154,18 @@ function! s:TrimBlock(lines, alignment) abort
         let a:lines[0] = trim(a:lines[0])
     else
         for i in range(len(a:lines))
-            if a:alignment ==# 'l'
-                let a:lines[i] = table#compat#trim(a:lines[i], '', 2)
-            elseif a:alignment ==# 'r'
-                let a:lines[i] = table#compat#trim(a:lines[i], '', 1)
-            endif
+            let a:lines[i] = table#compat#trim(a:lines[i], '', 2)
         endfor
     endif
 
-    if a:alignment =~# '\v^l|c$'
-        let indent = s:MinTrimIndent(a:lines, 'left')
-        for i in range(len(a:lines))
-            let a:lines[i] = strpart(a:lines[i], indent)
-        endfor
-    endif
-    if a:alignment =~# '\v^r|c$'
-        let indent = s:MinTrimIndent(a:lines, 'right')
-        for i in range(len(a:lines))
-            let a:lines[i] = strpart(a:lines[i], 0, strlen(a:lines[i]) - indent)
-        endfor
-    endif
+    let indent = s:MinTrimIndent(a:lines, 'left')
+    for i in range(len(a:lines))
+        let a:lines[i] = strpart(a:lines[i], indent)
+    endfor
+    let width = table#util#CellStrDisplayWidth(a:lines)
+    for i in range(len(a:lines))
+        let a:lines[i] = s:PadAlignLine(a:lines[i], 'l', width)
+    endfor
 endfunction
 
 function! s:MinTrimIndent(lines, side) abort
