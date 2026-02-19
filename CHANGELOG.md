@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
   - detects if a table has multiline rows by checking for separator patterns
   - Enabled when `multiline` option is set to `'auto'` (now the default)
 - **Multiline formatting options**:
-  - New `multiline_format` option with values: `'align'`, `'wrap'` (default), `'block_align'`, `'block_wrap'`, `'paragraph_wrap'`
+  - New `multiline_format` option with values: `'align'`, `'wrap'`, `'block_align'`, `'block_wrap'` (default), `'paragraph_wrap'`
 - Cell editor now automatically fills missing multiline rows when editing cells
 
 ### Fixed
