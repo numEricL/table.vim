@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-" ml_format options: 'align' 'wrap' 'block_align' 'block_wrap' 'paragraph_wrap'
+" multiline_format options: 'align' 'wrap' 'block_align' 'block_wrap' 'paragraph_wrap'
 let s:default_config = {
             \ 'disable_mappings'  : v:false,
             \ 'disable_ftplugins' : v:false,

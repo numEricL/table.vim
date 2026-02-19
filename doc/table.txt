@@ -188,7 +188,7 @@ COMMANDS                                                      *table-commands*
         Examples: >
             :TableConfig Option default_alignment center
             :TableConfig Option multiline true
-            :TableConfig Option ml_format paragraph_wrap
+            :TableConfig Option multiline_format paragraph_wrap
             :TableConfig Option SortComparator {a, b -> len(a) < len(b)}
 <
     :TableConfig Style [name]                            *:TableConfig-Style*
@@ -485,8 +485,8 @@ Table Options ~
 
                                                                   *multiline*
 multiline
-    Type: Boolean
-    Default: v:false (false)
+    Type: String
+    Default: 'auto'
 
     Allow cells to contain newline characters. When enabled, cells can span
     multiple lines visually. Use the |:Table| EditCell command or press
@@ -495,8 +495,8 @@ multiline
     When disabled, newlines in cells will cause parsing issues. >
         :TableConfig Option multiline true
 <
-                                                                 *ml_format*
-ml_format
+                                                          *multiline_format*
+multiline_format
     Type: String
     Default: 'align'
     Values: 'align', 'wrap', 'block_align', 'block_wrap', 'paragraph_wrap'

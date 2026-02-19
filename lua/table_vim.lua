@@ -5,9 +5,8 @@ local M = {}
 --   - disable_ftplugins: boolean - Disable built-in ftplugin configuration files (default: false)
 --   - style: string - Table style name (e.g., 'markdown', 'org', 'single', 'double')
 --   - options: table - Table options
---     - multiline: boolean - Allow cells to contain newlines
---     - preserve_indentation: boolean - Keep leading whitespace in multiline cells
---     - wrap_lines: boolean - hard-wrap lines with width tags
+--     - multiline: string - Allow cells to contain newlines
+--     - multiline_format: string - formatting to be applied to multiline cells: 'align' 'wrap' 'block_align' 'block_wrap' 'paragraph_wrap'
 --     - default_alignment: string - Default column alignment: 'left', 'center', or 'right'
 --     - chunk_size: list - Chunk size for parsing
 --     - i_vertical: string - Input vertical character
