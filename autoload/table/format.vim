@@ -22,7 +22,7 @@ function! table#format#Align(table) abort
             let width = get(a:table.fixed_widths, j, 0)
             let tag = s:ExtractAlignmentTag(align_tag_pos, cell)
             let cell = s:FormatCell(cell, j, align, width, cfg_opts)
-            call s:ReplaceAlignmentTag(align_tag_pos, cell, tag)
+            call s:InsertAlignmentTag(align_tag_pos, cell, tag)
             let a:table.rows[i].cells[j] = cell
         endfor
         call s:RepositionAlignmentTags(a:table.rows[i], align_tag_pos)
@@ -58,7 +58,7 @@ function! s:ExtractAlignmentTag(tag_pos, cell) abort
     endif
 endfunction
 
-function! s:ReplaceAlignmentTag(tag_pos, cell, tag) abort
+function! s:InsertAlignmentTag(tag_pos, cell, tag) abort
     if a:tag_pos == 'top'
         call insert(a:cell, a:tag, 0)
     elseif a:tag_pos == 'bottom'
