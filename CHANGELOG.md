@@ -8,8 +8,12 @@ All notable changes to this project will be documented in this file.
 - **Fixed-width columns**: Support for org-style alignment tags (`<l30>`, `<c10>`, `<r20>`)
   - Tags specify alignment (left/center/right) and column width
   - Automatic text wrapping for cells exceeding column width
+- **Automatic multiline row detection**:
+  - detects if a table has multiline rows by checking for separator patterns
+  - Enabled when `multiline` option is set to `'auto'` (now the default)
+- **Multiline formatting options**:
+  - New `multiline_format` option with values: `'align'`, `'wrap'` (default), `'block_align'`, `'block_wrap'`, `'paragraph_wrap'`
 - Cell editor now automatically fills missing multiline rows when editing cells
-- Cell wrapping now joins + wraps
 
 ### Fixed
 - Sort functionality now works correctly with right-aligned columns
@@ -19,9 +23,10 @@ All notable changes to this project will be documented in this file.
 - Fixed alignment row identification when placement align_sep_id is unset
 
 ### Changed
-- **BREAKING**: Replaced `preserve_indentation` and `wrap_lines` options with unified `ml_format` option
-  - New `ml_format` values: `'align'` (default), `'wrap'`, `'block_align'`, `'block_wrap'`, `'paragraph_wrap'`
-  - Migration: Update your configuration to use `ml_format` instead of `preserve_indentation` and `wrap_lines`
+- **BREAKING**: Changed `multiline` option default from `v:false` to `'auto'`
+  - Now auto-detects multiline rows based on separator patterns in the table
+  - Set to `v:true` or `v:false` for explicit control
+- **BREAKING**: Replaced `preserve_indentation` with `multiline_format` option
 - `:TableOption` command renamed to `:TableConfig`.
 - org-style alignment tags take precedence over alignment header
 
