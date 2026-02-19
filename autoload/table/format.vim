@@ -19,10 +19,9 @@ function! table#format#Align(table) abort
         let align_tag_pos = s:AlignmentTagPos(a:table.rows[i])
         for j in range(len(a:table.rows[i].cells))
             let cell = a:table.rows[i].cells[j]
-            let align = a:table.ColAlign(j)
             let width = get(a:table.fixed_widths, j, 0)
             let tag = s:ExtractAlignmentTag(align_tag_pos, cell)
-            let cell = s:FormatCell(cell, j, align, width, multiline, cfg_opts)
+            let cell = s:FormatCell(cell, j, width, multiline, cfg_opts)
             call s:InsertAlignmentTag(align_tag_pos, cell, tag)
             let a:table.rows[i].cells[j] = cell
         endfor
@@ -35,7 +34,11 @@ function! table#format#Align(table) abort
             let col_widths[i] = max([col_widths[i], a:table.fixed_widths[i]])
         endif
     endfor
-    call s:PadAlignCells(a:table, col_widths)
+    let col_aligns = []
+    for i in range(a:table.ColCount())
+        call add(col_aligns, a:table.ColAlign(i))
+    endfor
+    call s:PadAlignCells(a:table, col_aligns, col_widths)
     let a:table.col_widths = col_widths " used in draw.vim for separator lines
 endfunction
 
@@ -78,7 +81,7 @@ function! s:RepositionAlignmentTags(row, tag_pos) abort
     endif
 endfunction
 
-function! s:FormatCell(lines, col_idx, align, width, multiline, cfg_opts) abort
+function! s:FormatCell(lines, col_idx, width, multiline, cfg_opts) abort
     if empty(a:lines)
         return []
     endif
@@ -87,7 +90,7 @@ function! s:FormatCell(lines, col_idx, align, width, multiline, cfg_opts) abort
         call s:TrimLinewise(lines)
     else
         if a:cfg_opts.multiline_format =~# '\v^(block_align|block_wrap)$'
-            call s:TrimBlock(lines, a:align)
+            call s:TrimBlock(lines)
         else
             call s:TrimLinewise(lines)
         endif
@@ -106,17 +109,17 @@ function! s:FormatCell(lines, col_idx, align, width, multiline, cfg_opts) abort
     return lines
 endfunction
 
-function! s:PadAlignCells(table, widths) abort
+function! s:PadAlignCells(table, aligns, widths) abort
     for row in a:table.rows
         for j in range(len(row.cells))
             let cell = row.cells[j]
-            let align = a:table.ColAlign(j)
+            let align = a:aligns[j]
             let width = a:widths[j]
             for i in range(row.Height())
                 if i < len(cell)
-                    let cell[i] = s:PadAlignLine(cell[i], align, width)
+                    let cell[i] = ' ' .. s:PadAlignLine(cell[i], align, width) .. ' '
                 else
-                    call add(cell, s:PadAlignLine('', align, width))
+                    call add(cell, ' ' .. s:PadAlignLine('', align, width) .. ' ')
                 endif
             endfor
         endfor
@@ -127,13 +130,13 @@ function! s:PadAlignLine(line, align, width) abort
     let pad_size = a:width - strdisplaywidth(a:line)
     let line = a:line
     if a:align ==# 'l'
-        let line = ' ' .. line .. repeat(' ', pad_size) .. ' '
+        let line = line .. repeat(' ', pad_size)
     elseif a:align ==# 'r'
-        let line = ' ' .. repeat(' ', pad_size) .. line .. ' '
+        let line = repeat(' ', pad_size) .. line
     elseif a:align ==# 'c'
         let left_pad = float2nr(floor(pad_size / 2))
         let right_pad = pad_size - left_pad
-        let line = ' ' .. repeat(' ', left_pad) .. line .. repeat(' ', right_pad) .. ' '
+        let line = repeat(' ', left_pad) .. line .. repeat(' ', right_pad)
     else
         throw 'unknown alignment: ' .. a:align .. ' (should be l, r, or c)'
     endif
@@ -146,7 +149,7 @@ function! s:TrimLinewise(lines) abort
     endfor
 endfunction
 
-function! s:TrimBlock(lines, alignment) abort
+function! s:TrimBlock(lines) abort
     if empty(a:lines)
         return
     endif
@@ -154,26 +157,18 @@ function! s:TrimBlock(lines, alignment) abort
         let a:lines[0] = trim(a:lines[0])
     else
         for i in range(len(a:lines))
-            if a:alignment ==# 'l'
-                let a:lines[i] = table#compat#trim(a:lines[i], '', 2)
-            elseif a:alignment ==# 'r'
-                let a:lines[i] = table#compat#trim(a:lines[i], '', 1)
-            endif
+            let a:lines[i] = table#compat#trim(a:lines[i], '', 2)
         endfor
     endif
 
-    if a:alignment =~# '\v^l|c$'
-        let indent = s:MinTrimIndent(a:lines, 'left')
-        for i in range(len(a:lines))
-            let a:lines[i] = strpart(a:lines[i], indent)
-        endfor
-    endif
-    if a:alignment =~# '\v^r|c$'
-        let indent = s:MinTrimIndent(a:lines, 'right')
-        for i in range(len(a:lines))
-            let a:lines[i] = strpart(a:lines[i], 0, strlen(a:lines[i]) - indent)
-        endfor
-    endif
+    let indent = s:MinTrimIndent(a:lines, 'left')
+    for i in range(len(a:lines))
+        let a:lines[i] = strpart(a:lines[i], indent)
+    endfor
+    let width = table#util#CellStrDisplayWidth(a:lines)
+    for i in range(len(a:lines))
+        let a:lines[i] = s:PadAlignLine(a:lines[i], 'l', width)
+    endfor
 endfunction
 
 function! s:MinTrimIndent(lines, side) abort
