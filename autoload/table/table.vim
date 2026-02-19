@@ -13,7 +13,7 @@ function! table#table#GetCached(linenr, chunk_size) abort
     " return s:TryCache(a:linenr, a:chunk_size)
 endfunction
 
-function! s:ComputeChunkBounds(linenr, full_bounds, chunk_size, vcol_bounds) abort
+function! s:ComputeChunkBounds(linenr, full_bounds, chunk_size, vcol_bounds, multiline) abort
     if empty(a:chunk_size) || a:chunk_size == [0, -1]
         return a:full_bounds
     endif
@@ -25,8 +25,8 @@ function! s:ComputeChunkBounds(linenr, full_bounds, chunk_size, vcol_bounds) abo
     let end_line = min([a:full_bounds[1], end_line])
 
     let [start_line, end_line] = s:ExpandEmptyChunk(start_line, end_line, a:full_bounds, a:vcol_bounds)
-    let start_line = s:ExpandToCompleteRow(start_line, a:full_bounds[0], -1, a:vcol_bounds)
-    let end_line = s:ExpandToCompleteRow(end_line, a:full_bounds[1], 1, a:vcol_bounds)
+    let start_line = s:ExpandToCompleteRow(start_line, a:full_bounds[0], -1, a:vcol_bounds, a:multiline)
+    let end_line = s:ExpandToCompleteRow(end_line, a:full_bounds[1], 1, a:vcol_bounds, a:multiline)
 
     return [start_line, end_line]
 endfunction
@@ -60,10 +60,9 @@ function! s:ExpandEmptyChunk(start_line, end_line, full_bounds, vcol_bounds) abo
     return [a:start_line, a:end_line]
 endfunction
 
-function! s:ExpandToCompleteRow(linenr, boundary, direction, vcol_bounds) abort
+function! s:ExpandToCompleteRow(linenr, boundary, direction, vcol_bounds, multiline) abort
     let current = a:linenr
-    let cfg_opts = table#config#Config(bufnr('%')).options
-    if !cfg_opts.multiline
+    if !a:multiline
         let [_, _, _, type, _] = table#parse#ParseLine(current, a:vcol_bounds)
         if type ==# 'row' && current != a:boundary
             let [_, _, _, type, _] = table#parse#ParseLine(current + a:direction, a:vcol_bounds)
@@ -95,7 +94,8 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
     if full_bounds[0] == -1
         return {'valid': v:false}
     endif
-    let bounds = s:ComputeChunkBounds(a:linenr, full_bounds, a:chunk_size, a:vcol_bounds)
+    let multiline_rows = table#parse#DetectMultilineRows(a:linenr, full_bounds)
+    let bounds = s:ComputeChunkBounds(a:linenr, full_bounds, a:chunk_size, a:vcol_bounds, multiline_rows)
     let placement = {
                 \ 'bufnr'           : bufnr('%'),
                 \ 'bounds'          : bounds,
@@ -105,6 +105,7 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
                 \ 'has_align_chars' : v:false,
                 \ 'min_col_start'   : -1,
                 \ 'max_col_start'   : -1,
+                \ 'multiline'       : multiline_rows,
                 \ }
     let table = {
                 \ 'valid'         : v:true,
@@ -131,7 +132,7 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
                 let subtype = 'bottom'
             elseif placement.align_sep_id == -1 && (bounds[0] == full_bounds[0])
                 let subtype = 'alignment'
-            elseif subtype ==# 'alignment_tag' && !s:IsNewRow(last_type)  " alignment tag must begin row
+            elseif subtype ==# 'alignment_tag' && !s:IsNewRow(last_type, multiline_rows)  " alignment tag must begin row
                 let subtype = ''
             endif
         endif
@@ -223,7 +224,7 @@ function! s:CellRowHeight() dict abort
 endfunction
 
 function! s:AppendTableRow(table, subtype, last_type, line_cells, pos_id) abort
-    if s:IsNewRow(a:last_type)
+    if s:IsNewRow(a:last_type, a:table.placement.multiline)
         let cells = empty(a:line_cells)? [['']] : map(copy(a:line_cells), '[v:val]')
         let row = {
                     \ 'cells'         : cells,
@@ -246,9 +247,8 @@ function! s:AppendTableRow(table, subtype, last_type, line_cells, pos_id) abort
     endif
 endfunction
 
-function! s:IsNewRow(last_type) abort
-    let cfg_opts = table#config#Config(bufnr('%')).options
-    return !cfg_opts.multiline || a:last_type ==# 'separator'
+function! s:IsNewRow(last_type, multiline) abort
+    return !a:multiline || a:last_type ==# 'separator'
 endfunction
 
 function! s:TryCache(linenr, chunk_size) abort

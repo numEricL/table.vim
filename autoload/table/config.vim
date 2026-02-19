@@ -1,20 +1,20 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-" ml_format options: 'align' 'wrap' 'block_align' 'block_wrap' 'paragraph_wrap'
+" multiline_format options: 'align' 'wrap' 'block_align' 'block_wrap' 'paragraph_wrap'
 let s:default_config = {
             \ 'disable_mappings'  : v:false,
             \ 'disable_ftplugins' : v:false,
             \ 'style': 'default',
             \ 'options': {
-            \   'multiline'            : v:false,
-            \   'ml_format'            : 'align',
-            \   'default_alignment'    : 'left',
-            \   'chunk_size'           : [-10, 10],
-            \   'i_vertical'           : '|',
-            \   'i_horizontal'         : '-',
-            \   'i_alignment'          : ':',
-            \   'SortComparator'       : '',
+            \   'multiline'         : 'auto',
+            \   'multiline_format'  : 'wrap',
+            \   'default_alignment' : 'left',
+            \   'chunk_size'        : [-10, 10],
+            \   'i_vertical'        : '|',
+            \   'i_horizontal'      : '-',
+            \   'i_alignment'       : ':',
+            \   'SortComparator'    : '',
             \   },
             \ 'style_options': {},
             \ }

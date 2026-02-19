@@ -177,9 +177,10 @@ COMMANDS                                                      *table-commands*
           'right' (or 'l', 'c', 'r') (default: 'left')
         - chunk_size: Lines to process around cursor [before, after]
           (default: [-10, 10])
-        - multiline: Enable multiline cells (default: false)
-          When true, cells can contain newline characters.
-        - ml_format: Multiline cell formatting mode (default: 'align')
+        - multiline: Enable multiline cells (default: 'auto')
+          Values: v:true, v:false, or 'auto'. When 'auto', automatically
+          detects multiline rows based on table structure.
+        - multiline_format: Multiline cell formatting mode (default: 'wrap')
           Values: 'align', 'wrap', 'block_align', 'block_wrap', 'paragraph_wrap'
         - SortComparator: Custom comparison function for sorting
           (default: empty)
@@ -187,7 +188,7 @@ COMMANDS                                                      *table-commands*
         Examples: >
             :TableConfig Option default_alignment center
             :TableConfig Option multiline true
-            :TableConfig Option ml_format paragraph_wrap
+            :TableConfig Option multiline_format paragraph_wrap
             :TableConfig Option SortComparator {a, b -> len(a) < len(b)}
 <
     :TableConfig Style [name]                            *:TableConfig-Style*
@@ -428,8 +429,8 @@ table#Setup({config})
             'disable_ftplugins': v:false,
             'style': 'default',
             'options': {
-                'multiline': v:false,
-                'ml_format': 'align',
+                'multiline': 'auto',
+                'multiline_format': 'wrap',
                 'default_alignment': 'left',
                 'chunk_size': [-10, 10],
                 'i_vertical': '|',
@@ -449,14 +450,14 @@ table#Setup({config})
         " In vimrc
         call table#Setup({
             \ 'style': 'markdown',
-            \ 'options': {'default_alignment': 'center', 'multiline': v:true, 'ml_format': 'paragraph_wrap'}
+            \ 'options': {'default_alignment': 'center', 'multiline': v:true, 'multiline_format': 'paragraph_wrap'}
             \ })
 <
     Example (Lua): >
         -- In init.lua
         require('table_vim').setup({
             style = 'default',
-            options = { multiline = true, ml_format = 'paragraph_wrap', chunk_size = {-20, 20} }
+            options = { multiline = true, multiline_format = 'paragraph_wrap', chunk_size = {-20, 20} }
         })
 <
                                                       *table#SetBufferConfig()*
@@ -484,8 +485,8 @@ Table Options ~
 
                                                                   *multiline*
 multiline
-    Type: Boolean
-    Default: v:false (false)
+    Type: String
+    Default: 'auto'
 
     Allow cells to contain newline characters. When enabled, cells can span
     multiple lines visually. Use the |:Table| EditCell command or press
@@ -494,8 +495,8 @@ multiline
     When disabled, newlines in cells will cause parsing issues. >
         :TableConfig Option multiline true
 <
-                                                                 *ml_format*
-ml_format
+                                                          *multiline_format*
+multiline_format
     Type: String
     Default: 'align'
     Values: 'align', 'wrap', 'block_align', 'block_wrap', 'paragraph_wrap'
@@ -739,7 +740,7 @@ FIXED-WIDTH COLUMNS                                        *table-fixed-width*
 
 Fixed-width columns allow you to specify column widths using special alignment
 tags. Content exceeding the specified width automatically wraps to multiple
-lines within the cell when |multiline| is enabled with |ml_format| set to
+lines within the cell when |multiline| is enabled with |multiline_format| set to
 'wrap', 'paragraph_wrap' or 'block_wrap'.
 
 Tag Syntax ~
@@ -763,7 +764,7 @@ corresponding column: >
     | <l30>              |        <c10>        |
     | Next col will wrap | This cell will wrap |
 <
-When the |multiline| and a suitable |ml_format| is set, content exceeding the
+When the |multiline| and a suitable |multiline_format| is set, content exceeding the
 specified width will automatically wrap to multiple lines within the cell: >
 
     | Description        | Column 1  |
@@ -778,12 +779,12 @@ Configuration ~
 
 Enable wrapping with fixed-width columns: >
     call table#Setup({
-        \ 'options': {'multiline': v:true, 'ml_format': 'wrap'}
+        \ 'options': {'multiline': v:true, 'multiline_format': 'wrap'}
         \ })
 <
 Or at runtime: >
     :TableConfig Option multiline true
-    :TableConfig Option ml_format wrap
+    :TableConfig Option multiline_format wrap
 <
 
 ==============================================================================

@@ -39,7 +39,7 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 
 ## Features
 
-- **Multiline rows**        - must be enabled in your configuration
+- **Multiline rows**        - auto-detected by default
 - **Fixed-width columns**   - hard-wrap columns with alignment tags
 - **Cell editing window**   - edit in a floating window, hooks provided (split window in Vim)
 - **Sorting**               - sort rows and columns by any column/row
@@ -60,7 +60,7 @@ per-filetype in after/ftplugin files, or change at runtime with `:TableConfig`.
 " .vimrc - set defaults for all buffers (overridden by ftplugins)
 call table#Setup({
     \ 'style': 'default',
-    \ 'options': {'multiline': v:true, 'ml_format': 'wrap'}
+    \ 'options': {'multiline': 'auto', 'multiline_format': 'wrap'}
     \ })
 ```
 
@@ -68,7 +68,7 @@ call table#Setup({
 -- init.lua - set defaults for all buffers (overridden by ftplugins)
 require('table_vim').setup({
     style = 'default',
-    options = { multiline = true, ml_format = 'wrap' }
+    options = { multiline = 'auto', multiline_format = 'wrap' }
 })
 ```
 
@@ -175,10 +175,9 @@ See `:help :Table-SortRows` and `:help :Table-SortCols`
 
 Set column widths using alignment tags. Tags use the format
 `<[alignment][width]>` where alignment is `l` (left), `c` (center), or `r`
-(right), and width is a positive integer. When `multiline` is enabled with
-`ml_format` set to `'wrap'`, `'paragraph_wrap'`, or `'block_wrap'`, content
-exceeding the specified width automatically wraps to multiple lines within the
-cell.
+(right), and width is a positive integer. Columns are padded to the specified
+width, and, if `multiline` is enabled and a `multiline_format` wrap option is
+set, long columns are also hard-wrapped to the specified width.
 
 ```vim
 | Description        |   Column 1 width    |
@@ -198,7 +197,7 @@ cell.
 Enable wrapping in configuration:
 ```vim
 call table#Setup({
-    \ 'options': {'multiline': v:true, 'ml_format': 'wrap'}
+    \ 'options': {'multiline': 'auto', 'multiline_format': 'wrap'}
     \ })
 ```
 

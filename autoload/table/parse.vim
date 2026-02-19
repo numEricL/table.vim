@@ -26,6 +26,34 @@ function! table#parse#FindTableRange(linenr) abort
     return [top, bottom]
 endfunction
 
+function! table#parse#DetectMultilineRows(linenr, full_bounds) abort
+    let cfg_opts = table#config#Config(bufnr('%')).options
+    let multline = (type(cfg_opts.multiline) == v:t_string)? cfg_opts.multiline : string(cfg_opts.multiline)
+    if multline !=? 'auto'
+        return cfg_opts.multiline
+    endif
+
+    let chunk_size = cfg_opts.chunk_size
+    let bounds = []
+    if empty(chunk_size) || chunk_size == [0, -1]
+        let bounds = a:full_bounds
+    else
+        let bounds = [a:linenr + chunk_size[0], a:linenr + chunk_size[1]]
+        let bounds[0] = max([bounds[0], a:full_bounds[0]])
+        let bounds[1] = min([bounds[1], a:full_bounds[1]])
+    endif
+
+    let row_count = 0
+    for linenr in range(bounds[0], bounds[1])
+        let [_, _, _, type, _] = table#parse#ParseLine(linenr, [])
+        if type ==# 'separator' && row_count >= 2
+            return v:true
+        endif
+        let row_count = (type ==# 'row')? row_count + 1 : 0
+    endfor
+    return v:false
+endfunction
+
 " type may be: 'row', 'separator'
 function! table#parse#ParseLine(linenr, vcol_bounds) abort
     let col_byte_bounds = copy(a:vcol_bounds)
