@@ -95,6 +95,7 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
     if full_bounds[0] == -1
         return {'valid': v:false}
     endif
+    let multiline_rows = table#parse#DetectMultilineRows(a:linenr, full_bounds)
     let bounds = s:ComputeChunkBounds(a:linenr, full_bounds, a:chunk_size, a:vcol_bounds)
     let placement = {
                 \ 'bufnr'           : bufnr('%'),
