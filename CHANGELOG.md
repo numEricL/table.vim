@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [v0.2.0] - 2026-02-19
 
 ### Added
 - **Fixed-width columns**: Support for org-style alignment tags (`<l30>`, `<c10>`, `<r20>`)

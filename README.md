@@ -1,9 +1,9 @@
 # table.vim
 
-Advanced table editing for Vim and Neovim. Create, edit, and format tables with
-ease. Supports multi-line rows, fixed-width columns, sorting, and multiple table
-styles. Edit cell content in a separate window for greater control. Highly
-configurable and extensible.
+Advanced table editing for Vim and Neovim. Easily create, edit, and format
+tables with support for multi-line rows, fixed-width columns, sorting, and
+various table styles. Edit cell content in a separate window for enhanced
+control. Highly configurable and extensible.
 
 ## Quick Start
 
@@ -49,6 +49,7 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 
 ## Demo
 
+Note: This demo is from an older version, options have changed.
 https://github.com/user-attachments/assets/352e23b0-33ba-4f9d-9fa0-e2aee5fd16cc
 
 ## Configuration (optional)
