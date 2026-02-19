@@ -41,6 +41,7 @@ function! table#AlignIfNotEscaped() abort
         if coord.type ==# 'alignment'
             let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'separator'})
         endif
+        " if char under cursor before insertion is a pipe, offset by one for correct coordinate
         let char_under_cursor = getline('.')[col('.') - 1]
         let coord.coord[-1] -= ( char_under_cursor ==# '|' )? 1 : 0
         let table = table#draw#CurrentlyPlaced(table)
@@ -100,6 +101,7 @@ function! table#CycleCursor(dir, count1) abort
     endif
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2], {'dir': a:dir})
     if coord.type ==# 'separator'
+        let table = table#table#Get(curpos[0], [0,0])
         let coord = table#cursor#GetCoord(table, getpos('.')[1:2], {'type_override': 'cell'})
     endif
     for _ in range(a:count1)
