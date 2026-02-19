@@ -86,12 +86,12 @@ function! s:FormatCell(lines, col_idx, align, width, multiline, cfg_opts) abort
     if !a:multiline
         call s:TrimLinewise(lines)
     else
-        if a:cfg_opts.ml_format =~# '\v^(block_align|block_wrap)$'
+        if a:cfg_opts.multiline_format =~# '\v^(block_align|block_wrap)$'
             call s:TrimBlock(lines, a:align)
         else
             call s:TrimLinewise(lines)
         endif
-        if a:cfg_opts.ml_format ==# 'paragraph_wrap'
+        if a:cfg_opts.multiline_format ==# 'paragraph_wrap'
             if a:width > 0
                 call filter(lines, 'v:val !=# ""')
                 let lines = [ join(lines) ]
@@ -99,7 +99,7 @@ function! s:FormatCell(lines, col_idx, align, width, multiline, cfg_opts) abort
                 let lines = s:RemoveBlankLines(lines)
             endif
         endif
-        if a:cfg_opts.ml_format =~# '\v^(wrap|block_wrap|paragraph_wrap)$'
+        if a:cfg_opts.multiline_format =~# '\v^(wrap|block_wrap|paragraph_wrap)$'
             let lines = s:WrapCell(lines, a:width)
         endif
     endif
@@ -205,11 +205,6 @@ function! s:WrapCell(cell, width) abort
             call add(new_cell, a:cell[i])
         endif
     endfor
-    let empty_last_line = new_cell[-1] =~# '^\s*$'
-    while empty_last_line && !empty(new_cell)
-        call remove(new_cell, len(new_cell) - 1)
-        let empty_last_line = get(new_cell, -1, '') =~# '^\s*$'
-    endwhile
     return new_cell
 endfunction
 
