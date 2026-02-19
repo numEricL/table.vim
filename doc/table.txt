@@ -180,7 +180,7 @@ COMMANDS                                                      *table-commands*
         - multiline: Enable multiline cells (default: 'auto')
           Values: v:true, v:false, or 'auto'. When 'auto', automatically
           detects multiline rows based on table structure.
-        - multiline_format: Multiline cell formatting mode (default: 'wrap')
+        - multiline_format: Multiline cell formatting mode (default: 'block_wrap')
           Values: 'align', 'wrap', 'block_align', 'block_wrap', 'paragraph_wrap'
         - SortComparator: Custom comparison function for sorting
           (default: empty)
@@ -430,7 +430,7 @@ table#Setup({config})
             'style': 'default',
             'options': {
                 'multiline': 'auto',
-                'multiline_format': 'wrap',
+                'multiline_format': 'block_wrap',
                 'default_alignment': 'left',
                 'chunk_size': [-10, 10],
                 'i_vertical': '|',
@@ -498,7 +498,7 @@ multiline
                                                           *multiline_format*
 multiline_format
     Type: String
-    Default: 'align'
+    Default: 'block_wrap'
     Values: 'align', 'wrap', 'block_align', 'block_wrap', 'paragraph_wrap'
 
     Controls how multiline cell content is formatted when |multiline| is
@@ -779,12 +779,12 @@ Configuration ~
 
 Enable wrapping with fixed-width columns: >
     call table#Setup({
-        \ 'options': {'multiline': v:true, 'multiline_format': 'wrap'}
+        \ 'options': {'multiline': v:true, 'multiline_format': 'block_wrap'}
         \ })
 <
 Or at runtime: >
     :TableConfig Option multiline true
-    :TableConfig Option multiline_format wrap
+    :TableConfig Option multiline_format block_wrap
 <
 
 ==============================================================================

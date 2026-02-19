@@ -60,7 +60,7 @@ per-filetype in after/ftplugin files, or change at runtime with `:TableConfig`.
 " .vimrc - set defaults for all buffers (overridden by ftplugins)
 call table#Setup({
     \ 'style': 'default',
-    \ 'options': {'multiline': 'auto', 'multiline_format': 'wrap'}
+    \ 'options': {'multiline': 'auto', 'multiline_format': 'block_wrap'}
     \ })
 ```
 
@@ -68,7 +68,7 @@ call table#Setup({
 -- init.lua - set defaults for all buffers (overridden by ftplugins)
 require('table_vim').setup({
     style = 'default',
-    options = { multiline = 'auto', multiline_format = 'wrap' }
+    options = { multiline = 'auto', multiline_format = 'block_wrap' }
 })
 ```
 
@@ -197,7 +197,7 @@ set, long columns are also hard-wrapped to the specified width.
 Enable wrapping in configuration:
 ```vim
 call table#Setup({
-    \ 'options': {'multiline': 'auto', 'multiline_format': 'wrap'}
+    \ 'options': {'multiline': 'auto', 'multiline_format': 'block_wrap'}
     \ })
 ```
 
