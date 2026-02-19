@@ -95,7 +95,7 @@ function! s:FormatCell(lines, col_idx, align, width, cfg_opts) abort
                 call filter(lines, 'v:val !=# ""')
                 let lines = [ join(lines) ]
             else
-                let lines = s:RemoveEmptyLines(lines)
+                let lines = s:RemoveBlankLines(lines)
             endif
         endif
         if a:cfg_opts.ml_format =~# '\v^(wrap|block_wrap|paragraph_wrap)$'
@@ -233,23 +233,14 @@ function! s:WrapLine(line, width) abort
     return result
 endfunction
 
-
-function! s:RemoveEmptyLines(lines) abort
-    if empty(a:lines)
-        return []
-    endif
+function! s:RemoveBlankLines(lines) abort
     " remove empty lines from the top
-    let empty = a:lines[0] =~# '^\s*$'
-    while empty && !empty(a:lines)
+    while !empty(a:lines) && (a:lines[0] =~# '^\s*$')
         call remove(a:lines, 0)
-        let empty = a:lines[0] =~# '^\s*$'
     endwhile
-
     " remove empty lines from the bottom
-    let empty = a:lines[-1] =~# '^\s*$'
-    while empty && !empty(a:lines)
+    while !empty(a:lines) && (a:lines[-1] =~# '^\s*$')
         call remove(a:lines, len(a:lines) - 1)
-        let empty = a:lines[-1] =~# '^\s*$'
     endwhile
     return a:lines
 endfunction
