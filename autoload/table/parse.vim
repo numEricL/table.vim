@@ -28,8 +28,8 @@ endfunction
 
 function! table#parse#DetectMultilineRows(linenr, full_bounds) abort
     let cfg_opts = table#config#Config(bufnr('%')).options
-    let multiline_opt = (type(cfg_opts.multiline) == v:t_string)? cfg_opts.multiline : string(cfg_opts.multiline)
-    if multiline_opt !=? 'auto'
+    let multline = (type(cfg_opts.multiline) == v:t_string)? cfg_opts.multiline : string(cfg_opts.multiline)
+    if multline !=? 'auto'
         return cfg_opts.multiline
     endif
 
