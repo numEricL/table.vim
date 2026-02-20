@@ -270,7 +270,7 @@ function! s:BisectIfMultilineCell(cur_pos) abort
     endif
 endfunction
 
-function! s:IsCompleteRow(table, cell_id)
+function! s:IsCompleteRow(table, cell_id) abort
     let positions = a:table.placement.positions
     let row_off = a:cell_id[1]
     let row_off  += (positions[ 0].type ==# 'separator') ? 1 : 0
@@ -292,7 +292,7 @@ endfunction
 function! s:GetAdjustedBounds(table, cell_id) abort
     let positions = a:table.placement.positions
     let cell_count = a:table.rows[a:cell_id[0]].ColCount()
-    let bounds = a:table.placement.bounds
+    let bounds = copy(a:table.placement.bounds)
     let row_offset = a:cell_id[1]
     if positions[0].type ==# 'separator'
         let pipe_count = len(positions[0].separator_pos)
