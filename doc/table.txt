@@ -991,9 +991,10 @@ table#AlignIfNotEscaped()
     is not a backslash escape (\). Used internally for insert mode
     auto-align on typing |. This allows typing literal pipes with \|.
 
-    Auto-split feature: When enabled, inserting a pipe character into a
-    multiline cell automatically splits the entire cell at the cursor position
-    across all lines in the cell. Disable with the |auto_split_cell| option.
+    Auto-split feature (disabled by default): When enabled, inserting a pipe
+    character into a multiline cell automatically splits the entire cell at the
+    cursor position across all lines in the cell. Enable with the
+    |auto_split_cell| option.
 
     Should be called in insert mode via a <cmd> mapping.
 
