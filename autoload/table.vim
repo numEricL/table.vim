@@ -33,6 +33,9 @@ function! table#AlignIfNotEscaped() abort
     else
         let cur_pos = getpos('.')[1:2]
         let cfg_opts = table#config#Config(bufnr('%')).options
+
+        call s:BisectCell(cur_pos)
+
         let table = table#table#Get(cur_pos[0], cfg_opts.chunk_size)
         if !table.valid
             return
@@ -44,6 +47,9 @@ function! table#AlignIfNotEscaped() abort
         " if char under cursor before insertion is a pipe, offset by one for correct coordinate
         let char_under_cursor = getline('.')[col('.') - 1]
         let coord.coord[-1] -= ( char_under_cursor ==# '|' )? 1 : 0
+        " if coord.type ==# 'cell' && table.placement.multiline
+        "     let table = s:BisectCell(table, coord.coord)
+        " endif
         let table = table#draw#CurrentlyPlaced(table)
         call table#cursor#SetCoord(table, coord)
     endif
@@ -243,6 +249,30 @@ function! s:UpdateOnOutOfBounds(table, dir, coord) abort
         endif
     endif
     return [ new_table, a:coord ]
+endfunction
+
+function! s:BisectCell(cur_pos) abort
+    let table = table#table#Get(a:cur_pos[0], [0,0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, a:cur_pos)
+    if coord.type ==# 'cell' && table.placement.multiline
+        let line_up_to_pipe = getline(a:cur_pos[0])[:a:cur_pos[1]-3]
+        let col_display = strdisplaywidth(line_up_to_pipe)
+        let row_offset = coord.coord[1]
+        let bounds = table.placement.bounds
+        let bounds[0] += (table.placement.positions[ 0].type ==# 'separator')? 1 : 0
+        let bounds[1] -= (table.placement.positions[-1].type ==# 'separator')? 1 : 0
+        for linenr in range(bounds[0], bounds[1])
+            if linenr == bounds[0] + row_offset
+                continue
+            endif
+            let line = getline(linenr)
+            let col_byte = table#util#DisplayWidthToByteWidth(line, col_display)
+            call setline(linenr, strpart(line, 0, col_byte) .. '|' .. strpart(line, col_byte))
+        endfor
+    endif
 endfunction
 
 let &cpo = s:save_cpo

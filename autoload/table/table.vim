@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:debug_table = v:false
+let s:debug_table = v:true
 
 function! table#table#Get(linenr, chunk_size, ...) abort
     let vcol_bounds = a:0? a:1 : []
@@ -188,7 +188,11 @@ function! s:TableRowCount() dict abort
 endfunction
 
 function! s:TableColCount() dict abort
-    return self.max_col_count
+    let col_count = 0
+    for row in self.rows
+        let col_count = max([col_count, row.ColCount()])
+    endfor
+    return col_count
 endfunction
 
 function! s:TableColAlign(col) dict abort
