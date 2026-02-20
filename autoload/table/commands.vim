@@ -240,6 +240,8 @@ function! s:CompleteOption(ArgLead, CmdLine, CursorPos) abort
             return filter(['auto', 'true', 'false'], 'v:val =~? "^" .. a:ArgLead')
         elseif option_key ==# 'multiline_format'
             return filter(['align', 'wrap', 'block_align', 'block_wrap', 'paragraph_wrap'], 'v:val =~? "^" .. a:ArgLead')
+        elseif option_key ==# 'auto_split_cell'
+            return filter(['true', 'false'], 'v:val =~? "^" .. a:ArgLead')
         endif
     endif
     return []

@@ -7,6 +7,7 @@ let s:default_config = {
             \ 'disable_ftplugins' : v:false,
             \ 'style': 'default',
             \ 'options': {
+            \   'auto_split_cell'   : v:true,
             \   'multiline'         : 'auto',
             \   'multiline_format'  : 'block_wrap',
             \   'default_alignment' : 'left',

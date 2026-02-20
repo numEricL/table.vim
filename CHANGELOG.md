@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### Added
+- **Auto-split feature for multiline cells**: When inserting a pipe character in
+a multiline cell, the entire cell is now split across all lines at the same
+column position, not just the current line. Enabled by default, disable with
+`auto_split_cell` option.
 ## [v0.2.0] - 2026-02-19
 
 ### Added
