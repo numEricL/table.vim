@@ -25,8 +25,8 @@ objects, and a split/floating window cell editor.
 
 Features:
   • Automatic alignment on pipe insertion
-  • Auto-split multiline cells: inserting a pipe splits the entire cell
-    across all lines (can be disabled with |auto_split_cell|)
+  • Auto-split multiline cells: inserting a pipe splits the entire cell (must be
+    enabled with |auto_split_cell|)
   • Multiline cell support (optional)
   • Fixed-width columns with automatic wrapping
   • Cell editing in floating/split windows
@@ -173,7 +173,7 @@ COMMANDS                                                      *table-commands*
 
         Options:
         - auto_split_cell: When true, inserting a pipe (|) in a multiline cell
-          splits the entire cell across all lines (default: v:true)
+          splits the entire cell across all lines (default: v:false)
         - i_vertical: Insert mode vertical separator character (default: '|')
         - i_horizontal: Insert mode horizontal border character (default: '-')
         - i_alignment: Insert mode alignment marker character (default: ':')
@@ -433,7 +433,7 @@ table#Setup({config})
             'disable_ftplugins': v:false,
             'style': 'default',
             'options': {
-                'auto_split_cell': v:true,
+                'auto_split_cell': false,
                 'multiline': 'auto',
                 'multiline_format': 'block_wrap',
                 'default_alignment': 'left',
@@ -491,7 +491,7 @@ Table Options ~
                                                             *auto_split_cell*
 auto_split_cell
     Type: Boolean
-    Default: v:true (true)
+    Default: v:false (false)
 
     When enabled, inserting a pipe character (|) in a multiline cell
     automatically splits the entire cell across all lines at the same column
@@ -502,7 +502,7 @@ auto_split_cell
 
     This option only applies when |multiline| is enabled and you are working
     with multiline cells. >
-        :TableConfig Option auto_split_cell false
+        :TableConfig Option auto_split_cell true
 <
                                                                   *multiline*
 multiline
@@ -991,10 +991,9 @@ table#AlignIfNotEscaped()
     is not a backslash escape (\). Used internally for insert mode
     auto-align on typing |. This allows typing literal pipes with \|.
 
-    Auto-split feature: For multiline tables, inserting a pipe character
-    automatically splits the entire cell at the cursor position across all
-    lines in the cell, not just the current line. Disable with the
-    |auto_split_cell| option.
+    Auto-split feature: When enabled, inserting a pipe character into a
+    multiline cell automatically splits the entire cell at the cursor position
+    across all lines in the cell. Disable with the |auto_split_cell| option.
 
     Should be called in insert mode via a <cmd> mapping.
 
