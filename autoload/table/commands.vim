@@ -237,7 +237,7 @@ function! s:CompleteOption(ArgLead, CmdLine, CursorPos) abort
         if option_key ==# 'default_alignment'
             return filter(['left', 'center', 'right'], 'v:val =~? "^" .. a:ArgLead')
         elseif option_key ==# 'multiline'
-            return filter(['true', 'false'], 'v:val =~? "^" .. a:ArgLead')
+            return filter(['auto', 'true', 'false'], 'v:val =~? "^" .. a:ArgLead')
         elseif option_key ==# 'multiline_format'
             return filter(['align', 'wrap', 'block_align', 'block_wrap', 'paragraph_wrap'], 'v:val =~? "^" .. a:ArgLead')
         endif
