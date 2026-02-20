@@ -32,9 +32,10 @@ function! table#AlignIfNotEscaped() abort
         return
     else
         let cur_pos = getpos('.')[1:2]
-        call s:BisectIfMultilineCell(cur_pos)
-
         let cfg_opts = table#config#Config(bufnr('%')).options
+        if cfg_opts.auto_split_cell
+            call s:BisectIfMultilineCell(cur_pos)
+        endif
         let table = table#table#Get(cur_pos[0], cfg_opts.chunk_size)
         if !table.valid
             return
