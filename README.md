@@ -45,12 +45,13 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 
 ## Features
 
-- **Multiline rows**        - auto-detected by default
-- **Fixed-width columns**   - hard-wrap columns with alignment tags
-- **Cell editing window**   - edit in a floating window, hooks provided (split window in Vim)
-- **Sorting**               - sort rows and columns by any column/row
-- **Table navigation**      - move between cells even if the table is not yet aligned
-- **Text objects**          - cell, row, and column
+- **Multiline rows**             - auto-detected by default
+- **Auto-split multiline cells** - inserting a pipe splits the entire cell
+- **Fixed-width columns**        - hard-wrap columns with alignment tags
+- **Cell editing window**        - edit in a floating window, hooks provided (split window in Vim)
+- **Sorting**                    - sort rows and columns by any column/row
+- **Table navigation**           - move between cells even if the table is not yet aligned
+- **Text objects**               - cell, row, and column
 - **Multiple table styles** - markdown, org, rst, and box-drawing styles included, or define your own
 
 ## Demo
