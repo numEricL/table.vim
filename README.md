@@ -37,6 +37,12 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 - Vim 8.1 or later
 - Neovim 0.11.5 or later
 
+## Upgrading from v0.1.x
+
+- **Multiline rows** are now auto-detected by default. Set `multiline` to `true` or `false` to override.
+- **`:TableOption`** is deprecated. Use **`:TableConfig`** instead.
+- If you used `preserve_indentation`, switch to `multiline_format` (see `:help table-configuration`). Default behavior is unchanged.
+
 ## Features
 
 - **Multiline rows**        - auto-detected by default
