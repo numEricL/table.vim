@@ -58,11 +58,11 @@ function! table#commands#TableComplete(ArgLead, CmdLine, CursorPos) abort
     return []
 endfunction
 
-" :TableOption command - for configuration
-function! table#commands#TableOptionCommand(...) abort
+" :TableConfig command - for configuration
+function! table#commands#TableConfigCommand(...) abort
     if a:0 == 0
         let subcommands = ['Option', 'StyleOption', 'Style', 'RegisterStyle']
-        echomsg 'TableOption subcommands: ' .. join(subcommands, ', ')
+        echomsg 'TableConfig subcommands: ' .. join(subcommands, ', ')
         echomsg ' '
         echomsg 'table.vim ' .. table#Version()
         echomsg 'Configuration for buffer ' .. (bufname('%') !=# '' ? bufname('%') : bufnr('%'))
@@ -87,12 +87,12 @@ function! table#commands#TableOptionCommand(...) abort
         call s:RegisterStyle(args)
     else
         echohl ErrorMsg
-        echomsg "TableOption: unknown subcommand '" .. subcommand .. "'"
+        echomsg "TableConfig: unknown subcommand '" .. subcommand .. "'"
         echohl None
     endif
 endfunction
 
-function! table#commands#TableOptionComplete(ArgLead, CmdLine, CursorPos) abort
+function! table#commands#TableConfigComplete(ArgLead, CmdLine, CursorPos) abort
     let parts = split(a:CmdLine, '\s\+', 1)
     let num_args = len(parts) - 1
 
@@ -236,8 +236,10 @@ function! s:CompleteOption(ArgLead, CmdLine, CursorPos) abort
         let option_key = parts[1]
         if option_key ==# 'default_alignment'
             return filter(['left', 'center', 'right'], 'v:val =~? "^" .. a:ArgLead')
-        elseif option_key =~# 'multiline\|indentation'
-            return filter(['true', 'false'], 'v:val =~? "^" .. a:ArgLead')
+        elseif option_key ==# 'multiline'
+            return filter(['auto', 'true', 'false'], 'v:val =~? "^" .. a:ArgLead')
+        elseif option_key ==# 'multiline_format'
+            return filter(['align', 'wrap', 'block_align', 'block_wrap', 'paragraph_wrap'], 'v:val =~? "^" .. a:ArgLead')
         endif
     endif
     return []
@@ -313,6 +315,12 @@ function! s:ParseSortArgs(type, bang, args) abort
         endif
     endfor
     return sort_args
+endfunction
+
+function! table#commands#TableOptionCommand(...) abort
+    echom 'TableOption command is deprecated, use TableConfig instead'
+    echom ''
+    call call('table#commands#TableConfigCommand', a:000)
 endfunction
 
 let &cpo = s:save_cpo

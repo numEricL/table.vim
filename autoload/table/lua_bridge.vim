@@ -1,9 +1,9 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! table#lua_bridge#Draw_CurrentlyPlaced() abort
+function! table#lua_bridge#Draw_CurrentlyPlaced(opts) abort
     if exists('g:table_vim_lua_bridge')
-        call table#draw#CurrentlyPlaced(g:table_vim_lua_bridge)
+        call table#draw#CurrentlyPlaced(g:table_vim_lua_bridge, a:opts)
     endif
 endfunction
 

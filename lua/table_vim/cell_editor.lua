@@ -138,7 +138,7 @@ local function set_window_autocmds(tbl, cell_id, winid, bufnr)
                 })
 
                 update_cell(tbl, cell_id, bufnr)
-                bridge.draw__currently_placed(tbl)
+                bridge.draw__currently_placed(tbl, { fill_multiline_gaps = true })
                 vim.api.nvim_del_augroup_by_id(group)
             end
         end,

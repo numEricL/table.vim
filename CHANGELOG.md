@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.2.0] - 2026-02-19
+
+### Added
+- **Fixed-width columns**: Support for org-style alignment tags (`<l30>`, `<c10>`, `<r20>`)
+  - Tags specify alignment (left/center/right) and column width
+  - Automatic text wrapping for cells exceeding column width
+- **Automatic multiline row detection**:
+  - detects if a table has multiline rows by checking for separator patterns
+  - Enabled when `multiline` option is set to `'auto'` (now the default)
+- **Multiline formatting options**:
+  - New `multiline_format` option with values: `'align'`, `'wrap'`, `'block_align'`, `'block_wrap'` (default), `'paragraph_wrap'`
+- Cell editor now automatically fills missing multiline rows when editing cells
+
+### Fixed
+- Sort functionality now works correctly with right-aligned columns
+- Org-style alignment detection no longer triggers false positives on empty lines
+- Improved table parser to handle column bounds for visual block operations
+- Fixed cleanup in table drawing lines to clear removed data
+- Fixed alignment row identification when placement align_sep_id is unset
+
+### Changed
+- **BREAKING**: Changed `multiline` option default from `v:false` to `'auto'`
+  - Now auto-detects multiline rows based on separator patterns in the table
+  - Set to `v:true` or `v:false` for explicit control
+- **BREAKING**: Replaced `preserve_indentation` with `multiline_format` option
+- `:TableOption` command renamed to `:TableConfig`.
+- org-style alignment tags take precedence over alignment header
+
+### Deprecated
+- `:TableOption` command is deprecated in favor of `:TableConfig`
+  - `:TableOption` still works but shows a deprecation warning
+
 ## [v0.1.1] - 2026-02-15
 
 ### Fixed

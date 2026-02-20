@@ -5,7 +5,10 @@ endif
 let s:save_cpo = &cpo
 set cpo&vim
 
-call table#SetBufferConfig({'style': 'rest'})
+call table#SetBufferConfig({
+            \ 'style': 'rest',
+            \ 'options': {'multiline': v:true}
+            \ })
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

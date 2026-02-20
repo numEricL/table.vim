@@ -87,14 +87,14 @@ function! table#util#ComputeWidths(table) abort
         let max_width = 0
         for row in a:table.rows
             let cell = get(row.cells, col, [''])
-            let max_width = max([max_width, s:CellStrDisplayWidth(cell)])
+            let max_width = max([max_width, table#util#CellStrDisplayWidth(cell)])
         endfor
         call add(widths, max_width)
     endfor
     return widths
 endfunction
 
-function! s:CellStrDisplayWidth(cell) abort
+function! table#util#CellStrDisplayWidth(cell) abort
     let width = 0
     for line in a:cell
         let width = max([width, strdisplaywidth(line)])
@@ -106,6 +106,34 @@ function! table#util#Pad(string, length) abort
     let pad_len = a:length - strdisplaywidth(a:string)
     let pad = (pad_len > 0)? repeat(' ', pad_len) : ''
     return a:string .. pad
+endfunction
+
+function! table#util#DisplayWidthToByteWidth(line, vcol) abort
+    " indices are 0-based
+    let byte = 0
+    let running_vcol = 0
+    let idx = 0
+    while byte < len(a:line) && running_vcol < a:vcol
+        let char = strcharpart(a:line, idx, 1)
+        let idx += 1
+        let running_vcol += strdisplaywidth(char, running_vcol)
+        if running_vcol > a:vcol
+            break
+        endif
+        let byte += len(char)
+    endwhile
+    return byte
+endfunction
+
+function! table#util#SetOrAppend(list, index, value, init_val) abort
+    if a:index < len(a:list)
+        let a:list[a:index] = a:value
+    else
+        while a:index > len(a:list)
+            call add(a:list, a:init_val)
+        endwhile
+        call add(a:list, a:value)
+    endif
 endfunction
 
 let &cpo = s:save_cpo

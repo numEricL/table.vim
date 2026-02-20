@@ -22,15 +22,16 @@ function! table#cursor#GetCoord(table, pos, ...) abort
     let row_offset = a:table.placement.positions[placement_id]['row_offset']
     let sep_pos    = a:table.placement.positions[placement_id]['separator_pos']
 
-    if !empty(type_override)
-        if type_override !=# 'cell'
-            throw 'only cell type override is supported'
-        endif
-        if coord.type =~# '\v^separator|alignment$'
+    if !empty(type_override) && type_override !=# coord.type
+        if type_override ==# 'cell' && coord.type =~# '\v^(separator|alignment)$'
             let coord.type = 'cell'
             let row_id += 1
             let row_id = min([row_id, a:table.RowCount() - 1])
             let row_offset = 0
+        elseif type_override ==# 'separator' && coord.type ==# 'alignment'
+            let coord.type = 'separator'
+        else
+            throw 'override from ' .. coord.type .. ' to ' .. type_override .. ' is not supported'
         endif
     endif
 
@@ -88,21 +89,23 @@ function! s:GetType(table, linenr) abort
         return ''
     endif
     let type = a:table.placement.positions[placement_id]['type']
-    if type =~# '\v^(row|incomplete)$'
+    let subtype = a:table.placement.positions[placement_id]['subtype']
+    if type ==# 'row'
         return 'cell'
-    elseif type ==# 'alignment'
+    elseif subtype ==# 'alignment'
         return 'alignment'
-    elseif type =~# '\v^(top|bottom|separator|incomplete)$'
+    elseif type ==# 'separator'
         return 'separator'
     else
-        throw 'unknown line type: ' .. type
+        throw 'unknown line type: ' .. type .. ' with subtype: ' .. subtype
     endif
 endfunction
 
 function! s:SetCursorCell(table, cell_id) abort
     let [row_id, row_offset, col_id] = a:cell_id
-    let pos_id = a:table.rows[row_id].placement_id + row_offset
+    let row_offset = min([row_offset, a:table.rows[row_id].Height() - 1])
 
+    let pos_id = a:table.rows[row_id].placement_id + row_offset
     let linenr = a:table.placement.bounds[0] + pos_id
     let sep_pos = a:table.placement.positions[pos_id]['separator_pos']
     let col = 0
@@ -113,8 +116,7 @@ function! s:SetCursorCell(table, cell_id) abort
     elseif col_id == len(row_cells)
         let col = sep_pos[-1][1] + 1
     else
-        let cfg_opts = table#config#Config(bufnr('%')).options
-        if cfg_opts.multiline && col_id >= len(sep_pos)
+        if a:table.placement.multiline && col_id >= len(sep_pos)
             let col = s:FindMultiCellSepCol(a:table, a:cell_id)
         else
             let col = sep_pos[col_id][1]
@@ -145,15 +147,16 @@ function! s:FindMultiCellSepCol(table, cell_id) abort
 endfunction
 
 function! s:SetCursorAlignmentSeparator(table, col_id) abort
-    let id = a:table.placement.align_id
+    let id = a:table.placement.align_sep_id
 
     let linenr = a:table.placement.bounds[0] + id
     let sep_pos = a:table.placement.positions[id]['separator_pos']
+    let len_col_align = 2*( len(sep_pos) - 1 )
     let col = 0
 
-    if id == -1 || a:col_id < 0 || a:col_id > 2 * len(a:table.col_align)
+    if id == -1 || a:col_id < 0 || a:col_id > 2 * len_col_align
         return
-    elseif a:col_id == 2 * len(a:table.col_align)
+    elseif a:col_id == 2 * len_col_align
         let col = sep_pos[-1][1] + 1
     else
         let sep_id = (a:col_id+1) / 2

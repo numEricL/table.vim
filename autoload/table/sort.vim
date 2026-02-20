@@ -43,7 +43,7 @@ function! s:SortCols(table, row_id, flags) abort
 
     let tagged_cells = copy(a:table.rows[a:row_id].cells)
     " compute the permutation from sorting column col_id
-    let tagged_cells = map(tagged_cells, {id, cell -> [ join(cell, "\n"), id ] })
+    let tagged_cells = map(tagged_cells, {id, cell -> [ trim(join(cell, "\n")), id ] })
     let VimSortHow = s:GetVimSortHow(a:flags)
     call sort(tagged_cells, VimSortHow)
     let permutation = map(copy(tagged_cells), {_, v -> v[1]})
@@ -51,12 +51,16 @@ function! s:SortCols(table, row_id, flags) abort
         call reverse(permutation)
     endif
 
-    "sort the cols according to the permutation
+    let col_align    = []
+    let fixed_widths = []
+    for i in range(a:table.ColCount())
+        call add(col_align,    get(a:table.col_align,    i, ''))
+        call add(fixed_widths, get(a:table.fixed_widths, i, 0 ))
+    endfor
+    let a:table.col_align    = s:Permute(col_align,    permutation)
+    let a:table.fixed_widths = s:Permute(fixed_widths, permutation)
     for i in range(len(a:table.rows))
-        let temp_row_cells = copy(a:table.rows[i].cells)
-        for j in range(a:table.rows[i].ColCount())
-            let a:table.rows[i].cells[j] = temp_row_cells[permutation[j]]
-        endfor
+        let a:table.rows[i].cells = s:Permute(a:table.rows[i].cells, permutation)
     endfor
 endfunction
 
@@ -81,6 +85,14 @@ function! s:GetVimSortHow(flags) abort
         let s:LessThan = { a,b -> a <# b }
     endif
     return { a,b -> s:LessThan(s:Op(a),s:Op(b)) ? -1 : s:LessThan(s:Op(b),s:Op(a)) ? 1 : 0 }
+endfunction
+
+function! s:Permute(list, permutation) abort
+    let temp = copy(a:list)
+    for i in range(len(a:list))
+        let temp[i] = a:list[a:permutation[i]]
+    endfor
+    return temp
 endfunction
 
 let &cpo = s:save_cpo

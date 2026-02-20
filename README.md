@@ -1,13 +1,15 @@
 # table.vim
 
-Your one-stop shop for all your table editing needs in Vim and Neovim. Supports
-multi-line rows and features a cell editing window for editing cell content in a
-separate buffer (Neovim users get a seamless floating window)
+Advanced table editing for Vim and Neovim. Easily create, edit, and format
+tables with support for multi-line rows, fixed-width columns, sorting, and
+various table styles. Edit cell content in a separate window for enhanced
+control. Highly configurable and extensible.
 
 ## Quick Start
 
 Create tables using pipes `|` and dashes `-`. The table is aligned and redrawn
-automatically on pipe insertion. Table style is configurable.
+automatically on pipe insertion. Table style is configurable, "double" is shown
+here:
 
 ```
 |Header 1| Header 2|Header 3|           ║ Header 1 ║ Header 2 ║ Header 3 ║
@@ -26,7 +28,7 @@ And may be completed to:
 ```
 
 - Use `:Table <action>` to perform table actions like completion, sorting, and style conversion.
-- Use `:TableOption <option>` to view and change configuration at runtime, such as enabling multiline rows or changing the table style.
+- Use `:TableConfig <option>` to view and change configuration at runtime, such as enabling multiline rows or changing the table style.
 
 See [`:help table.txt`](doc/table.txt) for complete documentation.
 
@@ -35,9 +37,16 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 - Vim 8.1 or later
 - Neovim 0.11.5 or later
 
+## Upgrading from v0.1.x
+
+- **Multiline rows** are now auto-detected by default. Set `multiline` to `true` or `false` to override.
+- **`:TableOption`** is deprecated. Use **`:TableConfig`** instead.
+- If you used `preserve_indentation`, switch to `multiline_format` (see `:help table-configuration`). Default behavior is unchanged.
+
 ## Features
 
-- **Multiline rows**        - must be enabled in your configuration
+- **Multiline rows**        - auto-detected by default
+- **Fixed-width columns**   - hard-wrap columns with alignment tags
 - **Cell editing window**   - edit in a floating window, hooks provided (split window in Vim)
 - **Sorting**               - sort rows and columns by any column/row
 - **Table navigation**      - move between cells even if the table is not yet aligned
@@ -46,18 +55,19 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 
 ## Demo
 
+Note: This demo is from an older version, options have changed.
 https://github.com/user-attachments/assets/352e23b0-33ba-4f9d-9fa0-e2aee5fd16cc
 
 ## Configuration (optional)
 
 Configuration is **buffer-local**. Set defaults in your vimrc, customize
-per-filetype in after/ftplugin files, or change at runtime with `:TableOption`.
+per-filetype in after/ftplugin files, or change at runtime with `:TableConfig`.
 
 ```vim
 " .vimrc - set defaults for all buffers (overridden by ftplugins)
 call table#Setup({
     \ 'style': 'default',
-    \ 'options': {'multiline': v:true}
+    \ 'options': {'multiline': 'auto', 'multiline_format': 'block_wrap'}
     \ })
 ```
 
@@ -65,7 +75,7 @@ call table#Setup({
 -- init.lua - set defaults for all buffers (overridden by ftplugins)
 require('table_vim').setup({
     style = 'default',
-    options = { multiline = true }
+    options = { multiline = 'auto', multiline_format = 'block_wrap' }
 })
 ```
 
@@ -93,7 +103,7 @@ keybindings work normally.
 
 ### Navigation
 
-- `<Tab>` / `<S-Tab>` - Next/previous cell (wraps rows)
+- `<Tab>` / `<S-Tab>` - Next/previous cell
 - `<C-h>` / `<C-j>` / `<C-k>` / `<C-l>` - Navigate left/down/up/right
 
 ### Text Objects
@@ -123,7 +133,7 @@ nnoremap <leader>te    <Plug>(table_cell_edit)
 
 ## Commands
 
-Two top level commands are defined, `:Table` and `:TableOption`. Tab-completion
+Two top level commands are defined, `:Table` and `:TableConfig`. Tab-completion
 is available for all subcommands and arguments.
 
 ### `:Table` - Table Actions
@@ -138,18 +148,20 @@ is available for all subcommands and arguments.
 :Table ToStyle {style}           " Convert to specified style and update buffer style
 ```
 
-### `:TableOption` - Runtime Configuration
+### `:TableConfig` - Runtime Configuration
 
 Runtime configuration for the current buffer. Use without arguments to show
 current configuration.
 
 ```vim
-:TableOption                              " Show all current settings
-:TableOption Style [name]                 " Get/set style
-:TableOption Option [key] [value]         " Get/set option
-:TableOption StyleOption [key] [value]    " Get/set style option
-:TableOption RegisterStyle [name]         " Register current style (session only)
+:TableConfig                              " Show all current settings
+:TableConfig Style [name]                 " Get/set style
+:TableConfig Option [key] [value]         " Get/set option
+:TableConfig StyleOption [key] [value]    " Get/set style option
+:TableConfig RegisterStyle [name]         " Register current style (session only)
 ```
+
+**Note:** `:TableOption` is deprecated, use `:TableConfig` instead.
 
 **Note:** Style registration is only for the current session. Add the
 registration to your vimrc/init.lua for persistence.
@@ -165,6 +177,38 @@ Sort table rows by a specific column or sort columns by a specific row:
 ```
 
 See `:help :Table-SortRows` and `:help :Table-SortCols`
+
+## Fixed-Width Columns
+
+Set column widths using alignment tags. Tags use the format
+`<[alignment][width]>` where alignment is `l` (left), `c` (center), or `r`
+(right), and width is a positive integer. Columns are padded to the specified
+width, and, if `multiline` is enabled and a `multiline_format` wrap option is
+set, long columns are also hard-wrapped to the specified width.
+
+```vim
+| Description        |   Column 1 width    |
+|--------------------|---------------------|
+| <l30>              |        <c10>        |
+| Next col will wrap | This cell will wrap |
+
+
+| Description        | Column 1  |
+|                    |   width   |
+|--------------------|-----------|
+| <l30>              |   <c10>   |
+| Next col will wrap | This cell |
+|                    | will wrap |
+```
+
+Enable wrapping in configuration:
+```vim
+call table#Setup({
+    \ 'options': {'multiline': 'auto', 'multiline_format': 'block_wrap'}
+    \ })
+```
+
+See `:help table-fixed-width` for details.
 
 ## Chunk Processing
 

@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let g:table_version = '0.1.1'
+let g:table_version = '0.2.0'
 
 function! table#Version() abort
     return g:table_version
@@ -31,11 +31,21 @@ function! table#AlignIfNotEscaped() abort
     if char_before_pipe ==# '\'
         return
     else
-        let coord = s:GetCursorLineCoord()
+        let cur_pos = getpos('.')[1:2]
+        let cfg_opts = table#config#Config(bufnr('%')).options
+        let table = table#table#Get(cur_pos[0], cfg_opts.chunk_size)
+        if !table.valid
+            return
+        endif
+        let coord = table#cursor#GetCoord(table, cur_pos)
+        if coord.type ==# 'alignment'
+            let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'separator'})
+        endif
+        " if char under cursor before insertion is a pipe, offset by one for correct coordinate
         let char_under_cursor = getline('.')[col('.') - 1]
         let coord.coord[-1] -= ( char_under_cursor ==# '|' )? 1 : 0
-        call table#Align(line('.'))
-        call s:SetCursorLineCoord(coord)
+        let table = table#draw#CurrentlyPlaced(table)
+        call table#cursor#SetCoord(table, coord)
     endif
 endfunction
 
@@ -85,12 +95,13 @@ endfunction
 
 function! table#CycleCursor(dir, count1) abort
     let curpos = getpos('.')[1:2]
-    let table = table#table#Get(curpos[0], [0,0])
+    let table = table#table#Get(curpos[0], [-1,0])
     if !table.valid
         return
     endif
     let coord = table#cursor#GetCoord(table, getpos('.')[1:2], {'dir': a:dir})
     if coord.type ==# 'separator'
+        let table = table#table#Get(curpos[0], [0,0])
         let coord = table#cursor#GetCoord(table, getpos('.')[1:2], {'type_override': 'cell'})
     endif
     for _ in range(a:count1)
@@ -117,27 +128,6 @@ function! table#Sort(linenr, dim_kind, id, flags) abort
     endif
     call table#sort#Sort(table, a:dim_kind, a:id, a:flags)
     call table#draw#CurrentlyPlaced(table)
-endfunction
-
-function! s:GetCursorLineCoord() abort
-    let table = table#table#Get(line('.'), [0,0])
-    return table#cursor#GetCoord(table, getpos('.')[1:2])
-endfunction
-
-function! s:SetCursorLineCoord(coord) abort
-    let table = table#table#Get(line('.'), [0,0])
-    if a:coord.type ==# 'cell'
-        let a:coord.coord[0] = 0
-    else
-        let sep_id = (table.placement.bounds[0] - line('.')) < 0? 0 : -1
-        if a:coord.type ==# 'alignment'
-            let a:coord.type= 'separator'
-            let a:coord.coord = [ sep_id, (a:coord.coord[0]+1)/2 ]
-        elseif a:coord.type ==# 'separator'
-            let a:coord.coord[0] = sep_id
-        endif
-    endif
-    call table#cursor#SetCoord(table, a:coord)
 endfunction
 
 function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
@@ -176,7 +166,8 @@ endfunction
 function! s:CycleCursor(table, dir, coord) abort
     let step = (a:dir ==# 'forward') ? 1 : -1
     if a:coord.type ==# 'alignment'
-        let n = 2*len(a:table.col_align)
+        let align_id = a:table.placement.align_sep_id
+        let n = 2*( len(a:table.placement.positions[align_id]['separator_pos']) - 1 )
         let a:coord.coord[0] = (a:coord.coord[0] + step + n) % n
     elseif a:coord.type ==# 'cell'
         let row_bound = a:table.RowCount()

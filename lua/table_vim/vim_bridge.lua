@@ -29,9 +29,9 @@ function M.cursor__get_coord(tbl, pos, opts)
     return vim.fn['table#lua_bridge#Cursor_GetCoord'](pos, opts)
 end
 
-function M.draw__currently_placed(tbl)
+function M.draw__currently_placed(tbl, opts)
     set_vim_methods(tbl)
-    vim.fn['table#lua_bridge#Draw_CurrentlyPlaced']()
+    vim.fn['table#lua_bridge#Draw_CurrentlyPlaced'](opts)
 end
 
 function M.table__get(linenr, chunk_size)
