@@ -154,6 +154,23 @@ function! table#InsertColumn() abort
     call table#cursor#SetCoord(table, coord)
 endfunction
 
+function! table#InsertRow() abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let row_id = coord.coord[0]
+    
+    let num_cols = table.rows[row_id].ColCount()
+    let empty_cells = map(range(num_cols), '[""]')
+    call table#table#InsertRow(table, empty_cells, row_id)
+
+    call table#draw#Table(table)
+    call table#cursor#SetCoord(table, coord)
+endfunction
+
 function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
     let new_table = a:table
     let new_coord = a:coord

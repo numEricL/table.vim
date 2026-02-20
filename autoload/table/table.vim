@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:debug_table = v:false
+let s:debug_table = v:true
 
 function! table#table#Get(linenr, chunk_size, ...) abort
     let vcol_bounds = a:0? a:1 : []
@@ -221,6 +221,17 @@ function! s:CellRowHeight() dict abort
         let height = max([height, len(cell)])
     endfor
     return height
+endfunction
+
+function! table#table#InsertRow(table, cells, idx) abort
+    let row = { 
+                \ 'cells'        : a:cells,
+                \ 'placement_id' : -1,
+                \ 'Height'       : function('s:CellRowHeight'),
+                \ 'ColCount'     : function('s:CellColCount'),
+                \ }
+    let row['types'] = repeat([''], row.Height())
+    call insert(a:table.rows, row, a:idx)
 endfunction
 
 function! s:AppendTableRow(table, subtype, last_type, line_cells, pos_id) abort
