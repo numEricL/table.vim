@@ -5,6 +5,7 @@ local M = {}
 --   - disable_ftplugins: boolean - Disable built-in ftplugin configuration files (default: false)
 --   - style: string - Table style name (e.g., 'markdown', 'org', 'single', 'double')
 --   - options: table - Table options
+--     - auto_split_cell: boolean - pipe insertion splits entire multiline cell
 --     - multiline: string - Allow cells to contain newlines
 --     - multiline_format: string - formatting to be applied to multiline cells: 'align' 'wrap' 'block_align' 'block_wrap' 'paragraph_wrap'
 --     - default_alignment: string - Default column alignment: 'left', 'center', or 'right'
