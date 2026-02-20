@@ -114,7 +114,6 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
                 \ 'col_align'     : [],
                 \ 'col_widths'    : [],
                 \ 'fixed_widths'  : [],
-                \ 'max_col_count' : 0,
                 \ 'RowCount'      : function('s:TableRowCount'),
                 \ 'ColCount'      : function('s:TableColCount'),
                 \ 'ColAlign'      : function('s:TableColAlign'),
@@ -139,7 +138,6 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
 
         if type ==# 'row'
             call s:AppendTableRow(table, subtype, last_type, line_cells, pos_id)
-            let table.max_col_count = max([table.max_col_count, len(line_cells)])
         endif
         let last_type = type
 
@@ -173,10 +171,8 @@ function! s:Generate(linenr, chunk_size, vcol_bounds) abort
                     call table#util#SetOrAppend(table.col_align, id, align_char, '')
                 endif
             endfor
-            let table.max_col_count = max([table.max_col_count, len(line_cells)])
         endif
     endfor
-    let table.fixed_widths += repeat([0], table.max_col_count - len(table.fixed_widths))
     if s:debug_table
         let g:t = table
     endif
