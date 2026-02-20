@@ -133,6 +133,27 @@ function! table#Sort(linenr, dim_kind, id, flags) abort
     call table#draw#CurrentlyPlaced(table)
 endfunction
 
+function! table#InsertColumn() abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let col_id = coord.coord[2]
+    
+    for row in table.rows
+        call insert(row.cells, [''], col_id)
+    endfor
+    
+    if col_id < len(table.col_align)
+        call insert(table.col_align, table.col_align[col_id], col_id)
+    endif
+    
+    call table#draw#Table(table)
+    call table#cursor#SetCoord(table, coord)
+endfunction
+
 function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
     let new_table = a:table
     let new_coord = a:coord
