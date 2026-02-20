@@ -32,10 +32,9 @@ function! table#AlignIfNotEscaped() abort
         return
     else
         let cur_pos = getpos('.')[1:2]
+        call s:BisectIfMultilineCell(cur_pos)
+
         let cfg_opts = table#config#Config(bufnr('%')).options
-
-        call s:BisectCell(cur_pos)
-
         let table = table#table#Get(cur_pos[0], cfg_opts.chunk_size)
         if !table.valid
             return
@@ -47,9 +46,6 @@ function! table#AlignIfNotEscaped() abort
         " if char under cursor before insertion is a pipe, offset by one for correct coordinate
         let char_under_cursor = getline('.')[col('.') - 1]
         let coord.coord[-1] -= ( char_under_cursor ==# '|' )? 1 : 0
-        " if coord.type ==# 'cell' && table.placement.multiline
-        "     let table = s:BisectCell(table, coord.coord)
-        " endif
         let table = table#draw#CurrentlyPlaced(table)
         call table#cursor#SetCoord(table, coord)
     endif
@@ -251,19 +247,17 @@ function! s:UpdateOnOutOfBounds(table, dir, coord) abort
     return [ new_table, a:coord ]
 endfunction
 
-function! s:BisectCell(cur_pos) abort
+function! s:BisectIfMultilineCell(cur_pos) abort
     let table = table#table#Get(a:cur_pos[0], [0,0])
     if !table.valid
         return
     endif
     let coord = table#cursor#GetCoord(table, a:cur_pos)
-    if coord.type ==# 'cell' && table.placement.multiline
-        let line_up_to_pipe = getline(a:cur_pos[0])[:a:cur_pos[1]-3]
+    if coord.type ==# 'cell' && table.placement.multiline && s:IsCompleteRow(table, coord.coord)
+        let pipe_col_byte = a:cur_pos[1]-2
+        let line_up_to_pipe = strpart(getline(a:cur_pos[0]), 0, pipe_col_byte)
         let col_display = strdisplaywidth(line_up_to_pipe)
-        let row_offset = coord.coord[1]
-        let bounds = table.placement.bounds
-        let bounds[0] += (table.placement.positions[ 0].type ==# 'separator')? 1 : 0
-        let bounds[1] -= (table.placement.positions[-1].type ==# 'separator')? 1 : 0
+        let [bounds, row_offset] = s:GetAdjustedBounds(table, coord.coord)
         for linenr in range(bounds[0], bounds[1])
             if linenr == bounds[0] + row_offset
                 continue
@@ -273,6 +267,43 @@ function! s:BisectCell(cur_pos) abort
             call setline(linenr, strpart(line, 0, col_byte) .. '|' .. strpart(line, col_byte))
         endfor
     endif
+endfunction
+
+function! s:IsCompleteRow(table, cell_id)
+    let positions = a:table.placement.positions
+    let row_off = a:cell_id[1]
+    let row_off  += (positions[ 0].type ==# 'separator') ? 1 : 0
+    let start_off = (positions[ 0].type ==# 'separator') ? 1 : 0
+    let end_off   = (positions[-1].type ==# 'separator') ? 1 : 0
+    let [start, end] = [ start_off, len(positions) - 1 - end_off ]
+    let pipe_count = len(positions[start].separator_pos)
+    let pipe_count -= (row_off == start)? 1 : 0
+    for pos in range(start + 1, end)
+        let next_pipe_count = len(positions[pos].separator_pos) - (row_off == pos ? 1 : 0)
+        if next_pipe_count != pipe_count
+            return v:false
+        endif
+    endfor
+    return v:true
+endfunction
+
+" if the separator has enough pipes, don't add more
+function! s:GetAdjustedBounds(table, cell_id) abort
+    let positions = a:table.placement.positions
+    let cell_count = a:table.rows[a:cell_id[0]].ColCount()
+    let bounds = a:table.placement.bounds
+    let row_offset = a:cell_id[1]
+    if positions[0].type ==# 'separator'
+        let pipe_count = len(positions[0].separator_pos)
+        let bounds[0]  += (pipe_count > cell_count) ? 1 : 0
+        let row_offset -= (pipe_count > cell_count) ? 1 : 0
+    endif
+    if positions[-1].type ==# 'separator'
+        let pipe_count = len(positions[-1].separator_pos)
+        let bounds[1] -= (pipe_count > cell_count) ? 1 : 0
+    endif
+    let row_offset += (positions[0].type ==# 'separator') ? 1 : 0
+    return [ bounds, row_offset ]
 endfunction
 
 let &cpo = s:save_cpo

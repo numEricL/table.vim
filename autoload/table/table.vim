@@ -233,7 +233,6 @@ function! s:AppendTableRow(table, subtype, last_type, line_cells, pos_id) abort
         let row = {
                     \ 'cells'         : cells,
                     \ 'types'         : [ a:subtype ],
-                    \ 'subtypes'      : [ '' ],
                     \ 'placement_id'  : a:pos_id,
                     \ 'Height'        : function('s:CellRowHeight'),
                     \ 'ColCount'      : function('s:CellColCount'),
