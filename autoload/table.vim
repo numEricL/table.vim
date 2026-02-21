@@ -141,18 +141,18 @@ function! table#InsertColumn() abort
     endif
     let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
     let col_id = coord.coord[2]
-    
+
     for row in table.rows
         call insert(row.cells, [''], col_id)
     endfor
-    
+
     if col_id < len(table.col_align)
         call insert(table.col_align, '', col_id)
     endif
     if col_id < len(table.fixed_widths)
         call insert(table.fixed_widths, 0, col_id)
     endif
-    
+
     call table#draw#Table(table)
     call table#cursor#SetCoord(table, coord)
 endfunction
@@ -165,13 +165,64 @@ function! table#InsertRow() abort
     endif
     let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
     let row_id = coord.coord[0]
-    
+
     let num_cols = table.rows[row_id].ColCount()
     let empty_cells = map(range(num_cols), '[""]')
     call table#table#InsertRow(table, empty_cells, row_id)
 
     call table#draw#Table(table)
     let table = s:GetFullTable(cur_pos[0])
+    call table#cursor#SetCoord(table, coord)
+endfunction
+
+function! table#DeleteColumn() abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let col_id = coord.coord[2]
+
+    for row in table.rows
+        if col_id < len(row.cells)
+            call remove(row.cells, col_id)
+        endif
+    endfor
+
+    if col_id < len(table.col_align)
+        call remove(table.col_align, col_id)
+    endif
+    if col_id < len(table.fixed_widths)
+        call remove(table.fixed_widths, col_id)
+    endif
+
+    if col_id > 0
+        let coord.coord[2] = col_id - 1
+    endif
+
+    call table#draw#Table(table)
+    echom 'coord: ' .. string(coord)
+    call table#cursor#SetCoord(table, coord)
+endfunction
+
+function! table#DeleteRow() abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let row_id = coord.coord[0]
+
+    call remove(table.rows, row_id)
+
+    if row_id > 0
+        let coord.coord[0] = row_id - 1
+    endif
+
+    call table#draw#Table(table)
+    let table = s:GetFullTable(table.placement.full_bounds[0])
     call table#cursor#SetCoord(table, coord)
 endfunction
 

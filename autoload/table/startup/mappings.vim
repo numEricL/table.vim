@@ -77,6 +77,8 @@ function! s:DefinePlugMaps() abort
     " other actions
     call s:SetNoremap(['n'], '<plug>(table_insert_row)',    '<cmd>call table#InsertRow()<cr>')
     call s:SetNoremap(['n'], '<plug>(table_insert_column)', '<cmd>call table#InsertColumn()<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_delete_row)',    '<cmd>call table#DeleteRow()<cr>')
+    call s:SetNoremap(['n'], '<plug>(table_delete_column)', '<cmd>call table#DeleteColumn()<cr>')
 
     " table navigation cycle
     call s:SetNoremap(['n', 'x', 'i'], '<plug>(table_next)', '<cmd>call table#CycleCursor("forward",  v:count1)<cr>')
