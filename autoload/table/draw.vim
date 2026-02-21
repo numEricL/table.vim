@@ -205,13 +205,13 @@ function! s:AppendConditionalCommentLine(placement, linenr) abort
     let cs = table#util#CommentString(a:placement.bufnr)
     let found = v:false
     if !empty(cs[0])
-        let line = table#compat#getbufoneline(a:placement.bufnr, a:linenr)
+        let line = table#compat#getbufoneline(a:placement.bufnr, a:placement.bounds[1])
         let cs_pattern = table#util#AnyPattern([cs[0]])
         let match = matchstrpos(line, '\V\^' .. cs_pattern)
         let found = !empty(match[0])
     endif
     let new_line = found? cs[0] : ''
-    call appendbufline(a:placement.bufnr, a:linenr, new_line)
+    call appendbufline(a:placement.bufnr, a:linenr - 1, new_line)
 endfunction
 
 function! s:ClearRemaining(placement, pos_id) abort
