@@ -147,7 +147,10 @@ function! table#InsertColumn() abort
     endfor
     
     if col_id < len(table.col_align)
-        call insert(table.col_align, table.col_align[col_id], col_id)
+        call insert(table.col_align, '', col_id)
+    endif
+    if col_id < len(table.fixed_widths)
+        call insert(table.fixed_widths, 0, col_id)
     endif
     
     call table#draw#Table(table)
@@ -168,6 +171,7 @@ function! table#InsertRow() abort
     call table#table#InsertRow(table, empty_cells, row_id)
 
     call table#draw#Table(table)
+    let table = s:GetFullTable(cur_pos[0])
     call table#cursor#SetCoord(table, coord)
 endfunction
 

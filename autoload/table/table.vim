@@ -224,7 +224,7 @@ function! s:CellRowHeight() dict abort
 endfunction
 
 function! table#table#InsertRow(table, cells, idx) abort
-    let row = { 
+    let row = {
                 \ 'cells'        : a:cells,
                 \ 'placement_id' : -1,
                 \ 'Height'       : function('s:CellRowHeight'),
