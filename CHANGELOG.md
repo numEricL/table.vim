@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file.
 a multiline cell, the entire cell is now split across all lines at the same
 column position, not just the current line. Enabled by default, disable with
 `auto_split_cell` option.
+
+### Fixed
+- Completing a table in a comment block now extends the comment prefix if needed
+
 ## [v0.2.0] - 2026-02-19
 
 ### Added
