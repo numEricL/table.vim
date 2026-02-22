@@ -140,12 +140,15 @@ function! table#InsertColumn() abort
         return
     endif
     let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let coord.coord[2] = max([0, coord.coord[2]])
     let col_id = coord.coord[2]
 
+    for pos in table.placement.positions
+        call insert(pos.separator_pos, [cur_pos[1], cur_pos[1]], col_id+1)
+    endfor
     for row in table.rows
         call insert(row.cells, [''], col_id)
     endfor
-
     if col_id < len(table.col_align)
         call insert(table.col_align, '', col_id)
     endif
@@ -153,7 +156,7 @@ function! table#InsertColumn() abort
         call insert(table.fixed_widths, 0, col_id)
     endif
 
-    call table#draw#Table(table)
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
     call table#cursor#SetCoord(table, coord)
 endfunction
 
