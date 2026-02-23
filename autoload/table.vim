@@ -162,19 +162,30 @@ endfunction
 
 function! table#InsertRow() abort
     let cur_pos = getpos('.')[1:2]
-    let table = s:GetFullTable(cur_pos[0])
+    let cfg_opts = table#config#Config(bufnr('%')).options
+    let table = table#table#Get(cur_pos[0], cfg_opts.chunk_size)
     if !table.valid
         return
     endif
     let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
-    let row_id = coord.coord[0]
-
-    let num_cols = table.rows[row_id].ColCount()
+    let num_cols = table.rows[coord.coord[0]].ColCount()
     let empty_cells = map(range(num_cols), '[""]')
-    call table#table#InsertRow(table, empty_cells, row_id)
+    let append = cur_pos[0] == table.placement.full_bounds[1] && table.placement.positions[-1].type ==# 'separator'
 
-    call table#draw#Table(table)
-    let table = s:GetFullTable(cur_pos[0])
+    let insert_id = coord.coord[0] + (append? 1 : 0)
+    call table#table#InsertRow(table, empty_cells, insert_id)
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
+
+    let row_linenr = 0
+    if !append " not last row
+        let row_linenr = cur_pos[0] - coord.coord[1]
+    else
+        let row_linenr = table.placement.full_bounds[1] + 1
+    endif
+
+    let table = table#table#Get(row_linenr, [0,0])
+    let coord.coord[0] = 0
+    let coord.coord[1] = 0
     call table#cursor#SetCoord(table, coord)
 endfunction
 
@@ -205,7 +216,6 @@ function! table#DeleteColumn() abort
     endif
 
     call table#draw#Table(table)
-    echom 'coord: ' .. string(coord)
     call table#cursor#SetCoord(table, coord)
 endfunction
 

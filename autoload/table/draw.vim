@@ -23,7 +23,8 @@ function! table#draw#CurrentlyPlaced(table, ...) abort
             throw 'unknown line type: ' .. line_type
         endif
     endfor
-    call s:ClearRemaining(a:table.placement, new_id)
+    call s:DrawRemaining(a:table, new_id, opts)
+    " call s:ClearRemaining(a:table.placement, new_id)
     return table#table#Get(a:table.placement.bounds[0], [0,new_id-1])
 endfunction
 
@@ -212,6 +213,27 @@ function! s:AppendConditionalCommentLine(placement, linenr) abort
     endif
     let new_line = found? cs[0] : ''
     call appendbufline(a:placement.bufnr, a:linenr - 1, new_line)
+endfunction
+
+function! s:DrawRemaining(table, pos_id, opts) abort
+    let last_drawn_row = a:table.placement.positions[a:pos_id-1].row_id
+    let row_count = a:table.RowCount()
+    if row_count <= last_drawn_row + 1
+        return
+    endif
+    let sep_at_top = (a:table.placement.positions[-1].type ==# 'separator')
+    let pos_id = a:pos_id
+    for row_id in range(last_drawn_row + 1, row_count - 1)
+        let num_cols = a:table.rows[row_id].ColCount()
+        if !sep_at_top
+            let pos_id = s:DrawSeparator(a:table, pos_id, '', num_cols)
+        endif
+        let pos_id = s:DrawRow(a:table, pos_id, row_id, a:opts)
+        if sep_at_top
+            let subtype = (row_id == row_count -1)? 'bottom' : ''
+            let pos_id = s:DrawSeparator(a:table, pos_id, subtype, num_cols)
+        endif
+    endfor
 endfunction
 
 function! s:ClearRemaining(placement, pos_id) abort
