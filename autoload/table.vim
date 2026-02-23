@@ -196,11 +196,20 @@ function! table#DeleteColumn() abort
         return
     endif
     let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
-    let col_id = coord.coord[2]
+    let col_id = max([0, coord.coord[2]])
+    let col_id = min([col_id, table.ColCount() - 1])
 
     for row in table.rows
-        if col_id < len(row.cells)
-            call remove(row.cells, col_id)
+        let cell_id = min([col_id, len(row.cells)-1])
+        call remove(row.cells, cell_id)
+    endfor
+
+    for pos in table.placement.positions
+        let sep_pos = pos.separator_pos
+        if col_id < len(sep_pos)
+            let sep_id = max([1, col_id])
+            let sep_id = min([sep_id, len(sep_pos)-1])
+            call remove(sep_pos, sep_id)
         endif
     endfor
 
@@ -215,7 +224,7 @@ function! table#DeleteColumn() abort
         let coord.coord[2] = col_id - 1
     endif
 
-    call table#draw#Table(table)
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
     call table#cursor#SetCoord(table, coord)
 endfunction
 
