@@ -162,8 +162,7 @@ endfunction
 
 function! table#InsertRow() abort
     let cur_pos = getpos('.')[1:2]
-    let cfg_opts = table#config#Config(bufnr('%')).options
-    let table = table#table#Get(cur_pos[0], cfg_opts.chunk_size)
+    let table = s:GetFullTable(cur_pos[0])
     if !table.valid
         return
     endif
