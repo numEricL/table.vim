@@ -127,10 +127,10 @@ function! s:DrawRow(table, pos_id, row_id, opts) abort
     let style_opts = table#config#Style(bufnr).options
     let [row_left, row_right, row_sep, row_horiz] = table#config#GetBoxDrawingChars(bufnr, 'row', '')
 
+    let row_width = 0
     for i in range(row.Height())
         let fill_cell = fill_multiline_gaps || s:HasRightMostSeparator(a:table, a:row_id, i)
         let rowline = ''
-
         if get(row.types, i, '') ==# 'incomplete'
             let rowline = cfg_opts.i_vertical
         else
@@ -149,8 +149,9 @@ function! s:DrawRow(table, pos_id, row_id, opts) abort
             endif
         endif
         let pos_id = s:DrawLine(a:table.placement, pos_id, rowline)
+        let row_width = strdisplaywidth(rowline)
     endfor
-    return [pos_id, strdisplaywidth(rowline)]
+    return [pos_id, row_width]
 endfunction
 
 function! s:DrawSeparator(table, pos_id, subtype, num_cols) abort
