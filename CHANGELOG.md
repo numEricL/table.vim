@@ -17,6 +17,7 @@ column position, not just the current line. Enabled by default, disable with
 
 ### Fixed
 - Completing a table in a comment block now extends the comment prefix if needed
+- Cell movement is correct when cells are empty
 
 ## [v0.2.0] - 2026-02-19
 
