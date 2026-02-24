@@ -359,8 +359,8 @@ function! s:UpdateOnOutOfBounds(table, dir, coord) abort
     elseif a:dir ==# 'right'
         let row = new_table.rows[a:coord.coord[0]]
         let col_bound = row.ColCount()
-        if a:coord.coord[2] == col_bound
-            let a:coord.coord[2] = col_bound - 1
+        if a:coord.coord[2] > col_bound
+            let a:coord.coord[2] = col_bound
         endif
     endif
     return [ new_table, a:coord ]

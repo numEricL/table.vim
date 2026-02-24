@@ -113,8 +113,10 @@ function! s:SetCursorCell(table, cell_id) abort
     let col = 0
 
     let row_cells = a:table.rows[row_id].cells
-    if col_id < 0 || col_id > len(row_cells)
+    if col_id < -1 || col_id > len(row_cells)
         return
+    elseif col_id == -1
+        let col = max([ 1, sep_pos[0][0] - 1 ])
     elseif col_id == len(row_cells)
         let col = sep_pos[-1][1] + 1
     else
