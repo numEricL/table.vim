@@ -69,6 +69,8 @@ function! table#cursor#SetCoord(table, coord) abort
     if !a:table.valid
         return
     endif
+    " mark current position for the jumplist
+    execute "normal! m`"
     if a:coord.type ==# 'cell'
         call s:SetCursorCell(a:table, a:coord.coord)
     elseif a:coord.type ==# 'alignment'
