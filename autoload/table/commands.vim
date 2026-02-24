@@ -4,7 +4,7 @@ set cpo&vim
 " :Table command - for actions
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        let actions = ['Align', 'Complete', 'DeleteCol', 'DeleteRow', 'EditCell', 'InsertCol', 'InsertRow', 'SortCols', 'SortRows', 'ToDefault', 'ToStyle']
+        let actions = ['Align', 'Complete', 'DeleteCol', 'DeleteRow', 'EditCell', 'InsertCol', 'InsertRow', 'MoveCol', 'MoveRow', 'SortCols', 'SortRows', 'ToDefault', 'ToStyle']
         echomsg 'Table actions: ' .. join(actions, ', ')
         return
     endif
@@ -30,6 +30,10 @@ function! table#commands#TableCommand(...) abort
         call table#DeleteColumn()
     elseif action ==# 'DeleteRow'
         call table#DeleteRow()
+    elseif action ==# 'MoveCol'
+        call table#MoveColumn(args)
+    elseif action ==# 'MoveRow'
+        call table#MoveRow(args)
     elseif action =~# 'SortCols!\?'
         call s:SortAction('cols', action[-1:] ==# '!', args)
     elseif action =~# 'SortRows!\?'
@@ -53,14 +57,20 @@ function! table#commands#TableComplete(ArgLead, CmdLine, CursorPos) abort
 
     " Complete action names
     if num_args <= 1
-        let actions = ['Align', 'Complete', 'DeleteCol', 'DeleteRow', 'EditCell', 'InsertCol', 'InsertRow', 'SortCols', 'SortRows', 'ToDefault', 'ToStyle']
+        let actions = ['Align', 'Complete', 'DeleteCol', 'DeleteRow', 'EditCell', 'InsertCol', 'InsertRow', 'MoveCol', 'MoveRow', 'SortCols', 'SortRows', 'ToDefault', 'ToStyle']
         return filter(copy(actions), 'v:val =~? "^" .. a:ArgLead')
     endif
 
+    let action = parts[1]
+
     " Complete style names for ToStyle
-    if num_args == 2 && len(parts) > 1 && parts[1] ==# 'ToStyle'
+    if action ==# 'ToStyle'
         let styles = ['default'] + table#style#GetNames()
         return filter(copy(styles), 'v:val =~? "^" .. a:ArgLead')
+    elseif action ==# 'MoveCol'
+        return filter(['left', 'right'], 'v:val =~? "^" .. a:ArgLead')
+    elseif action ==# 'MoveRow'
+        return filter(['up', 'down'], 'v:val =~? "^" .. a:ArgLead')
     endif
 
     return []

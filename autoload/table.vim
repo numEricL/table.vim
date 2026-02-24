@@ -425,5 +425,11 @@ function! s:GetAdjustedBounds(table, cell_id) abort
     return [ bounds, row_offset ]
 endfunction
 
+function! table#MoveColumn(dir) abort
+endfunction
+
+function! table#MoveRow(dir) abort
+endfunction
+
 let &cpo = s:save_cpo
 unlet s:save_cpo
