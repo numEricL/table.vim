@@ -8,6 +8,7 @@ function! table#draw#CurrentlyPlaced(table, ...) abort
     let cfg_opts = table#config#Config(bufnr).options
     let positions = a:table.placement.positions
     let new_id = 0
+    let row_width = 0
     let row_count = a:table.RowCount()
     for pos_id in range(len(positions))
         let line_type = positions[pos_id].type
@@ -21,14 +22,14 @@ function! table#draw#CurrentlyPlaced(table, ...) abort
                 if row_id >= row_count
                     break
                 endif
-                let new_id = s:DrawRow(a:table, new_id, row_id, opts)
+                let [new_id, row_width] = s:DrawRow(a:table, new_id, row_id, opts)
             endif
         elseif line_type !=# 'skip'
             throw 'unknown line type: ' .. line_type
         endif
     endfor
     call s:DrawRemaining(a:table, new_id, opts)
-    call s:ClearRemaining(a:table.placement, new_id)
+    call s:ClearRemaining(a:table.placement, new_id, row_width)
     return new_id
 endfunction
 
@@ -36,6 +37,7 @@ function! table#draw#Table(table) abort
     call table#format#FillGaps(a:table)
     call table#format#Align(a:table)
     let pos_id = 0
+    let row_width = 0
     let bufnr = a:table.placement.bufnr
     let cfg_opts = table#config#Config(bufnr).options
     let style_opts = table#config#Style(bufnr).options
@@ -44,7 +46,7 @@ function! table#draw#Table(table) abort
         let num_cols = a:table.rows[0].ColCount()
         let pos_id = s:DrawSeparator(a:table, pos_id, 'top', num_cols)
     endif
-    let pos_id = s:DrawRow(a:table, pos_id, 0, {})
+    let [pos_id, row_width] = s:DrawRow(a:table, pos_id, 0, {})
 
     if a:table.RowCount() > 1
         let row_id = 0
@@ -55,7 +57,7 @@ function! table#draw#Table(table) abort
 
     if a:table.RowCount() > 2
         for row_id in range(1, a:table.RowCount() - 2)
-            let pos_id = s:DrawRow(a:table, pos_id, row_id, {})
+            let [pos_id, row_width] = s:DrawRow(a:table, pos_id, row_id, {})
             if a:table.placement.multiline || !style_opts.omit_separator_rows
                 let num_cols = max([a:table.rows[row_id].ColCount(), a:table.rows[row_id+1].ColCount()])
                 let pos_id = s:DrawSeparator(a:table, pos_id, 'separator', num_cols)
@@ -64,14 +66,14 @@ function! table#draw#Table(table) abort
     endif
 
     if a:table.RowCount() > 1
-        let pos_id = s:DrawRow(a:table, pos_id, a:table.RowCount() - 1, {})
+        let [pos_id, row_width] = s:DrawRow(a:table, pos_id, a:table.RowCount() - 1, {})
     endif
 
     if !style_opts.omit_bottom_border
         let num_cols = a:table.rows[-1].ColCount()
         let pos_id = s:DrawSeparator(a:table, pos_id, 'bottom', num_cols)
     endif
-    call s:ClearRemaining(a:table.placement, pos_id)
+    call s:ClearRemaining(a:table.placement, pos_id, row_width)
     call table#table#InvalidateCache()
 endfunction
 
@@ -148,7 +150,7 @@ function! s:DrawRow(table, pos_id, row_id, opts) abort
         endif
         let pos_id = s:DrawLine(a:table.placement, pos_id, rowline)
     endfor
-    return pos_id
+    return [pos_id, strdisplaywidth(rowline)]
 endfunction
 
 function! s:DrawSeparator(table, pos_id, subtype, num_cols) abort
@@ -220,6 +222,9 @@ function! s:AppendConditionalCommentLine(placement, linenr) abort
 endfunction
 
 function! s:DrawRemaining(table, pos_id, opts) abort
+    if a:pos_id >= len(a:table.placement.positions)
+        return
+    endif
     let last_drawn_row = a:table.placement.positions[a:pos_id-1].row_id
     let row_count = a:table.RowCount()
     if row_count <= last_drawn_row + 1
@@ -232,7 +237,7 @@ function! s:DrawRemaining(table, pos_id, opts) abort
         if !sep_at_top
             let pos_id = s:DrawSeparator(a:table, pos_id, '', num_cols)
         endif
-        let pos_id = s:DrawRow(a:table, pos_id, row_id, a:opts)
+        let [pos_id, _] = s:DrawRow(a:table, pos_id, row_id, a:opts)
         if sep_at_top
             let subtype = (row_id == row_count -1)? 'bottom' : ''
             let pos_id = s:DrawSeparator(a:table, pos_id, subtype, num_cols)
@@ -240,7 +245,7 @@ function! s:DrawRemaining(table, pos_id, opts) abort
     endfor
 endfunction
 
-function! s:ClearRemaining(placement, pos_id) abort
+function! s:ClearRemaining(placement, pos_id, width) abort
     if a:pos_id >= len(a:placement.positions)
         return
     endif
@@ -251,7 +256,10 @@ function! s:ClearRemaining(placement, pos_id) abort
         let col_start = a:placement.positions[id]['separator_pos'][0][0]
         let col_end   = a:placement.positions[id]['separator_pos'][-1][1]
         let newline = strpart(line, 0, col_start)
-        let newline ..= strpart(line, col_end)
+        if !empty(col_end)
+            let newline ..= repeat(' ', a:width)
+            let newline ..= strpart(line, col_end)
+        endif
         if newline =~# '\V\^' .. cs_left .. cs_right .. '\$'
             call deletebufline(a:placement.bufnr, linenr)
         else
