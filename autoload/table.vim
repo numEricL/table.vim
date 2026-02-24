@@ -341,6 +341,7 @@ endfunction
 
 function! s:UpdateOnOutOfBounds(table, dir, coord) abort
     let new_table = a:table
+    echom 'coord: ' .. string(a:coord.coord)
     if a:dir ==# 'down' && a:coord.coord[0] == a:table.RowCount()
         let is_bottom_hunk = (a:table.placement.bounds[1] == a:table.placement.full_bounds[1])
         if !is_bottom_hunk
@@ -359,8 +360,8 @@ function! s:UpdateOnOutOfBounds(table, dir, coord) abort
     elseif a:dir ==# 'right'
         let row = new_table.rows[a:coord.coord[0]]
         let col_bound = row.ColCount()
-        if a:coord.coord[2] == col_bound
-            let a:coord.coord[2] = col_bound - 1
+        if a:coord.coord[2] > col_bound
+            let a:coord.coord[2] = col_bound
         endif
     endif
     return [ new_table, a:coord ]
