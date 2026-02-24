@@ -127,7 +127,8 @@ function! s:SetCursorCell(table, cell_id) abort
                 let col += matchpos[1] + 1
             else
                 " if the cell is <= 2 width of whitespace, put the cursor at the end of the cell
-                let col += min([2, sep_pos[col_id+1][0] - sep_pos[col_id][1]])
+                let cap = (len(sep_pos) > col_id + 1) ? sep_pos[col_id+1][0] - sep_pos[col_id][1] : 2
+                let col += min([2, cap])
             endif
         endif
     endif
