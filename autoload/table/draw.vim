@@ -8,6 +8,7 @@ function! table#draw#CurrentlyPlaced(table, ...) abort
     let cfg_opts = table#config#Config(bufnr).options
     let positions = a:table.placement.positions
     let new_id = 0
+    let row_count = a:table.RowCount()
     for pos_id in range(len(positions))
         let line_type = positions[pos_id].type
         if line_type ==# 'separator'
@@ -17,15 +18,18 @@ function! table#draw#CurrentlyPlaced(table, ...) abort
         elseif line_type ==# 'row'
             if positions[pos_id].row_offset == 0
                 let row_id = positions[pos_id].row_id
+                if row_id >= row_count
+                    break
+                endif
                 let new_id = s:DrawRow(a:table, new_id, row_id, opts)
             endif
-        else
+        elseif line_type !=# 'skip'
             throw 'unknown line type: ' .. line_type
         endif
     endfor
     call s:DrawRemaining(a:table, new_id, opts)
     call s:ClearRemaining(a:table.placement, new_id)
-    return table#table#Get(a:table.placement.bounds[0], [0,new_id-1])
+    return new_id
 endfunction
 
 function! table#draw#Table(table) abort

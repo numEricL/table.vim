@@ -47,7 +47,8 @@ function! table#AlignIfNotEscaped() abort
         " if char under cursor before insertion is a pipe, offset by one for correct coordinate
         let char_under_cursor = getline('.')[col('.') - 1]
         let coord.coord[-1] -= ( char_under_cursor ==# '|' )? 1 : 0
-        let table = table#draw#CurrentlyPlaced(table)
+        let pos_id = table#draw#CurrentlyPlaced(table)
+        let table = table#table#Get(table.placement.bounds[0], [0, pos_id-1])
         call table#cursor#SetCoord(table, coord)
     endif
 endfunction
@@ -235,15 +236,18 @@ function! table#DeleteRow() abort
     endif
     let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
     let row_id = coord.coord[0]
+    " adjust row_id if we're removing the last row
+    let row_linenr = table.placement.bounds[0] + table.rows[min([row_id, table.RowCount()-2])].placement_id
 
+    if table.placement.positions[-1].type !=# 'separator'
+        let pos_id = table.rows[-1].placement_id - 1
+        let table.placement.positions[pos_id].type = 'skip'
+    endif
     call remove(table.rows, row_id)
 
-    if row_id > 0
-        let coord.coord[0] = row_id - 1
-    endif
-
-    call table#draw#Table(table)
-    let table = s:GetFullTable(table.placement.full_bounds[0])
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
+    let table = table#table#Get(row_linenr, [0,0])
+    let coord.coord = [0, 0, coord.coord[2]]
     call table#cursor#SetCoord(table, coord)
 endfunction
 
