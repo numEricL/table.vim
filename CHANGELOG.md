@@ -10,6 +10,10 @@ a multiline cell, the entire cell is now split across all lines at the same
 column position, not just the current line. Enabled by default, disable with
 `auto_split_cell` option.
 - movements increment the jumplist
+- **Insert and delete row/column actions**: New `:Table InsertRow`, `:Table InsertCol`, 
+`:Table DeleteRow`, and `:Table DeleteCol` commands for table manipulation
+  - Available as `<Plug>` mappings: `<plug>(table_insert_row)`, `<plug>(table_insert_column)`,
+  `<plug>(table_delete_row)`, `<plug>(table_delete_column)`
 
 ### Fixed
 - Completing a table in a comment block now extends the comment prefix if needed

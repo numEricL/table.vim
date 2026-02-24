@@ -102,6 +102,38 @@ COMMANDS                                                      *table-commands*
         Example: >
             :Table Align
 <
+    :Table InsertRow                                        *:Table-InsertRow*
+        Insert a new empty row at the cursor position.
+
+        Equivalent to the |<Plug>(table_insert_row)| mapping.
+
+        Example: >
+            :Table InsertRow
+<
+    :Table InsertCol                                        *:Table-InsertCol*
+        Insert a new empty column at the cursor position.
+
+        Equivalent to the |<Plug>(table_insert_column)| mapping.
+
+        Example: >
+            :Table InsertCol
+<
+    :Table DeleteRow                                        *:Table-DeleteRow*
+        Delete the row at the cursor position.
+
+        Equivalent to the |<Plug>(table_delete_row)| mapping.
+
+        Example: >
+            :Table DeleteRow
+<
+    :Table DeleteCol                                        *:Table-DeleteCol*
+        Delete the column at the cursor position.
+
+        Equivalent to the |<Plug>(table_delete_column)| mapping.
+
+        Example: >
+            :Table DeleteCol
+<
     :Table ToDefault                                        *:Table-ToDefault*
         Convert table to the 'default' style. Uses the |i_vertical| and
         |i_horizontal| characters from the current buffer configuration, with
@@ -241,8 +273,8 @@ Default mappings are provided for auto-alignment, navigation, and text objects.
 These may be disabled by calling the config setup function with the
 disable_mappings option before the VimEnter event.
 
-For table actions (EditCell, Align, Complete, ToDefault), <Plug>
-mappings are provided but not mapped by default.
+For table actions (EditCell, Align, Complete, ToDefault, InsertRow, InsertCol,
+DeleteRow, DeleteCol), <Plug> mappings are provided but not mapped by default.
 
 Context-Aware Mappings ~
 
@@ -260,6 +292,10 @@ Suggested keybindings for table actions: >
     nnoremap <leader><bar> <Plug>(table_complete)
     nnoremap <leader>td    <Plug>(table_to_default)
     nnoremap <leader>te    <Plug>(table_cell_edit)
+    nnoremap <leader>tir   <Plug>(table_insert_row)
+    nnoremap <leader>tic   <Plug>(table_insert_column)
+    nnoremap <leader>tdr   <Plug>(table_delete_row)
+    nnoremap <leader>tdc   <Plug>(table_delete_column)
 <
 
 Table Operations ~
@@ -294,6 +330,34 @@ Table Operations ~
 <Plug>(table_cell_edit)
     Edit current cell in split window (Vim) or floating window (Neovim).
     Useful for multiline editing. Changes save on WinLeave.
+    No default mapping
+
+                                                  *<Plug>(table_insert_row)*
+<Plug>(table_insert_row)
+    Insert a new empty row at the cursor position. The cursor moves to the
+    first cell of the new row.
+    Available in normal mode.
+    No default mapping
+
+                                               *<Plug>(table_insert_column)*
+<Plug>(table_insert_column)
+    Insert a new empty column at the cursor position. The cursor remains on
+    the same cell in the new column.
+    Available in normal mode.
+    No default mapping
+
+                                                  *<Plug>(table_delete_row)*
+<Plug>(table_delete_row)
+    Delete the row at the cursor position. The cursor moves to the row below
+    (or the new last row if deleting the last row).
+    Available in normal mode.
+    No default mapping
+
+                                               *<Plug>(table_delete_column)*
+<Plug>(table_delete_column)
+    Delete the column at the cursor position. The cursor moves to the previous
+    column (or stays on the first column if deleting the first column).
+    Available in normal mode.
     No default mapping
 
 Navigation ~

@@ -130,6 +130,10 @@ nnoremap <leader>ta    <Plug>(table_align)
 nnoremap <leader><bar> <Plug>(table_complete)
 nnoremap <leader>td    <Plug>(table_to_default)
 nnoremap <leader>te    <Plug>(table_cell_edit)
+nnoremap <leader>tir   <Plug>(table_insert_row)
+nnoremap <leader>tic   <Plug>(table_insert_column)
+nnoremap <leader>tdr   <Plug>(table_delete_row)
+nnoremap <leader>tdc   <Plug>(table_delete_column)
 ```
 
 ## Commands
@@ -143,6 +147,10 @@ is available for all subcommands and arguments.
 :Table EditCell                  " Edit cell in split (Vim) or floating (Neovim) window
 :Table Complete                  " Fill missing cells and borders (processes entire table)
 :Table Align                     " Align table columns (processes chunk near cursor)
+:Table InsertRow                 " Insert a new row at cursor position
+:Table InsertCol                 " Insert a new column at cursor position
+:Table DeleteRow                 " Delete the row at cursor position
+:Table DeleteCol                 " Delete the column at cursor position
 :Table SortRows[!] {col} [flags] " Sort rows by specified column (! for reverse)
 :Table SortCols[!] {row} [flags] " Sort columns by specified row (! for reverse)
 :Table ToDefault                 " Convert to default style (using i_vertical/i_horizontal)
