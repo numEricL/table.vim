@@ -4,7 +4,7 @@ set cpo&vim
 " :Table command - for actions
 function! table#commands#TableCommand(...) abort
     if a:0 == 0
-        let actions = ['Align', 'Complete', 'EditCell', 'SortCols', 'SortRows', 'ToDefault', 'ToStyle']
+        let actions = ['Align', 'Complete', 'DeleteCol', 'DeleteRow', 'EditCell', 'InsertCol', 'InsertRow', 'SortCols', 'SortRows', 'ToDefault', 'ToStyle']
         echomsg 'Table actions: ' .. join(actions, ', ')
         return
     endif
@@ -22,6 +22,14 @@ function! table#commands#TableCommand(...) abort
         call table#Complete(line('.'))
     elseif action ==# 'Align'
         call table#Align(line('.'))
+    elseif action ==# 'InsertCol'
+        call table#InsertColumn()
+    elseif action ==# 'InsertRow'
+        call table#InsertRow()
+    elseif action ==# 'DeleteCol'
+        call table#DeleteColumn()
+    elseif action ==# 'DeleteRow'
+        call table#DeleteRow()
     elseif action =~# 'SortCols!\?'
         call s:SortAction('cols', action[-1:] ==# '!', args)
     elseif action =~# 'SortRows!\?'
@@ -45,7 +53,7 @@ function! table#commands#TableComplete(ArgLead, CmdLine, CursorPos) abort
 
     " Complete action names
     if num_args <= 1
-        let actions = ['Align', 'Complete', 'EditCell', 'SortCols', 'SortRows', 'ToDefault', 'ToStyle']
+        let actions = ['Align', 'Complete', 'DeleteCol', 'DeleteRow', 'EditCell', 'InsertCol', 'InsertRow', 'SortCols', 'SortRows', 'ToDefault', 'ToStyle']
         return filter(copy(actions), 'v:val =~? "^" .. a:ArgLead')
     endif
 
@@ -320,8 +328,8 @@ function! s:ParseSortArgs(type, bang, args) abort
 endfunction
 
 function! table#commands#TableOptionCommand(...) abort
-    echom 'TableOption command is deprecated, use TableConfig instead'
-    echom ''
+    echomsg 'TableOption command is deprecated, use TableConfig instead'
+    echomsg ''
     call call('table#commands#TableConfigCommand', a:000)
 endfunction
 

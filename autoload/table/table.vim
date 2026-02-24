@@ -223,6 +223,17 @@ function! s:CellRowHeight() dict abort
     return height
 endfunction
 
+function! table#table#InsertRow(table, cells, idx) abort
+    let row = {
+                \ 'cells'        : a:cells,
+                \ 'placement_id' : -1,
+                \ 'Height'       : function('s:CellRowHeight'),
+                \ 'ColCount'     : function('s:CellColCount'),
+                \ }
+    let row['types'] = repeat([''], row.Height())
+    call insert(a:table.rows, row, a:idx)
+endfunction
+
 function! s:AppendTableRow(table, subtype, last_type, line_cells, pos_id) abort
     if s:IsNewRow(a:last_type, a:table.placement.multiline)
         let cells = empty(a:line_cells)? [['']] : map(copy(a:line_cells), '[v:val]')
