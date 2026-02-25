@@ -448,12 +448,18 @@ function! table#MoveColumn(dir) abort
         endif
     endfor
 
+    if len(table.col_align) == max([col_id, target_col_id])
+        call add(table.col_align, '')
+    endif
     if col_id < len(table.col_align) && target_col_id < len(table.col_align)
         let temp = table.col_align[col_id]
         let table.col_align[col_id] = table.col_align[target_col_id]
         let table.col_align[target_col_id] = temp
     endif
 
+    if len(table.fixed_widths) == max([col_id, target_col_id])
+        call add(table.fixed_widths, 0)
+    endif
     if col_id < len(table.fixed_widths) && target_col_id < len(table.fixed_widths)
         let temp = table.fixed_widths[col_id]
         let table.fixed_widths[col_id] = table.fixed_widths[target_col_id]
@@ -468,6 +474,34 @@ function! table#MoveColumn(dir) abort
 endfunction
 
 function! table#MoveRow(dir) abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let row_id = coord.coord[0]
+    let row_count = table.RowCount()
+
+    let target_row_id = (a:dir ==# 'up')? row_id - 1 : row_id + 1
+    if target_row_id < 0 || target_row_id >= row_count
+        return
+    endif
+
+    " correct the placements after swap for SetCoord
+    let first_id  = min([row_id, target_row_id])
+    let second_id = max([row_id, target_row_id])
+    let temp = table.rows[first_id].placement_id
+    let table.rows[first_id].placement_id = table.rows[second_id].placement_id - ( table.rows[first_id].Height() - table.rows[second_id].Height() )
+    let table.rows[second_id].placement_id = temp
+
+    let temp = table.rows[row_id]
+    let table.rows[row_id] = table.rows[target_row_id]
+    let table.rows[target_row_id] = temp
+
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
+    let coord.coord[0] += (a:dir ==# 'up')? -1 : 1
+    call table#cursor#SetCoord(table, coord)
 endfunction
 
 let &cpo = s:save_cpo
