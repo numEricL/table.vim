@@ -14,6 +14,12 @@ column position, not just the current line. Enabled by default, disable with
 `:Table DeleteRow`, and `:Table DeleteCol` commands for table manipulation
   - Available as `<Plug>` mappings: `<plug>(table_insert_row)`, `<plug>(table_insert_column)`,
   `<plug>(table_delete_row)`, `<plug>(table_delete_column)`
+- **Move row/column actions**: New `:Table MoveRow {direction}` and `:Table MoveCol {direction}` 
+commands for reordering table rows and columns
+  - `:Table MoveRow up|down` - Move current row up or down
+  - `:Table MoveCol left|right` - Move current column left or right
+  - Available as `<Plug>` mappings: `<plug>(table_move_row_up)`, `<plug>(table_move_row_down)`,
+  `<plug>(table_move_column_left)`, `<plug>(table_move_column_right)`
 
 ### Fixed
 - Completing a table in a comment block now extends the comment prefix if needed
