@@ -462,6 +462,7 @@ function! table#MoveColumn(dir) abort
 
     call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
     let table = table#table#Get(cur_pos[0], [0,0])
+    let coord.coord[0] = 0
     let coord.coord[2] = target_col_id
     call table#cursor#SetCoord(table, coord)
 endfunction
