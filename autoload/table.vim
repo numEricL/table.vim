@@ -426,6 +426,44 @@ function! s:GetAdjustedBounds(table, cell_id) abort
 endfunction
 
 function! table#MoveColumn(dir) abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let col_id = max([0, coord.coord[2]])
+    let col_count = table.ColCount()
+
+    let target_col_id = (a:dir ==# 'left')? col_id - 1 : col_id + 1
+    if target_col_id < 0 || target_col_id >= col_count
+        return
+    endif
+
+    for row in table.rows
+        if col_id < len(row.cells) && target_col_id < len(row.cells)
+            let temp = row.cells[col_id]
+            let row.cells[col_id] = row.cells[target_col_id]
+            let row.cells[target_col_id] = temp
+        endif
+    endfor
+
+    if col_id < len(table.col_align) && target_col_id < len(table.col_align)
+        let temp = table.col_align[col_id]
+        let table.col_align[col_id] = table.col_align[target_col_id]
+        let table.col_align[target_col_id] = temp
+    endif
+
+    if col_id < len(table.fixed_widths) && target_col_id < len(table.fixed_widths)
+        let temp = table.fixed_widths[col_id]
+        let table.fixed_widths[col_id] = table.fixed_widths[target_col_id]
+        let table.fixed_widths[target_col_id] = temp
+    endif
+
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
+    let table = table#table#Get(cur_pos[0], [0,0])
+    let coord.coord[2] = target_col_id
+    call table#cursor#SetCoord(table, coord)
 endfunction
 
 function! table#MoveRow(dir) abort
