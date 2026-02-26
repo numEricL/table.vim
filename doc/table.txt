@@ -327,10 +327,10 @@ Suggested keybindings for table actions: >
     nnoremap <leader>tic   <Plug>(table_insert_column)
     nnoremap <leader>tdr   <Plug>(table_delete_row)
     nnoremap <leader>tdc   <Plug>(table_delete_column)
-    nnoremap <leader>tmru  <Plug>(table_move_row_up)
-    nnoremap <leader>tmrd  <Plug>(table_move_row_down)
-    nnoremap <leader>tmcl  <Plug>(table_move_column_left)
-    nnoremap <leader>tmcr  <Plug>(table_move_column_right)
+    nnoremap <leader>tmk  <Plug>(table_move_row_up)
+    nnoremap <leader>tmj  <Plug>(table_move_row_down)
+    nnoremap <leader>tmh  <Plug>(table_move_column_left)
+    nnoremap <leader>tml  <Plug>(table_move_column_right)
 <
 
 Table Operations ~

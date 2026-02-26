@@ -31,9 +31,9 @@ function! table#commands#TableCommand(...) abort
     elseif action ==# 'DeleteRow'
         call table#DeleteRow()
     elseif action ==# 'MoveCol'
-        call table#MoveColumn(args)
+        call s:MoveAction('col', args)
     elseif action ==# 'MoveRow'
-        call table#MoveRow(args)
+        call s:MoveAction('row', args)
     elseif action =~# 'SortCols!\?'
         call s:SortAction('cols', action[-1:] ==# '!', args)
     elseif action =~# 'SortRows!\?'
@@ -285,6 +285,23 @@ function! s:CompleteStyleOption(ArgLead, CmdLine, CursorPos) abort
         endif
     endif
     return []
+endfunction
+
+function! s:MoveAction(type, args) abort
+    let action_name = (a:type ==# 'col')? 'MoveColumn' : 'MoveRow'
+    if len(a:args) == 0
+        let allowed_directions = (a:type ==# 'col')? '<left|right>' : '<up|down>'
+        echomsg 'Usage: :Table '.. action_name .. ' ' .. allowed_directions
+        return
+    endif
+    let direction = a:args[0]
+    if a:type ==# 'col' && (direction ==# 'left' || direction ==# 'right')
+        call table#MoveColumn(direction)
+    elseif a:type ==# 'row' && (direction ==# 'up' || direction ==# 'down')
+        call table#MoveRow(direction)
+    else
+        echomsg 'Invalid direction "' .. direction .. '" for ' .. action_name
+    endif
 endfunction
 
 function! s:SortAction(type, bang, args) abort
