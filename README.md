@@ -134,6 +134,10 @@ nnoremap <leader>tir   <Plug>(table_insert_row)
 nnoremap <leader>tic   <Plug>(table_insert_column)
 nnoremap <leader>tdr   <Plug>(table_delete_row)
 nnoremap <leader>tdc   <Plug>(table_delete_column)
+nnoremap <leader>tmk   <Plug>(table_move_row_up)
+nnoremap <leader>tmj   <Plug>(table_move_row_down)
+nnoremap <leader>tmh   <Plug>(table_move_column_left)
+nnoremap <leader>tml   <Plug>(table_move_column_right)
 ```
 
 ## Commands
@@ -151,6 +155,8 @@ is available for all subcommands and arguments.
 :Table InsertCol                 " Insert a new column at cursor position
 :Table DeleteRow                 " Delete the row at cursor position
 :Table DeleteCol                 " Delete the column at cursor position
+:Table MoveRow {up|down}         " Move current row up or down
+:Table MoveCol {left|right}      " Move current column left or right
 :Table SortRows[!] {col} [flags] " Sort rows by specified column (! for reverse)
 :Table SortCols[!] {row} [flags] " Sort columns by specified row (! for reverse)
 :Table ToDefault                 " Convert to default style (using i_vertical/i_horizontal)

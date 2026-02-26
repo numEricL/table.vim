@@ -134,6 +134,37 @@ COMMANDS                                                      *table-commands*
         Example: >
             :Table DeleteCol
 <
+    :Table MoveRow {direction}                               *:Table-MoveRow*
+        Move the current row up or down within the table. The cursor moves with
+        the row to maintain position.
+
+        Arguments:
+        - up: Move row up (swap with previous row)
+        - down: Move row down (swap with next row)
+
+        Equivalent to the |<Plug>(table_move_row_up)| and
+        |<Plug>(table_move_row_down)| mappings.
+
+        Example: >
+            :Table MoveRow up
+            :Table MoveRow down
+<
+    :Table MoveCol {direction}                               *:Table-MoveCol*
+        Move the current column left or right within the table. The cursor moves
+        with the column to maintain position. Column alignments and fixed widths
+        are preserved during the move.
+
+        Arguments:
+        - left: Move column left (swap with previous column)
+        - right: Move column right (swap with next column)
+
+        Equivalent to the |<Plug>(table_move_column_left)| and
+        |<Plug>(table_move_column_right)| mappings.
+
+        Example: >
+            :Table MoveCol left
+            :Table MoveCol right
+<
     :Table ToDefault                                        *:Table-ToDefault*
         Convert table to the 'default' style. Uses the |i_vertical| and
         |i_horizontal| characters from the current buffer configuration, with
@@ -296,6 +327,10 @@ Suggested keybindings for table actions: >
     nnoremap <leader>tic   <Plug>(table_insert_column)
     nnoremap <leader>tdr   <Plug>(table_delete_row)
     nnoremap <leader>tdc   <Plug>(table_delete_column)
+    nnoremap <leader>tmk  <Plug>(table_move_row_up)
+    nnoremap <leader>tmj  <Plug>(table_move_row_down)
+    nnoremap <leader>tmh  <Plug>(table_move_column_left)
+    nnoremap <leader>tml  <Plug>(table_move_column_right)
 <
 
 Table Operations ~
@@ -357,6 +392,30 @@ Table Operations ~
 <Plug>(table_delete_column)
     Delete the column at the cursor position. The cursor moves to the previous
     column (or stays on the first column if deleting the first column).
+    Available in normal mode.
+    No default mapping
+
+                                                  *<Plug>(table_move_row_up)*
+<Plug>(table_move_row_up)
+    Move the current row up by swapping it with the row above.
+    Available in normal mode.
+    No default mapping
+
+                                                *<Plug>(table_move_row_down)*
+<Plug>(table_move_row_down)
+    Move the current row down by swapping it with the row below.
+    Available in normal mode.
+    No default mapping
+
+                                              *<Plug>(table_move_column_left)*
+<Plug>(table_move_column_left)
+    Move the current column left by swapping it with the column to the left.
+    Available in normal mode.
+    No default mapping
+
+                                             *<Plug>(table_move_column_right)*
+<Plug>(table_move_column_right)
+    Move the current column right by swapping it with the column to the right.
     Available in normal mode.
     No default mapping
 
@@ -1139,6 +1198,30 @@ table#CellEditor()
 
     Example: >
         nnoremap <leader>te :call table#CellEditor()<CR>
+<
+                                                          *table#MoveRow()*
+table#MoveRow({direction})
+    Move the current row up or down within the table. The row is swapped with
+    the adjacent row in the specified direction.
+
+    Parameters: ~
+        {direction}  Either 'up' or 'down'
+
+    Example: >
+        nnoremap <leader>tmu :call table#MoveRow('up')<CR>
+        nnoremap <leader>tmd :call table#MoveRow('down')<CR>
+<
+                                                       *table#MoveColumn()*
+table#MoveColumn({direction})
+    Move the current column left or right within the table. The column is
+    swapped with the adjacent column in the specified direction.
+
+    Parameters: ~
+        {direction}  Either 'left' or 'right'
+
+    Example: >
+        nnoremap <leader>tml :call table#MoveColumn('left')<CR>
+        nnoremap <leader>tmr :call table#MoveColumn('right')<CR>
 <
                                                               *table#Sort()*
 table#Sort({linenr}, {dim_kind}, {id}, {flags})
