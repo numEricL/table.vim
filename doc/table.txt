@@ -305,7 +305,8 @@ These may be disabled by calling the config setup function with the
 disable_mappings option before the VimEnter event.
 
 For table actions (EditCell, Align, Complete, ToDefault, InsertRow, InsertCol,
-DeleteRow, DeleteCol), <Plug> mappings are provided but not mapped by default.
+DeleteRow, DeleteCol, MoveRow, MoveCol), <Plug> mappings are provided but not
+mapped by default.
 
 Context-Aware Mappings ~
 
@@ -327,10 +328,10 @@ Suggested keybindings for table actions: >
     nnoremap <leader>tic   <Plug>(table_insert_column)
     nnoremap <leader>tdr   <Plug>(table_delete_row)
     nnoremap <leader>tdc   <Plug>(table_delete_column)
-    nnoremap <leader>tmk  <Plug>(table_move_row_up)
-    nnoremap <leader>tmj  <Plug>(table_move_row_down)
-    nnoremap <leader>tmh  <Plug>(table_move_column_left)
-    nnoremap <leader>tml  <Plug>(table_move_column_right)
+    nnoremap <leader>tmk   <Plug>(table_move_row_up)
+    nnoremap <leader>tmj   <Plug>(table_move_row_down)
+    nnoremap <leader>tmh   <Plug>(table_move_column_left)
+    nnoremap <leader>tml   <Plug>(table_move_column_right)
 <
 
 Table Operations ~
@@ -1210,8 +1211,8 @@ table#MoveRow({direction})
         {direction}  Either 'up' or 'down'
 
     Example: >
-        nnoremap <leader>tmu :call table#MoveRow('up')<CR>
-        nnoremap <leader>tmd :call table#MoveRow('down')<CR>
+        nnoremap <leader>tmk :call table#MoveRow('up')<CR>
+        nnoremap <leader>tmj :call table#MoveRow('down')<CR>
 <
                                                        *table#MoveColumn()*
 table#MoveColumn({direction})
@@ -1222,8 +1223,8 @@ table#MoveColumn({direction})
         {direction}  Either 'left' or 'right'
 
     Example: >
-        nnoremap <leader>tml :call table#MoveColumn('left')<CR>
-        nnoremap <leader>tmr :call table#MoveColumn('right')<CR>
+        nnoremap <leader>tml :call table#MoveColumn('right')<CR>
+        nnoremap <leader>tmh :call table#MoveColumn('left')<CR>
 <
                                                               *table#Sort()*
 table#Sort({linenr}, {dim_kind}, {id}, {flags})
