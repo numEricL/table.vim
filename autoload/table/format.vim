@@ -44,17 +44,22 @@ function! table#format#Align(table) abort
     let a:table.col_widths = col_widths " used in draw.vim for separator lines
 endfunction
 
+function! s:CountTrailingBlankLinesCell(cell) abort
+    let count = 0
+    let id = len(a:cell) - 1
+    while id >= 0 && a:cell[id] =~# '^\s*$'
+        let count += 1
+        let id -= 1
+    endwhile
+    return count
+endfunction
+
 function! s:CountTrailingBlankLines(row) abort
     let cells = a:row.cells
     let height = a:row.Height()
     let count = -1
     for cell in cells
-        let cell_count = height - len(cell)
-        let id = len(cell) - 1
-        while id >= 0 && cell[id] =~# '^\s*$'
-            let cell_count += 1
-            let id -= 1
-        endwhile
+        let cell_count = height - len(cell) + s:CountTrailingBlankLinesCell(cell)
         if count == -1 || cell_count < count
             let count = cell_count
         endif
@@ -69,12 +74,10 @@ function! s:TrimTrailingBlankLines(row, keep) abort
     let cells = a:row.cells
     let height = a:row.Height()
     for cell in cells
-        let removed = height - len(cell)
-        let id = len(cell) - 1 - a:keep
-        while id >= 0 && cell[id] =~# '^\s*$' && removed < a:keep
-            call remove(cell, id)
-            let id -= 1
-            let removed += 1
+        let to_remove = s:CountTrailingBlankLinesCell(cell) - a:keep
+        while to_remove > 0 && cell[-1] =~# '^\s*$'
+            call remove(cell, len(cell) - 1)
+            let to_remove -= 1
         endwhile
     endfor
 endfunction

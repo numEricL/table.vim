@@ -673,7 +673,7 @@ default_alignment
                                                                 *chunk_size*
 chunk_size
     Type: List [before, after]
-    Default: [-10, 10]
+    Default: [-20, 20]
 
     Number of lines to process around the cursor for alignment operations.
     First element is lines before cursor (negative), second is lines after.
