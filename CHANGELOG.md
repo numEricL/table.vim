@@ -29,6 +29,7 @@ commands for reordering table rows and columns
 - `paragraph_wrap` now allows multiple paragraphs in a single cell, separated by
   blank lines, and wraps each paragraph separately while preserving blank lines
   between them
+- Default `chunk_size` range increased from `[-10, 10]` to `[-20, 20]`
 
 ## [v0.2.0] - 2026-02-19
 
