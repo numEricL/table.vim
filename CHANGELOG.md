@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [v0.3.0] - 2026-02-27
 
 ### Added
 - **Auto-split feature for multiline cells**: When inserting a pipe character in
