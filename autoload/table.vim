@@ -241,7 +241,11 @@ function! table#DeleteRow() abort
 
     if table.placement.positions[-1].type !=# 'separator'
         let pos_id = table.rows[-1].placement_id
-        let table.placement.positions[pos_id].type = 'skip'
+        if table.placement.positions[pos_id - 1].type ==# 'separator'
+            let table.placement.positions[pos_id - 1].type = 'skip'
+        else
+            let table.placement.positions[pos_id].type = 'skip'
+        endif
     endif
     call remove(table.rows, row_id)
 
