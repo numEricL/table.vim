@@ -243,7 +243,7 @@ COMMANDS                                                      *table-commands*
         - default_alignment: Default column alignment: 'left', 'center', or
           'right' (or 'l', 'c', 'r') (default: 'left')
         - chunk_size: Lines to process around cursor [before, after]
-          (default: [-10, 10])
+          (default: [-20, 20])
         - multiline: Enable multiline cells (default: 'auto')
           Values: v:true, v:false, or 'auto'. When 'auto', automatically
           detects multiline rows based on table structure.
@@ -560,7 +560,7 @@ table#Setup({config})
                 'multiline': 'auto',
                 'multiline_format': 'block_wrap',
                 'default_alignment': 'left',
-                'chunk_size': [-10, 10],
+                'chunk_size': [-20, 20],
                 'i_vertical': '|',
                 'i_horizontal': '-',
                 'i_alignment': ':'
@@ -651,14 +651,16 @@ multiline_format
 
     'align'          - Trim leading/trailing whitespace, no wrapping
 
-    'wrap'           - Wrap lines independently of each other in fixed-width columns
+    'wrap'           - Wrap lines independently of each other in fixed-width
+                       columns
 
     'block_align'    - Align text as a block based on column alignment
 
-    'block_wrap'     - Align text as a block with independent line wrapping in fixed-width
-                       columns
+    'block_wrap'     - Align text as a block with independent line wrapping in
+                       fixed-width columns
 
-    'paragraph_wrap' - Keep paragraph structure in fixed-width columns
+    'paragraph_wrap' - Keep paragraph structure in fixed-width columns,
+                       paragraphs are separated by blank lines
 
                                                           *default_alignment*
 default_alignment

@@ -55,10 +55,9 @@ function! s:CountTrailingBlankLinesCell(cell) abort
 endfunction
 
 function! s:CountTrailingBlankLines(row) abort
-    let cells = a:row.cells
     let height = a:row.Height()
     let count = -1
-    for cell in cells
+    for cell in a:row.cells
         let cell_count = height - len(cell) + s:CountTrailingBlankLinesCell(cell)
         if count == -1 || cell_count < count
             let count = cell_count
@@ -68,12 +67,10 @@ function! s:CountTrailingBlankLines(row) abort
 endfunction
 
 function! s:TrimTrailingBlankLines(row, keep) abort
-    if a:keep <= 0
+    if a:keep < 0
         return
     endif
-    let cells = a:row.cells
-    let height = a:row.Height()
-    for cell in cells
+    for cell in a:row.cells
         let to_remove = s:CountTrailingBlankLinesCell(cell) - a:keep
         while to_remove > 0 && cell[-1] =~# '^\s*$'
             call remove(cell, len(cell) - 1)
