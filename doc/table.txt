@@ -243,7 +243,7 @@ COMMANDS                                                      *table-commands*
         - default_alignment: Default column alignment: 'left', 'center', or
           'right' (or 'l', 'c', 'r') (default: 'left')
         - chunk_size: Lines to process around cursor [before, after]
-          (default: [-20, 20])
+          (default: [20, 20])
         - multiline: Enable multiline cells (default: 'auto')
           Values: v:true, v:false, or 'auto'. When 'auto', automatically
           detects multiline rows based on table structure.
@@ -560,7 +560,7 @@ table#Setup({config})
                 'multiline': 'auto',
                 'multiline_format': 'block_wrap',
                 'default_alignment': 'left',
-                'chunk_size': [-20, 20],
+                'chunk_size': [20, 20],
                 'i_vertical': '|',
                 'i_horizontal': '-',
                 'i_alignment': ':'
@@ -585,7 +585,7 @@ table#Setup({config})
         -- In init.lua
         require('table_vim').setup({
             style = 'default',
-            options = { multiline = true, multiline_format = 'paragraph_wrap', chunk_size = {-20, 20} }
+            options = { multiline = true, multiline_format = 'paragraph_wrap', chunk_size = {20, 20} }
         })
 <
                                                       *table#SetBufferConfig()*
@@ -684,7 +684,7 @@ chunk_size
     Smaller chunks improve performance for large tables but may not align
     the entire visible table. Increase if you have large tables and
     alignment doesn't cover enough rows. >
-        :TableConfig Option chunk_size [-20, 20]
+        :TableConfig Option chunk_size [20, 20]
         :TableConfig Option chunk_size []
 <
                                                                 *i_vertical*
@@ -858,7 +858,7 @@ Global setup in init.lua: >
       options = {
         multiline = true,
         default_alignment = 'center',
-        chunk_size = {-20, 20}
+        chunk_size = {20, 20}
       }
     })
 <
