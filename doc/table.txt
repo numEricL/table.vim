@@ -650,15 +650,15 @@ multiline_format
     `wrap_lines` options.
 
     'align'          - Trim leading/trailing whitespace, no wrapping
-    
+
     'wrap'           - Wrap lines independently of each other in fixed-width columns
-    
+
     'block_align'    - Align text as a block based on column alignment
-    
+
     'block_wrap'     - Align text as a block with independent line wrapping in fixed-width
                        columns
-    
-    'paragraph_wrap' - Collapse to single line and wrap in fixed-width columns
+
+    'paragraph_wrap' - Keep paragraph structure in fixed-width columns
 
                                                           *default_alignment*
 default_alignment
