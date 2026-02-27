@@ -675,11 +675,11 @@ default_alignment
                                                                 *chunk_size*
 chunk_size
     Type: List [before, after]
-    Default: [-20, 20]
+    Default: [20, 20]
 
-    Number of lines to process around the cursor for alignment operations.
-    First element is lines before cursor (negative), second is lines after.
-    Use [] to process the entire table regardless of size.
+    Number of lines to process around the cursor for alignment operations. The
+    first element specifies lines before the cursor, the second specifies lines
+    after. Use [] to process the entire table, regardless of size.
 
     Smaller chunks improve performance for large tables but may not align
     the entire visible table. Increase if you have large tables and
