@@ -25,6 +25,11 @@ commands for reordering table rows and columns
 - Completing a table in a comment block now extends the comment prefix if needed
 - Cell movement is correct when cells are empty
 
+### Changed
+- `paragraph_wrap` now allows multiple paragraphs in a single cell, separated by
+  blank lines, and wraps each paragraph separately while preserving blank lines
+  between them
+
 ## [v0.2.0] - 2026-02-19
 
 ### Added
