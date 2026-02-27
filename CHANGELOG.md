@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **Auto-split feature for multiline cells**: When inserting a pipe character in
 a multiline cell, the entire cell is now split across all lines at the same
-column position, not just the current line. Enabled by default, disable with
+column position, not just the current line. Disabled by default, enable with
 `auto_split_cell` option.
 - movements increment the jumplist
 - **Insert and delete row/column actions**: New `:Table InsertRow`, `:Table InsertCol`, 

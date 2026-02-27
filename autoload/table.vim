@@ -99,7 +99,7 @@ endfunction
 
 function! table#CycleCursor(dir, count1) abort
     let curpos = getpos('.')[1:2]
-    let table = table#table#Get(curpos[0], [-1,0])
+    let table = table#table#Get(curpos[0], [1,0])
     if !table.valid
         return
     endif
@@ -240,8 +240,12 @@ function! table#DeleteRow() abort
     let row_linenr = table.placement.bounds[0] + table.rows[min([row_id, table.RowCount()-2])].placement_id
 
     if table.placement.positions[-1].type !=# 'separator'
-        let pos_id = table.rows[-1].placement_id - 1
-        let table.placement.positions[pos_id].type = 'skip'
+        let pos_id = table.rows[-1].placement_id
+        if table.placement.positions[pos_id - 1].type ==# 'separator'
+            let table.placement.positions[pos_id - 1].type = 'skip'
+        else
+            let table.placement.positions[pos_id].type = 'skip'
+        endif
     endif
     call remove(table.rows, row_id)
 
