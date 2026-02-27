@@ -143,9 +143,6 @@ function! s:ConvertValue(args) abort
         let matches = matchlist(value, '\v(\d+)\D+(\d+)')
         let matches = matches[1:2]
         call map(matches, 'abs(str2nr(v:val))')
-        if !empty(matches)
-            let matches[0] = -matches[0]
-        endif
         return matches
     elseif key ==# 'SortComparator'
         if value[0] ==# '{' && value[-1:] ==# '}'

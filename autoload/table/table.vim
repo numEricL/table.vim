@@ -18,11 +18,11 @@ function! s:ComputeChunkBounds(linenr, full_bounds, chunk_size, vcol_bounds, mul
         return a:full_bounds
     endif
 
-    let start_line = a:linenr + a:chunk_size[0]
-    let end_line = a:linenr + a:chunk_size[1]
+    let start_line = a:linenr - a:chunk_size[0]
+    let end_line   = a:linenr + a:chunk_size[1]
 
     let start_line = max([a:full_bounds[0], start_line])
-    let end_line = min([a:full_bounds[1], end_line])
+    let end_line   = min([a:full_bounds[1], end_line])
 
     let [start_line, end_line] = s:ExpandEmptyChunk(start_line, end_line, a:full_bounds, a:vcol_bounds)
     let start_line = s:ExpandToCompleteRow(start_line, a:full_bounds[0], -1, a:vcol_bounds, a:multiline)
