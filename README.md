@@ -46,7 +46,7 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 
 ## Demo
 
-Note: This demo is from an older version, options have changed.
+Note: This demo is from an older version, options have changed. See the Upgrading from v0.1.x section for details.
 
 https://github.com/user-attachments/assets/352e23b0-33ba-4f9d-9fa0-e2aee5fd16cc
 
