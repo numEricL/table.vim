@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
   a multiline cell, the entire cell is now split across all lines at the same
   column position, not just the current line. Disabled by default, enable with
   `auto_split_cell` option.
-- **Insert/delete/move row and column actions**: 
+- **Insert/delete/move row and column actions**:
   - `:Table InsertRow` and `:Table InsertCol`,
   - `:Table DeleteRow` and `:Table DeleteCol`
   - `:Table MoveRow {direction}` and `:Table MoveCol {direction}`

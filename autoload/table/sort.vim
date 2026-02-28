@@ -71,7 +71,7 @@ function! s:GetVimSortHow(flags) abort
         if index(a:flags, 'i') != -1 | let s:Op = { x ->   tolower(x[0]) }
     elseif index(a:flags, 'n') != -1 | let s:Op = { x ->    str2nr(x[0]) }
     elseif index(a:flags, 'f') != -1 | let s:Op = { x -> str2float(x[0]) }
-    else 
+    else
         let s:Op = { x -> x[0] }
     endif
     let s:LessThan = ''
