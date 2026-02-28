@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.0] - 2026-02-27
+
+### Added
+- **Auto-split feature for multiline cells**: When inserting a pipe character in
+  a multiline cell, the entire cell is now split across all lines at the same
+  column position, not just the current line. Disabled by default, enable with
+  `auto_split_cell` option.
+- **Insert/delete/move row and column actions**:
+  - `:Table InsertRow` and `:Table InsertCol`,
+  - `:Table DeleteRow` and `:Table DeleteCol`
+  - `:Table MoveRow {direction}` and `:Table MoveCol {direction}`
+  - Available as `<Plug>` mappings
+- cell movement increments the jumplist
+
+### Fixed
+- Completing a table in a comment block now extends the comment prefix if needed
+- Cell movement is correct when cells are empty
+
+### Changed
+- `paragraph_wrap` now allows multiple paragraphs in a single cell, separated by
+  blank lines, and wraps each paragraph separately while preserving blank lines
+  between them
+- `chunk_size` option now uses positive integers for both directions
+- Default `chunk_size` range increased from `[10, 10]` to `[20, 20]`
+
 ## [v0.2.0] - 2026-02-19
 
 ### Added

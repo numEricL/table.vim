@@ -7,10 +7,11 @@ let s:default_config = {
             \ 'disable_ftplugins' : v:false,
             \ 'style': 'default',
             \ 'options': {
+            \   'auto_split_cell'   : v:false,
             \   'multiline'         : 'auto',
             \   'multiline_format'  : 'block_wrap',
             \   'default_alignment' : 'left',
-            \   'chunk_size'        : [-10, 10],
+            \   'chunk_size'        : [20, 20],
             \   'i_vertical'        : '|',
             \   'i_horizontal'      : '-',
             \   'i_alignment'       : ':',

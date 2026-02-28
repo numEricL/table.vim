@@ -69,6 +69,8 @@ function! table#cursor#SetCoord(table, coord) abort
     if !a:table.valid
         return
     endif
+    " mark current position for the jumplist
+    execute "normal! m`"
     if a:coord.type ==# 'cell'
         call s:SetCursorCell(a:table, a:coord.coord)
     elseif a:coord.type ==# 'alignment'
@@ -111,8 +113,10 @@ function! s:SetCursorCell(table, cell_id) abort
     let col = 0
 
     let row_cells = a:table.rows[row_id].cells
-    if col_id < 0 || col_id > len(row_cells)
+    if col_id < -1 || col_id > len(row_cells)
         return
+    elseif col_id == -1
+        let col = max([ 1, sep_pos[0][0] - 1 ])
     elseif col_id == len(row_cells)
         let col = sep_pos[-1][1] + 1
     else
@@ -124,7 +128,9 @@ function! s:SetCursorCell(table, cell_id) abort
             if matchpos[1] != -1
                 let col += matchpos[1] + 1
             else
-                let col += 2
+                " if the cell is <= 2 width of whitespace, put the cursor at the end of the cell
+                let cap = (len(sep_pos) > col_id + 1) ? sep_pos[col_id+1][0] - sep_pos[col_id][1] : 2
+                let col += min([2, cap])
             endif
         endif
     endif

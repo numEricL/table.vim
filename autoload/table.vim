@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let g:table_version = '0.2.0'
+let g:table_version = '0.3.0'
 
 function! table#Version() abort
     return g:table_version
@@ -33,6 +33,9 @@ function! table#AlignIfNotEscaped() abort
     else
         let cur_pos = getpos('.')[1:2]
         let cfg_opts = table#config#Config(bufnr('%')).options
+        if cfg_opts.auto_split_cell
+            call s:BisectIfMultilineCell(cur_pos)
+        endif
         let table = table#table#Get(cur_pos[0], cfg_opts.chunk_size)
         if !table.valid
             return
@@ -44,7 +47,8 @@ function! table#AlignIfNotEscaped() abort
         " if char under cursor before insertion is a pipe, offset by one for correct coordinate
         let char_under_cursor = getline('.')[col('.') - 1]
         let coord.coord[-1] -= ( char_under_cursor ==# '|' )? 1 : 0
-        let table = table#draw#CurrentlyPlaced(table)
+        let pos_id = table#draw#CurrentlyPlaced(table)
+        let table = table#table#Get(table.placement.bounds[0], [0, pos_id-1])
         call table#cursor#SetCoord(table, coord)
     endif
 endfunction
@@ -95,7 +99,7 @@ endfunction
 
 function! table#CycleCursor(dir, count1) abort
     let curpos = getpos('.')[1:2]
-    let table = table#table#Get(curpos[0], [-1,0])
+    let table = table#table#Get(curpos[0], [1,0])
     if !table.valid
         return
     endif
@@ -128,6 +132,127 @@ function! table#Sort(linenr, dim_kind, id, flags) abort
     endif
     call table#sort#Sort(table, a:dim_kind, a:id, a:flags)
     call table#draw#CurrentlyPlaced(table)
+endfunction
+
+function! table#InsertColumn() abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let coord.coord[2] = max([0, coord.coord[2]])
+    let col_id = coord.coord[2]
+
+    for pos in table.placement.positions
+        call insert(pos.separator_pos, [cur_pos[1], cur_pos[1]], col_id+1)
+    endfor
+    for row in table.rows
+        call insert(row.cells, [''], col_id)
+    endfor
+    if col_id < len(table.col_align)
+        call insert(table.col_align, '', col_id)
+    endif
+    if col_id < len(table.fixed_widths)
+        call insert(table.fixed_widths, 0, col_id)
+    endif
+
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
+    call table#cursor#SetCoord(table, coord)
+endfunction
+
+function! table#InsertRow() abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let num_cols = table.rows[coord.coord[0]].ColCount()
+    let empty_cells = map(range(num_cols), '[""]')
+    let append = cur_pos[0] == table.placement.full_bounds[1] && table.placement.positions[-1].type ==# 'separator'
+
+    let insert_id = coord.coord[0] + (append? 1 : 0)
+    call table#table#InsertRow(table, empty_cells, insert_id)
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
+
+    let row_linenr = 0
+    if !append " not last row
+        let row_linenr = cur_pos[0] - coord.coord[1]
+    else
+        let row_linenr = table.placement.full_bounds[1] + 1
+    endif
+
+    let table = table#table#Get(row_linenr, [0,0])
+    let coord.coord[0] = 0
+    let coord.coord[1] = 0
+    call table#cursor#SetCoord(table, coord)
+endfunction
+
+function! table#DeleteColumn() abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let col_id = max([0, coord.coord[2]])
+    let col_id = min([col_id, table.ColCount() - 1])
+
+    for row in table.rows
+        let cell_id = min([col_id, len(row.cells)-1])
+        call remove(row.cells, cell_id)
+    endfor
+
+    for pos in table.placement.positions
+        let sep_pos = pos.separator_pos
+        if col_id < len(sep_pos)
+            let sep_id = max([1, col_id])
+            let sep_id = min([sep_id, len(sep_pos)-1])
+            call remove(sep_pos, sep_id)
+        endif
+    endfor
+
+    if col_id < len(table.col_align)
+        call remove(table.col_align, col_id)
+    endif
+    if col_id < len(table.fixed_widths)
+        call remove(table.fixed_widths, col_id)
+    endif
+
+    if col_id > 0
+        let coord.coord[2] = col_id - 1
+    endif
+
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
+    call table#cursor#SetCoord(table, coord)
+endfunction
+
+function! table#DeleteRow() abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let row_id = coord.coord[0]
+    " adjust row_id if we're removing the last row
+    let row_linenr = table.placement.bounds[0] + table.rows[min([row_id, table.RowCount()-2])].placement_id
+
+    if table.placement.positions[-1].type !=# 'separator'
+        let pos_id = table.rows[-1].placement_id
+        if table.placement.positions[pos_id - 1].type ==# 'separator'
+            let table.placement.positions[pos_id - 1].type = 'skip'
+        else
+            let table.placement.positions[pos_id].type = 'skip'
+        endif
+    endif
+    call remove(table.rows, row_id)
+
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
+    let table = table#table#Get(row_linenr, [0,0])
+    let coord.coord = [0, 0, coord.coord[2]]
+    call table#cursor#SetCoord(table, coord)
 endfunction
 
 function! s:UpdateOnCycleWrapCell(table, dir, coord) abort
@@ -238,11 +363,149 @@ function! s:UpdateOnOutOfBounds(table, dir, coord) abort
     elseif a:dir ==# 'right'
         let row = new_table.rows[a:coord.coord[0]]
         let col_bound = row.ColCount()
-        if a:coord.coord[2] == col_bound
-            let a:coord.coord[2] = col_bound - 1
+        if a:coord.coord[2] > col_bound
+            let a:coord.coord[2] = col_bound
         endif
     endif
     return [ new_table, a:coord ]
+endfunction
+
+function! s:BisectIfMultilineCell(cur_pos) abort
+    let table = table#table#Get(a:cur_pos[0], [0,0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, a:cur_pos)
+    if coord.type ==# 'cell' && table.placement.multiline && s:IsCompleteRow(table, coord.coord)
+        let pipe_col_byte = a:cur_pos[1]-2
+        let line_up_to_pipe = strpart(getline(a:cur_pos[0]), 0, pipe_col_byte)
+        let col_display = strdisplaywidth(line_up_to_pipe)
+        let [bounds, row_offset] = s:GetAdjustedBounds(table, coord.coord)
+        for linenr in range(bounds[0], bounds[1])
+            if linenr == bounds[0] + row_offset
+                continue
+            endif
+            let line = getline(linenr)
+            let col_byte = table#util#DisplayWidthToByteWidth(line, col_display)
+            call setline(linenr, strpart(line, 0, col_byte) .. '|' .. strpart(line, col_byte))
+        endfor
+    endif
+endfunction
+
+function! s:IsCompleteRow(table, cell_id) abort
+    let positions = a:table.placement.positions
+    let row_off = a:cell_id[1]
+    let row_off  += (positions[ 0].type ==# 'separator') ? 1 : 0
+    let start_off = (positions[ 0].type ==# 'separator') ? 1 : 0
+    let end_off   = (positions[-1].type ==# 'separator') ? 1 : 0
+    let [start, end] = [ start_off, len(positions) - 1 - end_off ]
+    let pipe_count = len(positions[start].separator_pos)
+    let pipe_count -= (row_off == start)? 1 : 0
+    for pos in range(start + 1, end)
+        let next_pipe_count = len(positions[pos].separator_pos) - (row_off == pos ? 1 : 0)
+        if next_pipe_count != pipe_count
+            return v:false
+        endif
+    endfor
+    return v:true
+endfunction
+
+" if the separator has enough pipes, don't add more
+function! s:GetAdjustedBounds(table, cell_id) abort
+    let positions = a:table.placement.positions
+    let cell_count = a:table.rows[a:cell_id[0]].ColCount()
+    let bounds = copy(a:table.placement.bounds)
+    let row_offset = a:cell_id[1]
+    if positions[0].type ==# 'separator'
+        let pipe_count = len(positions[0].separator_pos)
+        let bounds[0]  += (pipe_count > cell_count) ? 1 : 0
+        let row_offset -= (pipe_count > cell_count) ? 1 : 0
+    endif
+    if positions[-1].type ==# 'separator'
+        let pipe_count = len(positions[-1].separator_pos)
+        let bounds[1] -= (pipe_count > cell_count) ? 1 : 0
+    endif
+    let row_offset += (positions[0].type ==# 'separator') ? 1 : 0
+    return [ bounds, row_offset ]
+endfunction
+
+function! table#MoveColumn(dir) abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let col_id = max([0, coord.coord[2]])
+    let col_count = table.ColCount()
+
+    let target_col_id = (a:dir ==# 'left')? col_id - 1 : col_id + 1
+    if target_col_id < 0 || target_col_id >= col_count
+        return
+    endif
+
+    for row in table.rows
+        if col_id < len(row.cells) && target_col_id < len(row.cells)
+            let temp = row.cells[col_id]
+            let row.cells[col_id] = row.cells[target_col_id]
+            let row.cells[target_col_id] = temp
+        endif
+    endfor
+
+    if len(table.col_align) == max([col_id, target_col_id])
+        call add(table.col_align, '')
+    endif
+    if col_id < len(table.col_align) && target_col_id < len(table.col_align)
+        let temp = table.col_align[col_id]
+        let table.col_align[col_id] = table.col_align[target_col_id]
+        let table.col_align[target_col_id] = temp
+    endif
+
+    if len(table.fixed_widths) == max([col_id, target_col_id])
+        call add(table.fixed_widths, 0)
+    endif
+    if col_id < len(table.fixed_widths) && target_col_id < len(table.fixed_widths)
+        let temp = table.fixed_widths[col_id]
+        let table.fixed_widths[col_id] = table.fixed_widths[target_col_id]
+        let table.fixed_widths[target_col_id] = temp
+    endif
+
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
+    let table = table#table#Get(cur_pos[0], [0,0])
+    let coord.coord[0] = 0
+    let coord.coord[2] = target_col_id
+    call table#cursor#SetCoord(table, coord)
+endfunction
+
+function! table#MoveRow(dir) abort
+    let cur_pos = getpos('.')[1:2]
+    let table = s:GetFullTable(cur_pos[0])
+    if !table.valid
+        return
+    endif
+    let coord = table#cursor#GetCoord(table, cur_pos, {'type_override': 'cell'})
+    let row_id = coord.coord[0]
+    let row_count = table.RowCount()
+
+    let target_row_id = (a:dir ==# 'up')? row_id - 1 : row_id + 1
+    if target_row_id < 0 || target_row_id >= row_count
+        return
+    endif
+
+    " correct the placements after swap for SetCoord
+    let first_id  = min([row_id, target_row_id])
+    let second_id = max([row_id, target_row_id])
+    let temp = table.rows[first_id].placement_id
+    let table.rows[first_id].placement_id = table.rows[second_id].placement_id - ( table.rows[first_id].Height() - table.rows[second_id].Height() )
+    let table.rows[second_id].placement_id = temp
+
+    let temp = table.rows[row_id]
+    let table.rows[row_id] = table.rows[target_row_id]
+    let table.rows[target_row_id] = temp
+
+    call table#draw#CurrentlyPlaced(table, {'fill_multiline_gaps': v:true})
+    let coord.coord[0] += (a:dir ==# 'up')? -1 : 1
+    call table#cursor#SetCoord(table, coord)
 endfunction
 
 let &cpo = s:save_cpo

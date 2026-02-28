@@ -38,7 +38,7 @@ function! table#parse#DetectMultilineRows(linenr, full_bounds) abort
     if empty(chunk_size) || chunk_size == [0, -1]
         let bounds = a:full_bounds
     else
-        let bounds = [a:linenr + chunk_size[0], a:linenr + chunk_size[1]]
+        let bounds = [a:linenr - chunk_size[0], a:linenr + chunk_size[1]]
         let bounds[0] = max([bounds[0], a:full_bounds[0]])
         let bounds[1] = min([bounds[1], a:full_bounds[1]])
     endif

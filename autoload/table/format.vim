@@ -17,6 +17,7 @@ function! table#format#Align(table) abort
 
     for i in range(len(a:table.rows))
         let align_tag_pos = s:AlignmentTagPos(a:table.rows[i])
+        let trailing_blank_lines = s:CountTrailingBlankLines(a:table.rows[i])
         for j in range(len(a:table.rows[i].cells))
             let cell = a:table.rows[i].cells[j]
             let width = get(a:table.fixed_widths, j, 0)
@@ -25,6 +26,7 @@ function! table#format#Align(table) abort
             call s:InsertAlignmentTag(align_tag_pos, cell, tag)
             let a:table.rows[i].cells[j] = cell
         endfor
+        call s:TrimTrailingBlankLines(a:table.rows[i], trailing_blank_lines)
         call s:RepositionAlignmentTags(a:table.rows[i], align_tag_pos)
     endfor
 
@@ -40,6 +42,41 @@ function! table#format#Align(table) abort
     endfor
     call s:PadAlignCells(a:table, col_aligns, col_widths)
     let a:table.col_widths = col_widths " used in draw.vim for separator lines
+endfunction
+
+function! s:CountTrailingBlankLinesCell(cell) abort
+    let count = 0
+    let id = len(a:cell) - 1
+    while id >= 0 && a:cell[id] =~# '^\s*$'
+        let count += 1
+        let id -= 1
+    endwhile
+    return count
+endfunction
+
+function! s:CountTrailingBlankLines(row) abort
+    let height = a:row.Height()
+    let count = -1
+    for cell in a:row.cells
+        let cell_count = height - len(cell) + s:CountTrailingBlankLinesCell(cell)
+        if count == -1 || cell_count < count
+            let count = cell_count
+        endif
+    endfor
+    return count
+endfunction
+
+function! s:TrimTrailingBlankLines(row, keep) abort
+    if a:keep < 0
+        return
+    endif
+    for cell in a:row.cells
+        let to_remove = s:CountTrailingBlankLinesCell(cell) - a:keep
+        while to_remove > 0 && cell[-1] =~# '^\s*$'
+            call remove(cell, len(cell) - 1)
+            let to_remove -= 1
+        endwhile
+    endfor
 endfunction
 
 function! s:AlignmentTagPos(row) abort
@@ -96,10 +133,7 @@ function! s:FormatCell(lines, col_idx, width, multiline, cfg_opts) abort
         endif
         if a:cfg_opts.multiline_format ==# 'paragraph_wrap'
             if a:width > 0
-                call filter(lines, 'v:val !=# ""')
-                let lines = [ join(lines) ]
-            else
-                let lines = s:RemoveBlankLines(lines)
+                let lines = s:ParagraphJoin(lines)
             endif
         endif
         if a:cfg_opts.multiline_format =~# '\v^(wrap|block_wrap|paragraph_wrap)$'
@@ -107,6 +141,26 @@ function! s:FormatCell(lines, col_idx, width, multiline, cfg_opts) abort
         endif
     endif
     return lines
+endfunction
+
+function! s:ParagraphJoin(lines) abort
+    let result = []
+    let paragraph = []
+    for line in a:lines
+        if line =~# '^\s*$'
+            if !empty(paragraph)
+                call add(result, join(paragraph))
+                let paragraph = []
+            endif
+            call add(result, '')
+        else
+            call add(paragraph, line)
+        endif
+    endfor
+    if !empty(paragraph)
+        call add(result, join(paragraph))
+    endif
+    return result
 endfunction
 
 function! s:PadAlignCells(table, aligns, widths) abort
@@ -208,10 +262,15 @@ function! s:WrapLine(line, width) abort
     let text = a:line
     while strdisplaywidth(text) > a:width
         let byte_width = table#util#DisplayWidthToByteWidth(text, a:width)
-        let chunk = strpart(text, 0, byte_width)
-        let break_at = match(chunk, '\s\zs\S\+$')
+        let break_at = -1
+        if strpart(text, byte_width, 1) =~# '\s'
+            let break_at = byte_width
+        else
+            let chunk = strpart(text, 0, byte_width)
+            let break_at = match(chunk, '\s\zs\S\+$')
+        endif
         if break_at == -1 || break_at == 0
-            let break_at = table#util#DisplayWidthToByteWidth(text, a:width)
+            let break_at = byte_width
         endif
         let line_part = strpart(text, 0, break_at)
         let line_part = substitute(line_part, '\s\+$', '', '')
@@ -224,17 +283,17 @@ function! s:WrapLine(line, width) abort
     return result
 endfunction
 
-function! s:RemoveBlankLines(lines) abort
-    " remove empty lines from the top
-    while !empty(a:lines) && (a:lines[0] =~# '^\s*$')
-        call remove(a:lines, 0)
-    endwhile
-    " remove empty lines from the bottom
-    while !empty(a:lines) && (a:lines[-1] =~# '^\s*$')
-        call remove(a:lines, len(a:lines) - 1)
-    endwhile
-    return a:lines
-endfunction
+" function! s:TrimBlankLines(lines) abort
+"     " remove empty lines from the top
+"     while len(a:lines) > 1 && (a:lines[0] =~# '^\s*$')
+"         call remove(a:lines, 0)
+"     endwhile
+"     " remove empty lines from the bottom
+"     while len(a:lines) > 1 && (a:lines[-1] =~# '^\s*$')
+"         call remove(a:lines, len(a:lines) - 1)
+"     endwhile
+"     return a:lines
+" endfunction
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

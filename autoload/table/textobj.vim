@@ -195,6 +195,8 @@ endfunction
 
 function! s:SetVisualSelection(text_obj, ...) abort
     if a:text_obj['valid']
+        " mark current position for the jumplist
+        execute 'normal! m`'
         let v_mode = a:0? a:1 : ''
         let v_mode = empty(v_mode)? get(a:text_obj, 'preferred_v_mode', 'v') : v_mode
         call cursor(a:text_obj['start'])

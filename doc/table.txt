@@ -25,6 +25,8 @@ objects, and a split/floating window cell editor.
 
 Features:
   • Automatic alignment on pipe insertion
+  • Auto-split multiline cells: inserting a pipe splits the entire cell (must be
+    enabled with |auto_split_cell|)
   • Multiline cell support (optional)
   • Fixed-width columns with automatic wrapping
   • Cell editing in floating/split windows
@@ -100,6 +102,69 @@ COMMANDS                                                      *table-commands*
         Example: >
             :Table Align
 <
+    :Table InsertRow                                        *:Table-InsertRow*
+        Insert a new empty row at the cursor position.
+
+        Equivalent to the |<Plug>(table_insert_row)| mapping.
+
+        Example: >
+            :Table InsertRow
+<
+    :Table InsertCol                                        *:Table-InsertCol*
+        Insert a new empty column at the cursor position.
+
+        Equivalent to the |<Plug>(table_insert_column)| mapping.
+
+        Example: >
+            :Table InsertCol
+<
+    :Table DeleteRow                                        *:Table-DeleteRow*
+        Delete the row at the cursor position.
+
+        Equivalent to the |<Plug>(table_delete_row)| mapping.
+
+        Example: >
+            :Table DeleteRow
+<
+    :Table DeleteCol                                        *:Table-DeleteCol*
+        Delete the column at the cursor position.
+
+        Equivalent to the |<Plug>(table_delete_column)| mapping.
+
+        Example: >
+            :Table DeleteCol
+<
+    :Table MoveRow {direction}                               *:Table-MoveRow*
+        Move the current row up or down within the table. The cursor moves with
+        the row to maintain position.
+
+        Arguments:
+        - up: Move row up (swap with previous row)
+        - down: Move row down (swap with next row)
+
+        Equivalent to the |<Plug>(table_move_row_up)| and
+        |<Plug>(table_move_row_down)| mappings.
+
+        Example: >
+            :Table MoveRow up
+            :Table MoveRow down
+<
+    :Table MoveCol {direction}                               *:Table-MoveCol*
+        Move the current column left or right within the table. The cursor moves
+        with the column to maintain position. Column alignments and fixed widths
+        are preserved during the move.
+
+        Arguments:
+        - left: Move column left (swap with previous column)
+        - right: Move column right (swap with next column)
+
+        Equivalent to the |<Plug>(table_move_column_left)| and
+        |<Plug>(table_move_column_right)| mappings.
+
+        Example: >
+            :Table MoveCol left
+            :Table MoveCol right
+<
     :Table ToDefault                                        *:Table-ToDefault*
         Convert table to the 'default' style. Uses the |i_vertical| and
         |i_horizontal| characters from the current buffer configuration, with
@@ -170,13 +235,15 @@ COMMANDS                                                      *table-commands*
         With only key, shows current value. With key and value, sets option.
 
         Options:
-        - i_vertical: Vertical border character (default: '|')
-        - i_horizontal: Horizontal border character (default: '-')
-        - i_alignment: Alignment marker character (default: ':')
+        - auto_split_cell: When true, inserting a pipe (|) in a multiline cell
+          splits the entire cell across all lines (default: v:false)
+        - i_vertical: Insert mode vertical separator character (default: '|')
+        - i_horizontal: Insert mode horizontal border character (default: '-')
+        - i_alignment: Insert mode alignment marker character (default: ':')
         - default_alignment: Default column alignment: 'left', 'center', or
           'right' (or 'l', 'c', 'r') (default: 'left')
         - chunk_size: Lines to process around cursor [before, after]
-          (default: [-10, 10])
+          (default: [20, 20])
         - multiline: Enable multiline cells (default: 'auto')
           Values: v:true, v:false, or 'auto'. When 'auto', automatically
           detects multiline rows based on table structure.
@@ -237,8 +304,9 @@ Default mappings are provided for auto-alignment, navigation, and text objects.
 These may be disabled by calling the config setup function with the
 disable_mappings option before the VimEnter event.
 
-For table actions (EditCell, Align, Complete, ToDefault), <Plug>
-mappings are provided but not mapped by default.
+For table actions (EditCell, Align, Complete, ToDefault, InsertRow, InsertCol,
+DeleteRow, DeleteCol, MoveRow, MoveCol), <Plug> mappings are provided but not
+mapped by default.
 
 Context-Aware Mappings ~
 
@@ -256,6 +324,14 @@ Suggested keybindings for table actions: >
     nnoremap <leader><bar> <Plug>(table_complete)
     nnoremap <leader>td    <Plug>(table_to_default)
     nnoremap <leader>te    <Plug>(table_cell_edit)
+    nnoremap <leader>tir   <Plug>(table_insert_row)
+    nnoremap <leader>tic   <Plug>(table_insert_column)
+    nnoremap <leader>tdr   <Plug>(table_delete_row)
+    nnoremap <leader>tdc   <Plug>(table_delete_column)
+    nnoremap <leader>tmk   <Plug>(table_move_row_up)
+    nnoremap <leader>tmj   <Plug>(table_move_row_down)
+    nnoremap <leader>tmh   <Plug>(table_move_column_left)
+    nnoremap <leader>tml   <Plug>(table_move_column_right)
 <
 
 Table Operations ~
@@ -290,6 +366,58 @@ Table Operations ~
 <Plug>(table_cell_edit)
     Edit current cell in split window (Vim) or floating window (Neovim).
     Useful for multiline editing. Changes save on WinLeave.
+    No default mapping
+
+                                                  *<Plug>(table_insert_row)*
+<Plug>(table_insert_row)
+    Insert a new empty row at the cursor position. The cursor moves to the
+    first cell of the new row.
+    Available in normal mode.
+    No default mapping
+
+                                               *<Plug>(table_insert_column)*
+<Plug>(table_insert_column)
+    Insert a new empty column at the cursor position. The cursor remains on
+    the same cell in the new column.
+    Available in normal mode.
+    No default mapping
+
+                                                  *<Plug>(table_delete_row)*
+<Plug>(table_delete_row)
+    Delete the row at the cursor position. The cursor moves to the row below
+    (or the new last row if deleting the last row).
+    Available in normal mode.
+    No default mapping
+
+                                               *<Plug>(table_delete_column)*
+<Plug>(table_delete_column)
+    Delete the column at the cursor position. The cursor moves to the previous
+    column (or stays on the first column if deleting the first column).
+    Available in normal mode.
+    No default mapping
+
+                                                  *<Plug>(table_move_row_up)*
+<Plug>(table_move_row_up)
+    Move the current row up by swapping it with the row above.
+    Available in normal mode.
+    No default mapping
+
+                                                *<Plug>(table_move_row_down)*
+<Plug>(table_move_row_down)
+    Move the current row down by swapping it with the row below.
+    Available in normal mode.
+    No default mapping
+
+                                              *<Plug>(table_move_column_left)*
+<Plug>(table_move_column_left)
+    Move the current column left by swapping it with the column to the left.
+    Available in normal mode.
+    No default mapping
+
+                                             *<Plug>(table_move_column_right)*
+<Plug>(table_move_column_right)
+    Move the current column right by swapping it with the column to the right.
+    Available in normal mode.
     No default mapping
 
 Navigation ~
@@ -429,10 +557,11 @@ table#Setup({config})
             'disable_ftplugins': v:false,
             'style': 'default',
             'options': {
+                'auto_split_cell': false,
                 'multiline': 'auto',
                 'multiline_format': 'block_wrap',
                 'default_alignment': 'left',
-                'chunk_size': [-10, 10],
+                'chunk_size': [20, 20],
                 'i_vertical': '|',
                 'i_horizontal': '-',
                 'i_alignment': ':'
@@ -457,7 +586,7 @@ table#Setup({config})
         -- In init.lua
         require('table_vim').setup({
             style = 'default',
-            options = { multiline = true, multiline_format = 'paragraph_wrap', chunk_size = {-20, 20} }
+            options = { multiline = true, multiline_format = 'paragraph_wrap', chunk_size = {20, 20} }
         })
 <
                                                       *table#SetBufferConfig()*
@@ -483,6 +612,22 @@ table#RestoreDefault()
 Table Options ~
                                                          *table-option-list*
 
+                                                            *auto_split_cell*
+auto_split_cell
+    Type: Boolean
+    Default: v:false (false)
+
+    When enabled, inserting a pipe character (|) in a multiline cell
+    automatically splits the entire cell across all lines at the same column
+    position, not just the current line. This provides consistent cell
+    structure when working with multiline tables.
+
+    When disabled, inserting a pipe only affects the current line.
+
+    This option only applies when |multiline| is enabled and you are working
+    with multiline cells. >
+        :TableConfig Option auto_split_cell true
+<
                                                                   *multiline*
 multiline
     Type: String
@@ -506,15 +651,17 @@ multiline_format
     `wrap_lines` options.
 
     'align'          - Trim leading/trailing whitespace, no wrapping
-    
-    'wrap'           - Wrap lines independently of each other in fixed-width columns
-    
-    'block_align'    - Align text as a block based on column alignment
-    
-    'block_wrap'     - Align text as a block with independent line wrapping in fixed-width
+
+    'wrap'           - Wrap lines independently of each other in fixed-width
                        columns
-    
-    'paragraph_wrap' - Collapse to single line and wrap in fixed-width columns
+
+    'block_align'    - Align text as a block based on column alignment
+
+    'block_wrap'     - Align text as a block with independent line wrapping in
+                       fixed-width columns
+
+    'paragraph_wrap' - Keep paragraph structure in fixed-width columns,
+                       paragraphs are separated by blank lines
 
                                                           *default_alignment*
 default_alignment
@@ -529,16 +676,16 @@ default_alignment
                                                                 *chunk_size*
 chunk_size
     Type: List [before, after]
-    Default: [-10, 10]
+    Default: [20, 20]
 
-    Number of lines to process around the cursor for alignment operations.
-    First element is lines before cursor (negative), second is lines after.
-    Use [] to process the entire table regardless of size.
+    Number of lines to process around the cursor for alignment operations. The
+    first element specifies lines before the cursor, the second specifies lines
+    after. Use [] to process the entire table, regardless of size.
 
     Smaller chunks improve performance for large tables but may not align
     the entire visible table. Increase if you have large tables and
     alignment doesn't cover enough rows. >
-        :TableConfig Option chunk_size [-20, 20]
+        :TableConfig Option chunk_size [20, 20]
         :TableConfig Option chunk_size []
 <
                                                                 *i_vertical*
@@ -712,7 +859,7 @@ Global setup in init.lua: >
       options = {
         multiline = true,
         default_alignment = 'center',
-        chunk_size = {-20, 20}
+        chunk_size = {20, 20}
       }
     })
 <
@@ -970,6 +1117,11 @@ table#AlignIfNotEscaped()
     is not a backslash escape (\). Used internally for insert mode
     auto-align on typing |. This allows typing literal pipes with \|.
 
+    Auto-split feature (disabled by default): When enabled, inserting a pipe
+    character into a multiline cell automatically splits the entire cell at the
+    cursor position across all lines in the cell. Enable with the
+    |auto_split_cell| option.
+
     Should be called in insert mode via a <cmd> mapping.
 
     Example: >
@@ -1049,6 +1201,30 @@ table#CellEditor()
 
     Example: >
         nnoremap <leader>te :call table#CellEditor()<CR>
+<
+                                                          *table#MoveRow()*
+table#MoveRow({direction})
+    Move the current row up or down within the table. The row is swapped with
+    the adjacent row in the specified direction.
+
+    Parameters: ~
+        {direction}  Either 'up' or 'down'
+
+    Example: >
+        nnoremap <leader>tmk :call table#MoveRow('up')<CR>
+        nnoremap <leader>tmj :call table#MoveRow('down')<CR>
+<
+                                                       *table#MoveColumn()*
+table#MoveColumn({direction})
+    Move the current column left or right within the table. The column is
+    swapped with the adjacent column in the specified direction.
+
+    Parameters: ~
+        {direction}  Either 'left' or 'right'
+
+    Example: >
+        nnoremap <leader>tml :call table#MoveColumn('right')<CR>
+        nnoremap <leader>tmh :call table#MoveColumn('left')<CR>
 <
                                                               *table#Sort()*
 table#Sort({linenr}, {dim_kind}, {id}, {flags})
