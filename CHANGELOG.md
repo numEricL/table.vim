@@ -2,24 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [v0.3.0] - 2026-02-27
 
 ### Added
 - **Auto-split feature for multiline cells**: When inserting a pipe character in
-a multiline cell, the entire cell is now split across all lines at the same
-column position, not just the current line. Disabled by default, enable with
-`auto_split_cell` option.
-- movements increment the jumplist
-- **Insert and delete row/column actions**: New `:Table InsertRow`, `:Table InsertCol`, 
-`:Table DeleteRow`, and `:Table DeleteCol` commands for table manipulation
-  - Available as `<Plug>` mappings: `<plug>(table_insert_row)`, `<plug>(table_insert_column)`,
-  `<plug>(table_delete_row)`, `<plug>(table_delete_column)`
-- **Move row/column actions**: New `:Table MoveRow {direction}` and `:Table MoveCol {direction}` 
-commands for reordering table rows and columns
-  - `:Table MoveRow up|down` - Move current row up or down
-  - `:Table MoveCol left|right` - Move current column left or right
-  - Available as `<Plug>` mappings: `<plug>(table_move_row_up)`, `<plug>(table_move_row_down)`,
-  `<plug>(table_move_column_left)`, `<plug>(table_move_column_right)`
+  a multiline cell, the entire cell is now split across all lines at the same
+  column position, not just the current line. Disabled by default, enable with
+  `auto_split_cell` option.
+- **Insert/delete/move row and column actions**:
+  - `:Table InsertRow` and `:Table InsertCol`,
+  - `:Table DeleteRow` and `:Table DeleteCol`
+  - `:Table MoveRow {direction}` and `:Table MoveCol {direction}`
+  - Available as `<Plug>` mappings
+- cell movement increments the jumplist
 
 ### Fixed
 - Completing a table in a comment block now extends the comment prefix if needed
