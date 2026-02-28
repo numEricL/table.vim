@@ -32,6 +32,24 @@ And may be completed to:
 
 See [`:help table.txt`](doc/table.txt) for complete documentation.
 
+## Features
+
+- **Multiline rows**             - auto-detected by default
+- **Auto-split multiline cells** - inserting a pipe splits the entire cell (enable via `auto_split_cell` option)
+- **Fixed-width columns**        - hard-wrap columns with alignment tags
+- **Cell editing window**        - edit in a floating window, hooks provided (split window in Vim)
+- **Sorting**                    - sort rows and columns by any column/row
+- **Insert/Delete/Move actions** - insert, delete, and move rows and columns
+- **Table navigation**           - move between cells even if the table is not yet aligned
+- **Text objects**               - cell, row, and column
+- **Multiple table styles**      - markdown, org, rst, and box-drawing styles included, or define your own
+
+## Demo
+
+Note: This demo is from an older version, options have changed. See the Upgrading from v0.1.x section for details.
+
+https://github.com/user-attachments/assets/352e23b0-33ba-4f9d-9fa0-e2aee5fd16cc
+
 ## Requirements
 
 - Vim 8.1 or later
@@ -42,23 +60,6 @@ See [`:help table.txt`](doc/table.txt) for complete documentation.
 - **Multiline rows** are now auto-detected by default. Set `multiline` to `true` or `false` to override.
 - **`:TableOption`** is deprecated. Use **`:TableConfig`** instead.
 - If you used `preserve_indentation`, switch to `multiline_format` (see `:help table-configuration`). Default behavior is unchanged.
-
-## Features
-
-- **Multiline rows**             - auto-detected by default
-- **Auto-split multiline cells** - inserting a pipe splits the entire cell (enable via `auto_split_cell` option)
-- **Fixed-width columns**        - hard-wrap columns with alignment tags
-- **Cell editing window**        - edit in a floating window, hooks provided (split window in Vim)
-- **Sorting**                    - sort rows and columns by any column/row
-- **Table navigation**           - move between cells even if the table is not yet aligned
-- **Text objects**               - cell, row, and column
-- **Multiple table styles**      - markdown, org, rst, and box-drawing styles included, or define your own
-
-## Demo
-
-Note: This demo is from an older version, options have changed.
-
-https://github.com/user-attachments/assets/352e23b0-33ba-4f9d-9fa0-e2aee5fd16cc
 
 ## Configuration (optional)
 
